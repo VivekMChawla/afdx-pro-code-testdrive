@@ -8,5 +8,6 @@
   "salesforcedx-vscode-slds.basic.mobileValidation": false,
   "salesforcedx-vscode-slds.basic.invalid": false,
   "salesforcedx-vscode-slds.enabled": false,
-  "workbench.editor.pinnedTabsOnSeparateRow": true
+  "workbench.editor.pinnedTabsOnSeparateRow": true,
+  "xml.preferences.showSchemaDocumentationType": "none"
 }
