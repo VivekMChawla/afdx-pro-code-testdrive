@@ -51,13 +51,27 @@
    ![Update line 8 with the Einstein Agent User profile ID from the previous step. Update line 9 with something unique to you to ensure a globally unique username is specified.](images/agent-user-data-import.png)
 
 3. Create the AFDX TestDrive Agent user with the CLI.
-```
-sf data import tree --files data-import/User.json
-```
+   ```
+   sf data import tree --files data-import/User.json
+   ```
 4. Assign permissions to the AFDX TestDrive Agent user with the CLI.
-```
-sf org assign permset -n AFDX_Service_Agent_Perms -b USERNAME_OF_YOUR_AFDX_TESTDRIVE_AGENT
-```
+   ```
+   sf org assign permset -n AFDX_Service_Agent_Perms -b USERNAME_OF_YOUR_AFDX_TESTDRIVE_AGENT
+   ```
+
+### STEP FOUR: Configure the next-gen **Local Info Agent**
+1. Open the `Local_Info_Agent_NGA` authoring bundle in Agentforce Studio.
+   ```
+   sf org open authoring-bundle --api-name Local_Info_Agent_NGA
+   ```
+2. Open the Agent Details and set **Agent User's Record** to your AFDX TestDrive Agent user.
+
+   ![Click the Agent Detials item under Settings inside the Next-Gen Agent Builder, then set the Agent User to your AFDX TestDrive user and click "Save"](images/set-local-info-agent-nga-user.png)
+
+3. Retrieve the `Local_Info_Agent_NGA` authoring bundle to update your local Agent Script source file.
+   ```
+   sf project retrieve start -m AiAuthoringBundle:Local_Info_Agent_NGA
+   ```
 
 ### STEP FIVE: Configure the classic **Local Info Agent**
 1. Open the `Local_Info_Agent` in Agent Builder.
