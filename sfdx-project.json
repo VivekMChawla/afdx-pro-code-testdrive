@@ -8,5 +8,5 @@
   "name": "afdx-pro-code-testdrive",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "63.0"
+  "sourceApiVersion": "65.0"
 }
