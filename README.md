@@ -123,9 +123,9 @@ sf agent generate agent-spec
 ```
 sf agent generate agent-spec --spec specs/Local_Info_Agent-partialAgentSpec.yaml 
 ```
-### Create a new Agent using an Agent Spec.
+### Generate a new Authoring Bundle using an Agent Spec.
 ```
-sf agent create --api-name My_First_Agent
+sf agent generate authoring-bundle --name "My First NGA Agent"
 ```
 ### Delete an Agent and related metadata
 ```
