@@ -13,11 +13,19 @@
    - **Agentforce** *(Setup > Einstein > Einstein Generative AI > Agentforce Studio > Agentforce Agents)*
 
 ### STEP TWO: Deploy the Testdrive sample code
-1. Clone this repo
+1. Clone this repo.
    ```
    git clone https://github.com/VivekMChawla/afdx-pro-code-testdrive.git
    ```
-2. Deploy everything *except* agents.
+2. Navigagte into the cloned Test Drive folder.
+   ```   
+   cd afdx-pro-code-testdrive
+   ```
+3. Authenticate the Salesforce CLI to your DE org.
+   ```
+   sf org login web -s -a AFDX-Pro-Code-Testdrive
+   ```
+3. Deploy everything *except* agents.
    ```
    sf project deploy start --manifest manifests/EverythingExceptAgents.package.xml
    ```
@@ -28,6 +36,10 @@
 4. Deploy agent tests.
    ```
    sf project deploy start --manifest manifests/AgentTests.package.xml
+   ```
+3. Open the Test Drive folder in VS Code.
+   ```   
+   code .
    ```
 
 ### STEP THREE: Configure the AFDX TestDrive Agent User
@@ -47,42 +59,38 @@ sf data import tree --files data-import/User.json
 sf org assign permset -n AFDX_Service_Agent_Perms -b USERNAME_OF_YOUR_AFDX_TESTDRIVE_AGENT
 ```
 
-### STEP FOUR: Configure the **Local Info Agent**
+### STEP FIVE: Configure the classic **Local Info Agent**
 1. Open the `Local_Info_Agent` in Agent Builder.
 ```
 sf org open agent --api-name Local_Info_Agent
 ```
 2. Open the settings and set **Agent User** to your AFDX TestDrive Agent user.
-   ![Click the Settings button near the top-right of Agent Builder, then set the Agent User to your AFDX TestDrive user and click "Save"](images/set-local-info-agent-user.png)
-3. Activate the agent by clicking "Activate" near the top-right of Agent Builder.
-4. Exit Agent Builder, view Agent Details for the **Local Info Agent**, and create a new API connection using the `Agent_Preview` Connected App.
-   ![From the Agent Detials page for the Local Info Agent, click the Connections tab, then click the Add button at the bottom right of the page.](images/agent-connection-settings.png)
-   ![Create a new API connection called "CLI Agent Preview" and use the "Agent Preview" connected app.](images/agent-preview-connection-details.png)
 
-### STEP FIVE: Authenticate an "Agent Preview" user with a JWT-based auth token
-1. Create a SysAdmin user with your email address.
-   - Make sure to activate this user and set a password for it.
-2. Edit the policies of the `Agent_Preview` Connected App to ensure that JWT-based access tokens are issued.
+   ![Click the Settings button near the top-right of Agent Builder, then set the Agent User to your AFDX TestDrive user and click "Save"](images/set-local-info-agent-user.png)
+
+3. Open the **Connections** tab and create a new API connection using the `Agent_Preview` Connected App.
+
+   ![Open the Connections tab, then click the Add button at the bottom right of the page.](images/add-api-agent-connection.png)
+   ![Create a new API connection called "CLI Agent Preview" and use the "Agent Preview" connected app.](images/agent-external-app-settings.png)
+
+4. Activate the agent by clicking "Activate" near the top-right of Agent Builder.
+
+   ![Click the Activate button near the top-right of Agent Builder](images/agent-activation.png)
+
+
+### STEP SIX: Add a JWT-based auth token to your login
+1. Edit the policies of the `Agent_Preview` Connected App to ensure that JWT-based access tokens are issued.
    ![Update the JWT-based token settings at the bottom of the "edit policies" page](images/set-jwt-based-token-policy.png)
-3. Retrieve the `Agent_Preview` Connected App from your org.
+2. Retrieve the `Agent_Preview` Connected App from your org.
    ```
    sf project retrieve start -m ConnectedApp:Agent_Preview
    ```
-4. Copy the `consumerKey` from line 8 of `Agent_Preview.connectedApp-meta.xml`
+3. Copy the `consumerKey` from line 8 of `Agent_Preview.connectedApp-meta.xml`
    ![ONLY copy the part of the key that's between the two consumerKey tags.](images/consumer-key-copy.png)
-5. Modify the `SFDX_AUTH_SCOPES` for your current terminal session.
-   Mac/Linux
-   ```
-   export SFDX_AUTH_SCOPES="refresh_token sfap_api chatbot_api web api"
-   ```
-   Windows
-   ```
-   $Env:SFDX_AUTH_SCOPES = 'sfap_api chatbot_api api refresh_token api web'
-   ```
-6. Authenticate the CLI to your new "Agent Preview" user WITH the specified `--client-id`.
+4. Link the `Agent_Preview` connected app to your authenticated user.
    **IMPORTANT:** When asked for the client secret, just press **ENTER** since it's not required.
    ```
-   sf org login web -a AgentPreview --client-id PASTE_CONSUMER_KEY_FROM_AGENT_PREVIEW_CONNECTED_APP
+   sf org login web --client-app AgentPreview --username YOUR_USERNAME --client-id PASTE_CONSUMER_KEY_FROM_AGENT_PREVIEW_CONNECTED_APP --scopes "sfap_api chatbot_api refresh_token api web"
    ```
 7. Confirm everything was set up correctly by previewing the Local Info Agent from the CLI.
    ```
