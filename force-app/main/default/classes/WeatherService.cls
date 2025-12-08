@@ -15,7 +15,7 @@ public class WeatherService {
         // Prepare API request
         HttpRequest req = new HttpRequest();
         req.setEndpoint(
-            'callout:WeatherEndpoint/weather?lat=37.789782764570425&lon=-122.39723702244089&date=' +
+            'callout:Weather_Endpoint/weather?lat=37.789782764570425&lon=-122.39723702244089&date=' +
             isoDate
         );
         req.setMethod('GET');
