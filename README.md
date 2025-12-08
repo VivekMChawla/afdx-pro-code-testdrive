@@ -73,9 +73,10 @@ sf org open agent --api-name Local_Info_Agent
    ![Open the Connections tab, then click the Add button at the bottom right of the page.](images/add-api-agent-connection.png)
    ![Create a new API connection called "CLI Agent Preview" and use the "Agent Preview" connected app.](images/agent-external-app-settings.png)
 
-4. Activate the agent by clicking "Activate" near the top-right of Agent Builder.
+4. Activate the agent by clicking "Activate" near the top-right of Agent Builder. If prompted, you can safely ignore the configuration issues and proceed with activation.
 
    ![Click the Activate button near the top-right of Agent Builder](images/agent-activation.png)
+   ![Ignore the activation issues](images/ignore-activation-issues.png)
 
 
 ### STEP SIX: Add a JWT-based auth token to your login
