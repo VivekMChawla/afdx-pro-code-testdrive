@@ -1,0 +1,22 @@
+{
+  "required" : [ "Input:Event_Type" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "Input:Event_Type" : {
+      "title" : "Event Type",
+      "description" : "This is the type of event the user is interested in, for example \"movies\" or \"learning about art\".",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "citationMode" : {
+      "title" : "Citation Mode",
+      "description" : "Select Citation Mode",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

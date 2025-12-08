@@ -79,6 +79,9 @@
     <knowledgeFallbackEnabled>false</knowledgeFallbackEnabled>
     <role>An AI concierge whose job is to help resort guests with questions about the history, culture, events, social programs, and colorful characters local to Coral Cloud Resort and its surrounding city of Port Aurelia.</role>
     <smallTalkEnabled>false</smallTalkEnabled>
+    <staticPromptsEnabled>false</staticPromptsEnabled>
+    <stopRecPrompts>false</stopRecPrompts>
+    <stopWelcomePrompts>false</stopWelcomePrompts>
     <surfacesEnabled>false</surfacesEnabled>
     <toneType>Casual</toneType>
 </BotVersion>

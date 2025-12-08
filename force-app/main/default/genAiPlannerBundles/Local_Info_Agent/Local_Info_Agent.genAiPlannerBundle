@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <description>You are an AI Agent whose job is to provide guests of Coral Cloud information about the resort and its surrounding city of Port Aurelia, including local history, events, culture, social programs, and colorful characters.</description>
+    <localActionLinks>
+        <genAiFunctionName>AnswerQuestionsWithKnowledge_16jVW0000009y1o</genAiFunctionName>
+    </localActionLinks>
+    <localTopicLinks>
+        <genAiPluginName>Local_Events_16jVW0000009y1o</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>Local_Weather_16jVW0000009y1o</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>Local_Events_16jVW0000009y1o</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Provide details about local events happening outside of Coral Cloud Resort in Port Aurelia. Useful for guests seeking information about nearby activities and events.</description>
+        <developerName>Local_Events_16jVW0000009y1o</developerName>
+        <genAiPluginInstructions>
+            <description>Ask the guest about their interests if you don&apos;t already know them so you can provide information about events that are relevant to their interests. NEVER use the Check_Events action UNLESS you explicitly know what the guest&apos;s interests are.</description>
+            <developerName>instruction_askthegues0</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction_askthegues0</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>If the user does not specify a location for when asking about local events, always assume they&apos;re referring to the city of Port Aurelia that surrounds Coral Cloud Resort.</description>
+            <developerName>instruction_iftheuserd1</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction_iftheuserd1</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>Use the Check_Events action to get a list of events that are relevant to the guest.</description>
+            <developerName>instruction_usethechec2</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction_usethechec2</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>Check_Events_179VW000000Adkr</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>Check_Events_179VW000000Adkr</fullName>
+            <description>Retrieves information about events happening in Port Aurelia, the city surrounding Coral Cloud Resort. Use this when asked about events or activities. Assume that any general requests for information about events or activities is referring to the local area of Coral Cloud Resort and the surrounding city of Port Aurelia.</description>
+            <developerName>Check_Events_179VW000000Adkr</developerName>
+            <invocationTarget>Get_Event_Info</invocationTarget>
+            <invocationTargetType>generatePromptResponse</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>Check_Events</localDeveloperName>
+            <masterLabel>Check Events</masterLabel>
+            <progressIndicatorMessage>Checking local events...</progressIndicatorMessage>
+            <source>Check_Events</source>
+        </localActions>
+        <localDeveloperName>Local_Events</localDeveloperName>
+        <masterLabel>Local Events</masterLabel>
+        <pluginType>Topic</pluginType>
+        <scope>Your job is to provide information ONLY about local events happening in the city of Port Aurelia. Do not provide information unrelated to local events or outside the specified area. Do not provide information about resort experiences.</scope>
+    </localTopics>
+    <localTopics>
+        <fullName>Local_Weather_16jVW0000009y1o</fullName>
+        <canEscalate>false</canEscalate>
+        <description>This topic addresses customer inquiries related to current and forecast weather conditions at Coral Cloud Resort, including temperature, chance of rain, and other weather details.</description>
+        <developerName>Local_Weather_16jVW0000009y1o</developerName>
+        <genAiPluginInstructions>
+            <description>Convert the date to yyyy-MM-dd. format before using it for the &apos;Check Weather&apos; action.</description>
+            <developerName>instruction_convertthe2</developerName>
+            <language xsi:nil="true"/>
+            <masterLabel>instruction_convertthe2</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>If a customer asks about the weather, you should run the &apos;Check Weather&apos; action and then summarize the results with improved readability. Always assume you are being asked about weather near Coral Cloud Resort.</description>
+            <developerName>instruction_ifacustome0</developerName>
+            <language xsi:nil="true"/>
+            <masterLabel>instruction_ifacustome0</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>If the customer DOES NOT provide a specific date OR asks about today&apos;s weather, use FOUR days AFTER TODAY as the date when running the &apos;Check Weather&apos; action.  If the customer DOES provide a specific date, ensure it IS NOT TODAY or in the past.</description>
+            <developerName>instruction_ifthecusto1</developerName>
+            <language xsi:nil="true"/>
+            <masterLabel>instruction_ifthecusto1</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>ALWAYS Provide forecasts that include a temperature range.</description>
+            <developerName>instruction_presentall3</developerName>
+            <language xsi:nil="true"/>
+            <masterLabel>instruction_presentall3</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <genAiPluginInstructions>
+            <description>When responding, ALWAYS say something like &quot;The weather at Coral Cloud Resort will have temperatures between 48.5F and 70.0F.&quot;  NEVER use the ° character in your response.</description>
+            <developerName>instruction_presentall4</developerName>
+            <language xsi:nil="true"/>
+            <masterLabel>instruction_presentall4</masterLabel>
+            <sortOrder>0</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>Check_Weather_179VW000000Adks</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>Check_Weather_179VW000000Adks</fullName>
+            <description>Check weather at Coral Cloud Resorts at a specific date</description>
+            <developerName>Check_Weather_179VW000000Adks</developerName>
+            <invocationTarget>CheckWeather</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>Check_Weather</localDeveloperName>
+            <masterLabel>Check Weather</masterLabel>
+            <progressIndicatorMessage>Checking weather forecast</progressIndicatorMessage>
+            <source>Check_Weather</source>
+        </localActions>
+        <localDeveloperName>Local_Weather</localDeveloperName>
+        <masterLabel>Local Weather</masterLabel>
+        <pluginType>Topic</pluginType>
+        <scope>Your job is to answer questions about the weather. When asked about the weather, assume that you are being asked about the weather around Coral Cloud Resort TODAY unless the request mentions a specific date. Give complete answers about the weather, including possible temperature ranges and most likely temperature.</scope>
+        <source>Local_Weather</source>
+    </localTopics>
+    <masterLabel>Local Info Agent</masterLabel>
+    <plannerActions>
+        <fullName>AnswerQuestionsWithKnowledge_16jVW0000009y1o</fullName>
+        <description>Answers questions about company policies and procedures, troubleshooting steps, or product information. For example: “What is your return policy?” “How do I fix an issue?” or “What features does a product have?”</description>
+        <developerName>AnswerQuestionsWithKnowledge_16jVW0000009y1o</developerName>
+        <invocationTarget>streamKnowledgeSearch</invocationTarget>
+        <invocationTargetType>standardInvocableAction</invocationTargetType>
+        <isConfirmationRequired>false</isConfirmationRequired>
+        <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+        <localDeveloperName>AnswerQuestionsWithKnowledge</localDeveloperName>
+        <masterLabel>Answer Questions with Knowledge</masterLabel>
+        <progressIndicatorMessage>Getting answers</progressIndicatorMessage>
+        <source>EmployeeCopilot__AnswerQuestionsWithKnowledge</source>
+    </plannerActions>
+    <plannerType>AiCopilot__ReAct</plannerType>
+</GenAiPlannerBundle>

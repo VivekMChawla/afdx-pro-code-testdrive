@@ -1,0 +1,33 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "maxTemperature" : {
+      "title" : "maxTemperature",
+      "description" : "Maximum temperature in Celsius at Coral Cloud Resorts location for the provided date",
+      "multipleOf" : 1.0E-34,
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "minTemperature" : {
+      "title" : "minTemperature",
+      "description" : "Minimum temperature in Celsius at Coral Cloud Resorts location for the provided date",
+      "multipleOf" : 1.0E-34,
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "temperatureDescription" : {
+      "title" : "temperatureDescription",
+      "description" : "Description of temperatures at Coral Cloud Resorts location for the provided date",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}
