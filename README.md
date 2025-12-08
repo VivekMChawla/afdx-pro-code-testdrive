@@ -109,7 +109,7 @@ sf org open agent --api-name Local_Info_Agent
    ```
 7. Confirm everything was set up correctly by previewing the Local Info Agent from the CLI.
    ```
-   sf agent preview -a AgentPreview
+   sf agent preview -c AgentPreview
    ```
 ---
 
