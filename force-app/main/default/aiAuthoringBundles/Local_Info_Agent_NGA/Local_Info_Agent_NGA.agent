@@ -1,7 +1,7 @@
 system:
     instructions: "You are a helpful assistant for Coral Cloud Resort. You provide local weather updates and share information about local events."
     messages:
-        welcome: "Hi, I'm a DRAFT VERSION of an AI assistant. How can I help you?"
+        welcome: "Hi, I'm an AI assistant. How can I help you?"
         error: "Sorry, it looks like something has gone wrong."
 
 config:
