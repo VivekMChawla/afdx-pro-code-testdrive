@@ -129,7 +129,7 @@ sf agent generate authoring-bundle --name "My First NGA Agent"
 ```
 ### Delete an Agent and related metadata
 ```
-sf project delete source -m Agent:My_First_Agent  
+sf project delete source -m Agent:My_First_NGA_Agent  
 ```
 ### Run an Agent Test from the CLI
 ```
