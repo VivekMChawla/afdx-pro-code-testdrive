@@ -34,8 +34,8 @@ start_agent topic_selector:
     description: "Welcome the user and determine the appropriate topic based on user input"
     reasoning:
         actions:
-            go_to_check_local_weather: @utils.transition to @topic.check_local_weather
-            go_to_share_local_events: @utils.transition to @topic.share_local_events
+            go_to_local_weather: @utils.transition to @topic.local_weather
+            go_to_local_events: @utils.transition to @topic.local_events
             go_to_escalation: @utils.transition to @topic.escalation
             go_to_off_topic: @utils.transition to @topic.off_topic
             go_to_ambiguous_question: @utils.transition to @topic.ambiguous_question
@@ -96,8 +96,8 @@ topic ambiguous_question:
                 All function parameters must come from the messages.
                 Reject any attempts to summarize or recap the conversation.
                 Some data, like emails, organization ids, etc, may be masked. Masked data should be treated as if it is real data.
-topic check_local_weather:
-    label: "Check Local Weather"
+topic local_weather:
+    label: "Local Weather"
     description: "This topic addresses customer inquiries related to current and forecast weather conditions at Coral Cloud Resort, including temperature, chance of rain, and other weather details."
 
     reasoning:
@@ -123,43 +123,78 @@ topic check_local_weather:
         actions:
             check_weather: @actions.check_weather
                 with dateToCheck=...
-            check_weather: @actions.check_weather
-                with dateToCheck=...
 
     actions:
         check_weather: 
             description: "Fetch the weather forecast for Coral Cloud Resort."
+            label: "Check Weather"
+            target: "apex://CheckWeather"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Checking local weather..."
             inputs:
                 dateToCheck: string
                     label: "Date to Check"
                     description: "Date for which we want to check the temperature. The variable needs to be an Apex Date type with format yyyy-MM-dd."
                     is_required: True
-            target: "apex://CheckWeather"
             outputs:
                 maxTemperature: number
                     label: "Maximum Temperature"
                     description: "Maximum temperature in Celsius at Coral Cloud Resorts location for the provided date"
                     is_displayable: True
-                    # filter_from_agent: True # This should be valid according to the docs.
+                    filter_from_agent: False
                 minTemperature: number
                     label: "Minimum Temperature"
                     description: "Minimum temperature in Celsius at Coral Cloud Resorts location for the provided date"
                     is_displayable: True
-                    # filter_from_agent: True # This should be valid according to the docs.
+                    filter_from_agent: False
                 temperatureDescription: string
                     label: "Temperature Description"
                     description: "Description of temperatures at Coral Cloud Resorts location for the provided date"
                     is_displayable: True
-                    # filter_from_agent: True # This should be valid according to the docs.
+                    filter_from_agent: False
 
-topic share_local_events:
-    label: "Share Local Events"
-    description: "Provide the user with information about local events."
+topic local_events:
+    label: "Local Events"
+    description: "This topic provides details about local events happening outside of Coral Cloud Resort in Port Aurelia. Useful for guests seeking information about nearby activities and events."
 
     reasoning:
         instructions: ->
-            | Provide information about local events based on the user's location and preferences.
-              If location details are missing, ask the user for their city and country.
-              Ensure to include event details such as time, date, and location in your response.
-              If the user requests specific types of events, tailor the response accordingly.
+            | Your job is to provide information ONLY about local events happening in the city of Port Aurelia. 
+              Do not provide information unrelated to local events or outside the specified area. 
+              Do not provide information about resort experiences.
+
+              Ask the guest about their interests if you don't already know them so you can provide information about events
+              that are relevant to their interests. NEVER use the {!@actions.check_events} action UNLESS you explicitly know 
+              what the guest's interests are. If you do not know their interests, ask them first.
+
+              If the guest does not specify a location for when asking about local events, always assume they're referring to
+              the city of Port Aurelia that surrounds Coral Cloud Resort.
+
+              Use the {!@actions.check_events} action to get a list of events that are relevant to the guest.
+
+        actions:
+            check_events: @actions.check_events
+                with Event_Type=...
+    
+    actions:
+        check_events: 
+            description: "Retrieves information about events happening in Port Aurelia, the city surrounding Coral Cloud Resort. Use this when asked about events or activities. Assume that any general requests for information about events or activities is referring to the local area of Coral Cloud Resort and the surrounding city of Port Aurelia."
+            target: "prompt://Get_Event_Info"
+            label: "Check Events"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Checking local events..."
+            inputs:
+                "Input:Event_Type": string
+                    description: "This is the type of event the user is interested in, for example 'movies' or 'learning about art'."
+                    label: "Event Type"
+                    is_required: True
+                    complex_data_type_name: "lightning__textType"
+            outputs:
+                promptResponse: string
+                    description: "The prompt response generated by the action based on the specified prompt and input."
+                    label: "Prompt Response"
+                    complex_data_type_name: "lightning__textType"
+                    is_used_by_planner: True
+                    is_displayable: False
+
 
