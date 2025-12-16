@@ -60,17 +60,13 @@
    ```
 
 ### STEP FOUR: Configure the next-gen **Local Info Agent**
-1. Open the `Local_Info_Agent_NGA` authoring bundle in Agentforce Studio.
-   ```
-   sf org open authoring-bundle --api-name Local_Info_Agent_NGA
-   ```
-2. Open the Agent Details and set **Agent User's Record** to your AFDX TestDrive Agent user.
+1. Open the `Local_Info_Agent_NGA.agent` file, located in `force-app/main/default/aiAuthoringBundles/Local_Info_Agent_NGA`.
 
-   ![Click the Agent Detials item under Settings inside the Next-Gen Agent Builder, then set the Agent User to your AFDX TestDrive user and click "Save"](images/set-local-info-agent-nga-user.png)
+2. Go to **Line 9** and replace the value for `default_agent_user` with the user you created in **STEP THREE**.
 
-3. Retrieve the `Local_Info_Agent_NGA` authoring bundle to update your local Agent Script source file.
+3. Deploy the updated `Local_Info_Agent_NGA` authoring bundle.
    ```
-   sf project retrieve start -m AiAuthoringBundle:Local_Info_Agent_NGA
+   sf project deploy start -m AiAuthoringBundle:Local_Info_Agent_NGA
    ```
 
 ### STEP FIVE: Configure the classic **Local Info Agent**
