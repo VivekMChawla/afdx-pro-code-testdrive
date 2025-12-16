@@ -47,3 +47,6 @@ $RECYCLE.BIN/
 # Ignore TEMP directories
 **/TEMP/
 **/temp/
+
+# Agentforce Vibes debug trace file
+trace.md
