@@ -58,46 +58,48 @@ Top-level blocks MUST appear in this order:
 ```agentscript
 # 1. CONFIG (required) - Agent metadata
 config:
-   agent_name: "DescriptiveName"
-   ...
+    agent_name: "DescriptiveName"
+    ...
 
 # 2. VARIABLES (optional) - State management
 variables:
-   ...
+    ...
 
 # 3. SYSTEM (required) - Global settings
 system:
-   messages:
-      welcome: "..."
-      error: "..."
-   instructions: "..."
+    instructions: "..."
+    messages:
+        welcome: "..."
+        error: "..."
 
 # 4. CONNECTIONS (optional) - Escalation routing
 connections:
-   ...
+    ...
 
 # 5. KNOWLEDGE (optional) - Knowledge base config
 knowledge:
-   ...
+    ...
 
 # 6. LANGUAGE (optional) - Locale settings
 language:
-   ...
+    ...
 
 # 7. START_AGENT (required) - Entry point
 start_agent topic_selector:
-   description: "..."
-   reasoning:
-      actions:
-         ...
+    description: "..."
+    reasoning:
+        instructions: ->
+            ...
+        actions:
+            ...
 
 # 8. TOPICS (at least one required)
 topic my_topic:
-   description: "..."
-   actions:
-      ...
-   reasoning:
-      ...
+    description: "..."
+    reasoning:
+        ...
+    actions:
+        ...
 ```
 
 ---
@@ -108,10 +110,10 @@ topic my_topic:
 
 1. `description` (required)
 2. `system` (optional - for instruction overrides)
-3. `actions` (optional - action definitions)
-4. `before_reasoning` (optional)
-5. `reasoning` (required)
-6. `after_reasoning` (optional)
+3. `before_reasoning` (optional)
+4. `reasoning` (required)
+5. `after_reasoning` (optional)
+6. `actions` (optional - action definitions)
 
 ### Within `reasoning` blocks:
 
@@ -147,14 +149,14 @@ All names (agent_name, topic names, variable names, action names):
 ## Indentation & Comments
 
 - Use spaces (not tabs)
-- Recommended: 3 spaces per level
+- Recommended: 4 spaces per level
 - Maintain consistent indentation throughout
 - Use `#` for comments (Python-style)
 
 ```agentscript
 # This is a comment
 config:
-   agent_name: "My_Agent"  # Inline comment
+    agent_name: "My_Agent"  # Inline comment
 ```
 
 ---
@@ -165,37 +167,41 @@ config:
 
 ```agentscript
 config:
-   # Required
-   agent_name: "DescriptiveName"           # Unique identifier (letters, numbers, underscores)
+    # Required
+    agent_name: "DescriptiveName"           # Unique identifier (letters, numbers, underscores)
 
-   # Optional with defaults
-   agent_label: "DescriptiveName"               # Display name (defaults to normalized agent_name)
-   description: "Agent description"       # What the agent does
-   agent_type: "AgentforceServiceAgent"  # or "AgentforceEmployeeAgent"
-   default_agent_user: "user@example.com" # Required for AgentforceServiceAgent
+    # Optional with defaults
+    agent_label: "DescriptiveName"          # Display name (defaults to normalized agent_name)
+    description: "Agent description"        # What the agent does
+    agent_type: "AgentforceServiceAgent"    # or "AgentforceEmployeeAgent"
+    default_agent_user: "user@example.com"  # Required for AgentforceServiceAgent
 ```
 
 ### Variables Block
 
 ```agentscript
 variables:
-   # MUTABLE variables - agent can read AND write (MUST have default value)
-   my_string: mutable string = ""
-      description: "Description for slot-filling"
+    # MUTABLE variables - agent can read AND write (MUST have default value)
+    my_string: mutable string = ""
+        description: "Description for slot-filling"
 
-   my_number: mutable number = 0
+    my_number: mutable number = 0
 
-   my_bool: mutable boolean = False
+    my_bool: mutable boolean = False  
 
-   my_list: mutable list[string] = []
+    my_list: mutable list[string] = []
 
-   my_object: mutable object = {}
+    my_object: mutable object = {}
 
-   # LINKED variables - read-only from external context (MUST have source, NO default)
-   session_id: linked string
-      description: "The session ID"
-      source: @session.sessionID
+    # LINKED variables - read-only from external context (MUST have source, NO default)
+    session_id: linked string
+        description: "The session ID"
+        source: @session.sessionID
 ```
+
+**Boolean variable values MUST be capitalized:** 
+- ALWAYS `True` or `False`
+- NEVER `true` or `false`
 
 **Type Support Matrix:**
 
@@ -215,75 +221,72 @@ variables:
 | `integer`   | ❌      | ❌     | ✅      |
 | `long`      | ❌      | ❌     | ✅      |
 
-**Boolean values MUST be capitalized:** `True` or `False` (never `true` or `false`)
 
 ### System Block
 
 ```agentscript
 system:
-   messages:
-      welcome: "Welcome message shown when conversation starts"
-      error: "Error message shown when something goes wrong"
+    messages:
+        welcome: "Welcome message shown when conversation starts"
+        error: "Error message shown when something goes wrong"
 
-   # Single-line or multi-line instructions
-   instructions: "You are a helpful assistant."
-
-   # OR multi-line with |
-   instructions:|
-      You are a helpful assistant.
-      Always be polite and professional.
-      Never share sensitive information.
+    # The | (pipe) indicates multiline prompt instructions before/after deterministic logic
+    instructions: ->
+        | You are a helpful assistant.
+          Always be polite and professional.
+          Never share sensitive information.
 ```
 
 ### Topic Block Structure
 
 ```agentscript
 topic my_topic:
-   description: "What this topic handles"
+    description: "What this topic handles"
 
-   # Optional: Override system instructions for this topic
-   system:
-      instructions: "Topic-specific system instructions"
+    # Optional: Override system instructions for this topic
+    system:
+        instructions: -> 
+            | Topic-specific system instructions
 
-   # Action definitions (what the topic CAN call)
-   actions:
-      action_name:
-         description: "What this action does"
-         inputs:
-            param1: string
-               description: "Parameter description"
-            param2: number
-         outputs:
-            result: string
-         target: "flow://MyFlow"
+    # Action definitions (what the topic CAN call)
+    actions:
+        action_name:
+            description: "What this action does"
+            inputs:
+                param1: string
+                description: "Parameter description"
+                param2: number
+            outputs:
+                result: string
+            target: "flow://MyFlow"
 
-   # Optional: Runs before each reasoning cycle
-   before_reasoning:
-      run @actions.some_action
-         with param=@variables.value
-         set @variables.result = @outputs.result
+    # Optional: Runs before each reasoning cycle
+    before_reasoning:
+        run @actions.some_action
+            with param = @variables.value
+            set @variables.result = @outputs.result
 
-   # Required: Reasoning configuration
-   reasoning:
-      instructions:->
-         | Static instructions that always appear
-         if @variables.some_condition:
-            | Conditional instructions
-         | More instructions with template: {!@variables.value}
+    # Required: Reasoning configuration
+    reasoning:
+        instructions:->
+            | Static instructions that always appear
+            if @variables.some_condition:
+                | Conditional instructions
+            | More instructions with template: {!@variables.value}
 
-      # Actions available to the LLM during reasoning
-      actions:
-         action_alias: @actions.action_name
-            description: "Override description"
-            available when @variables.condition == True
-            with param1=...           # LLM slot-fills this
-            with param2=@variables.x  # Bound to variable
-            set @variables.y = @outputs.result
+        # Actions available to the LLM during reasoning
+        actions:
+            action_alias: @actions.action_name
+                description: "Override description"
+                available when @variables.condition == True
+                with param1 = ...           # LLM slot-fills this
+                with param2 = @variables.x  # Bound to variable
+                set @variables.y = @outputs.result
 
-   # Optional: Runs after reasoning completes
-   after_reasoning:
-      if @variables.should_transition:
-         transition to @topic.next_topic
+    # Optional: Runs after reasoning completes
+    after_reasoning:
+        if @variables.should_transition:
+            transition to @topic.next_topic
 ```
 
 ---
@@ -309,25 +312,25 @@ Additional types: `serviceCatalog`, `integrationProcedureAction`, `expressionSet
 
 ```agentscript
 actions:
-   get_customer:
-      description: "Fetches customer information"
-      label: "Get Customer"
-      require_user_confirmation: False
-      include_in_progress_indicator: True
-      progress_indicator_message: "Looking up customer..."
-      inputs:
-         customer_id: string
-            description: "The customer's unique ID"
-            label: "Customer ID"
-            is_required: True
-      outputs:
-         name: string
-            description: "Customer's name"
-         email: string
-            description: "Customer's email"
-            filter_from_agent: False
-            is_displayable: True
-      target: "flow://GetCustomerInfo"
+    get_customer:
+        target: "flow://GetCustomerInfo"
+        description: "Fetches customer information"
+        label: "Get Customer"
+        require_user_confirmation: False
+        include_in_progress_indicator: True
+        progress_indicator_message: "Looking up customer..."
+        inputs:
+            customer_id: string
+                description: "The customer's unique ID"
+                label: "Customer ID"
+                is_required: True
+        outputs:
+            name: string
+                description: "Customer's name"
+            email: string
+                description: "Customer's email"
+                filter_from_agent: False
+                is_displayable: True
 ```
 
 ---
@@ -338,17 +341,17 @@ actions:
 
 ```agentscript
 reasoning:
-   actions:
-      # LLM slot-fills all parameters
-      search: @actions.search_products
-         with query=...
-         with category=...
+    actions:
+        # LLM slot-fills all parameters
+        search: @actions.search_products
+            with query = ...
+            with category = ...
 
-      # Mix of bound and slot-filled
-      lookup: @actions.lookup_customer
-         with customer_id=@variables.current_customer_id  # Bound
-         with include_history=...                          # LLM decides
-         with limit=10                                     # Fixed value
+        # Mix of bound and slot-filled
+        lookup: @actions.lookup_customer
+            with customer_id = @variables.current_customer_id   # Bound
+            with include_history = ...                          # LLM decides
+            with limit = 10                                     # Fixed value
 ```
 
 Use `...` to indicate LLM should extract value from conversation.
@@ -359,19 +362,19 @@ Only work with `@actions.*`, NOT with `@utils.*`:
 
 ```agentscript
 reasoning:
-   actions:
-      process: @actions.process_order
-         with order_id=@variables.order_id
-         # Capture outputs
-         set @variables.status = @outputs.status
-         set @variables.total = @outputs.total
-         # Chain another action
-         run @actions.send_notification
-            with message="Order processed"
-            set @variables.notified = @outputs.sent
-         # Conditional transition
-         if @outputs.needs_review:
-            transition to @topic.review
+    actions:
+        process: @actions.process_order
+            with order_id = @variables.order_id
+            # Capture outputs
+            set @variables.status = @outputs.status
+            set @variables.total = @outputs.total
+            # Chain another action
+            run @actions.send_notification
+                with message = "Order processed"
+                set @variables.notified = @outputs.sent
+            # Conditional transition
+            if @outputs.needs_review:
+                transition to @topic.review
 ```
 
 ### Utility Actions (reasoning.actions only)
@@ -385,26 +388,26 @@ reasoning:
 
 ```agentscript
 reasoning:
-   actions:
-      # Transition to another topic (permanent handoff)
-      go_to_checkout: @utils.transition to @topic.checkout
-         description: "Move to checkout when ready"
-         available when @variables.cart_has_items == True
+    actions:
+        # Transition to another topic (permanent handoff)
+        go_to_checkout: @utils.transition to @topic.checkout
+            description: "Move to checkout when ready"
+            available when @variables.cart_has_items == True
 
-      # Escalate to human
-      get_help: @utils.escalate
-         description: "Connect with a human agent"
-         available when @variables.needs_human == True
+        # Escalate to human
+        get_help: @utils.escalate
+            description: "Connect with a human agent"
+            available when @variables.needs_human == True
 
-      # Delegate to topic (can return)
-      consult_expert: @topic.expert_topic
-         description: "Consult the expert topic"
+        # Delegate to topic (can return)
+        consult_expert: @topic.expert_topic
+            description: "Consult the expert topic"
 
-      # Set variables via LLM
-      collect_info: @utils.setVariables
-         description: "Collect user preferences"
-         with preferred_color=...
-         with budget=...
+        # Set variables via LLM
+        collect_info: @utils.setVariables
+            description: "Collect user preferences"
+            with preferred_color = ...
+            with budget = ...
 ```
 
 ---
@@ -436,16 +439,16 @@ transition to @topic.target_topic
 ### If/Else in Instructions
 
 ```agentscript
-instructions:->
-   | Welcome to the assistant!
+instructions: ->
+    | Welcome to the assistant!
 
-   if @variables.user_name:
-      | Hello, {!@variables.user_name}!
-   else:
-      | What's your name?
+    if @variables.user_name:
+        | Hello, {!@variables.user_name}!
+    else:
+        | What's your name?
 
-   if @variables.is_premium:
-      | As a premium member, you have access to exclusive features.
+    if @variables.is_premium:
+        | As a premium member, you have access to exclusive features.
 ```
 
 Note: `else if` is not currently supported.
@@ -454,27 +457,27 @@ Note: `else if` is not currently supported.
 
 ```agentscript
 before_reasoning:
-   if @variables.not_authenticated:
-      transition to @topic.login
+    if @variables.not_authenticated:
+        transition to @topic.login
 
-   if @variables.session_expired:
-      transition to @topic.session_expired
+    if @variables.session_expired:
+        transition to @topic.session_expired
 
 after_reasoning:
-   if @variables.completed:
-      transition to @topic.summary
+    if @variables.completed:
+        transition to @topic.summary
 ```
 
 ### Conditional Action Availability
 
 ```agentscript
 reasoning:
-   actions:
-      admin_action: @actions.admin_function
-         available when @variables.user_role == "admin"
+    actions:
+        admin_action: @actions.admin_function
+            available when @variables.user_role == "admin"
 
-      premium_feature: @actions.premium_function
-         available when @variables.is_premium == True
+        premium_feature: @actions.premium_function
+            available when @variables.is_premium == True
 ```
 
 ---
@@ -486,10 +489,10 @@ reasoning:
 Use `{!expression}` for string interpolation:
 
 ```agentscript
-instructions:->
-   | Your order total is: {!@variables.total}
-   | Items in cart: {!@variables.cart_items}
-   | Status: {!@variables.status if @variables.status else "pending"}
+instructions: ->
+    | Your order total is: {!@variables.total}
+    | Items in cart: {!@variables.cart_items}
+    | Status: {!@variables.status if @variables.status else "pending"}
 ```
 
 ### Multiline Strings
@@ -497,7 +500,7 @@ instructions:->
 Use `|` for multiline content:
 
 ```agentscript
-instructions:|
+instructions: |
    Line one
    Line two
    Line three
@@ -506,7 +509,7 @@ instructions:|
 Or in procedures:
 
 ```agentscript
-instructions:->
+instructions: ->
    | Line one
      continues here
    | Line two starts fresh
@@ -539,92 +542,92 @@ instructions:->
 
 ```agentscript
 config:
-   agent_name: "Simple_QA"
+    agent_name: "Simple_QA"
 
 system:
-   messages:
-      welcome: "Hello! How can I help you today?"
-      error: "Sorry, something went wrong."
-   instructions: "You are a helpful assistant. Answer questions clearly."
+    messages:
+        welcome: "Hello! How can I help you today?"
+        error: "Sorry, something went wrong."
+    instructions: "You are a helpful assistant. Answer questions clearly."
 
 start_agent topic_selector:
-   description: "Entry point"
-   reasoning:
-      actions:
-         start: @utils.transition to @topic.main
+    description: "Entry point"
+    reasoning:
+        actions:
+            start: @utils.transition to @topic.main
 
 topic main:
-   description: "Answer user questions"
-   reasoning:
-      instructions:->
-         | Help the user with their questions.
+    description: "Answer user questions"
+    reasoning:
+        instructions: ->
+            | Help the user with their questions.
 ```
 
 ### Multi-Topic with Transitions
 
 ```agentscript
 start_agent topic_selector:
-   description: "Route to appropriate topic"
-   reasoning:
-      actions:
-         go_sales: @utils.transition to @topic.sales
-            description: "Handle sales inquiries"
-         go_support: @utils.transition to @topic.support
-            description: "Handle support issues"
+    description: "Route to appropriate topic"
+    reasoning:
+        actions:
+            go_sales: @utils.transition to @topic.sales
+                description: "Handle sales inquiries"
+            go_support: @utils.transition to @topic.support
+                description: "Handle support issues"
 
 topic sales:
-   description: "Handle sales"
-   reasoning:
-      instructions:->
-         | Help the customer with purchasing.
-      actions:
-         need_support: @utils.transition to @topic.support
-            description: "Transfer to support"
+    description: "Handle sales"
+    reasoning:
+        instructions: ->
+            | Help the customer with purchasing.
+        actions:
+            need_support: @utils.transition to @topic.support
+                description: "Transfer to support"
 
 topic support:
-   description: "Handle support"
-   reasoning:
-      instructions:->
-         | Help resolve the customer's issue.
-      actions:
-         need_sales: @utils.transition to @topic.sales
-            description: "Transfer to sales"
+    description: "Handle support"
+    reasoning:
+        instructions: ->
+            | Help resolve the customer's issue.
+        actions:
+            need_sales: @utils.transition to @topic.sales
+                description: "Transfer to sales"
 ```
 
 ### Action with State Management
 
 ```agentscript
 variables:
-   customer_id: mutable string = ""
-   customer_name: mutable string = ""
-   customer_loaded: mutable boolean = False
+    customer_id: mutable string = ""
+    customer_name: mutable string = ""
+    customer_loaded: mutable boolean = False
 
 topic customer_service:
-   description: "Customer service with data loading"
+    description: "Customer service with data loading"
 
-   actions:
-      fetch_customer:
-         description: "Get customer details"
-         inputs:
-            id: string
-         outputs:
-            name: string
-            email: string
-         target: "flow://FetchCustomer"
+    actions:
+        fetch_customer:
+            target: "flow://FetchCustomer"
+            description: "Get customer details"
+            inputs:
+                id: string
+            outputs:
+                name: string
+                email: string
 
-   before_reasoning:
-      if @variables.customer_id and not @variables.customer_loaded:
-         run @actions.fetch_customer
-            with id=@variables.customer_id
-            set @variables.customer_name = @outputs.name
-            set @variables.customer_loaded = True
+    before_reasoning:
+        if @variables.customer_id and not @variables.customer_loaded:
+            run @actions.fetch_customer
+                with id=@variables.customer_id
+                set @variables.customer_name = @outputs.name
+                set @variables.customer_loaded = True
 
-   reasoning:
-      instructions:->
-         if @variables.customer_name:
-            | Hello, {!@variables.customer_name}!
-         else:
-            | Please provide your customer ID.
+    reasoning:
+        instructions:->
+            if @variables.customer_name:
+                | Hello, {!@variables.customer_name}!
+            else:
+                | Please provide your customer ID.
 ```
 
 ---
@@ -645,7 +648,7 @@ Before finalizing an Agent Script, verify:
 - [ ] `...` is used for LLM slot-filling (not as variable default values)
 - [ ] `@utils.transition to` is used in `reasoning.actions`
 - [ ] `transition to` (without `@utils`) is used in directive blocks
-- [ ] Indentation is consistent (3 spaces recommended)
+- [ ] Indentation is consistent (4 spaces recommended)
 - [ ] Names follow naming rules (letters, numbers, underscores; no spaces; start with letter)
 
 ---
@@ -665,7 +668,7 @@ Before finalizing an Agent Script, verify:
 
     # CORRECT in directive blocks
     after_reasoning:
-       transition to @topic.next
+        transition to @topic.next
     ```
 
 2. **Missing default for mutable:**
@@ -713,11 +716,11 @@ Before finalizing an Agent Script, verify:
     ```agentscript
     # WRONG - linked variables get value from source
     session_id: linked string = ""
-       source: @session.sessionID
+        source: @session.sessionID
 
     # CORRECT
     session_id: linked string
-       source: @session.sessionID
+        source: @session.sessionID
     ```
 
 7. **Post-action directives on utilities:**
@@ -725,9 +728,9 @@ Before finalizing an Agent Script, verify:
     ```agentscript
     # WRONG - utilities don't support post-action directives
     go_next: @utils.transition to @topic.next
-       set @variables.navigated = True
+        set @variables.navigated = True
 
     # CORRECT - only @actions support post-action directives
     process: @actions.process_order
-       set @variables.result = @outputs.result
+        set @variables.result = @outputs.result
     ```
