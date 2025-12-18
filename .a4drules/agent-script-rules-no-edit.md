@@ -51,6 +51,21 @@ Before writing Agent Script, work through these questions to understand requirem
 
 ---
 
+## Lifecycle Operations
+
+### Validating Agent Script
+
+ALWAYS run this CLI command after modifying `.agent` files to validate your changes.
+```bash
+sf agent validate authoring-bundle --api-name NAME_OF_AGENT_FILE_WITHOUT_EXTENSION
+```
+
+### Deployment Considerations
+- NEVER deploy `.agent` or `AiAuthoringBundle` metadata unless explicitly asked to do so
+- ALWAYS deploy `ApexClass` metadata when you create or modify `.cls` Apex class files
+
+---
+
 ## File Structure & Block Ordering
 
 Top-level blocks MUST appear in this order:
