@@ -132,7 +132,8 @@ topic local_weather:
             include_in_progress_indicator: True
             progress_indicator_message: "Checking local weather..."
             inputs:
-                dateToCheck: string
+                dateToCheck: object
+                    complex_data_type_name: "lightning__dateType"
                     label: "Date to Check"
                     description: "Date for which we want to check the temperature. The variable needs to be an Apex Date type with format yyyy-MM-dd."
                     is_required: True
