@@ -63,42 +63,42 @@ SfdxFalconDebug.str(`${dbgNs}:sfdxProjectName`, sfdxProjectName);
 /**
  * The alias for DEV scratch orgs used by this SFDX project.
  */
-export const devOrgAlias = `PKG-DEV:${sfdxProjectName}`;
+export const devOrgAlias = `SCRATCH:${sfdxProjectName}`;
 SfdxFalconDebug.str(`${dbgNs}:devOrgAlias`, devOrgAlias);
 /**
  * The name of the scratch org configuration file for DEV environments.
  * Please note that the file must be located in the `config` subdirectory
  * at the root of your SFDX project directory.
  */
-export const devOrgConfigFile = "project-scratch-def.json";
+export const devOrgConfigFile = "afdx-scratch-def.json";
 SfdxFalconDebug.str(`${dbgNs}:devOrgConfigFile`, devOrgConfigFile);
 /**
  * The alias for QA scratch orgs used by this SFDX project.
  */
-export const qaOrgAlias = `PKG-QA:${sfdxProjectName}`;
-SfdxFalconDebug.str(`${dbgNs}:qaOrgAlias`, qaOrgAlias);
+//export const qaOrgAlias = `PKG-QA:${sfdxProjectName}`;
+//SfdxFalconDebug.str(`${dbgNs}:qaOrgAlias`, qaOrgAlias);
 /**
  * The name of the scratch org configuration file for QA environments.
  * Please note that the file must be located in the `config` subdirectory
  * at the root of your SFDX project directory.
  */
-export const qaOrgConfigFile = "qa-scratch-def.json";
-SfdxFalconDebug.str(`${dbgNs}:qaOrgConfigFile`, qaOrgConfigFile);
+//export const qaOrgConfigFile = "qa-scratch-def.json";
+//SfdxFalconDebug.str(`${dbgNs}:qaOrgConfigFile`, qaOrgConfigFile);
 /**
  * The alias for the UAT environment (Trial/Sandbox/Dev) used by this SFDX project.
  */
-export const uatOrgAlias = `PKG-UAT:${sfdxProjectName}`;
-SfdxFalconDebug.str(`${dbgNs}:uatOrgAlias`, uatOrgAlias);
+//export const uatOrgAlias = `PKG-UAT:${sfdxProjectName}`;
+//SfdxFalconDebug.str(`${dbgNs}:uatOrgAlias`, uatOrgAlias);
 /**
  * The JSON object defined by the `packageAliases` key in `sfdx-project.json`.
  */
-export const packageAliases = SfdxUtils.getPackageAliases(sfdxProjectJson);
-SfdxFalconDebug.obj(`${dbgNs}:packageAliases`, packageAliases);
+//export const packageAliases = SfdxUtils.getPackageAliases(sfdxProjectJson);
+//SfdxFalconDebug.obj(`${dbgNs}:packageAliases`, packageAliases);
 /**
  * The list of packages that must be installed before the
  * source in this SFDX project can be deployed to an org.
  */
-export const packageDependencies = SfdxUtils.getPackageDependencies(sfdxProjectJson);
+//export const packageDependencies = SfdxUtils.getPackageDependencies(sfdxProjectJson);
 /**
  * The name of the developer's non-standard browser. Useful for opening development
  * and QA scratch orgs because it makes it easy for developers to distinguish between
@@ -108,7 +108,14 @@ export const alternativeBrowser = "firefox";
 /**
  * The path to the Salesforce Setup page that shows the status of a deployment.
  */
-export const deploymentStatusPage = "lightning/setup/DeployStatus/home"
+export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
+/**
+ * The username of the agent user defined in `data-import/User.json`.
+ * Read at startup so it can be used in task titles and CLI commands.
+ */
+const userJson = fs.readJsonSync('data-import/User.json');
+export const agentUsername = userJson.records[0].Username;
+SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
 
 // Run the process defined in `build-dev-env.mjs`.
 try {
