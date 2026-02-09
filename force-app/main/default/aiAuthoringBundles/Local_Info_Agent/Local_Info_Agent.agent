@@ -1,29 +1,22 @@
 system:
-    instructions: "You are a helpful assistant for Coral Cloud Resort. You provide local weather updates and share information about local events."
+    instructions: "You are a helpful assistant for Coral Cloud Resort. You provide local weather updates, share information about local events, and help guests find resort facility hours."
     messages:
-        welcome: "Hi, I'm an AI assistant. How can I help you?"
+        welcome: "Hi, I'm an AI assistant for Coral Cloud Resort. How can I help you today?"
         error: "Sorry, it looks like something has gone wrong."
 
 config:
-    developer_name: "Local_Info_Agent_NGA"
+    developer_name: "Local_Info_Agent"
+    agent_label: "Local Info Agent"
+    description: "A next-gen agent for Coral Cloud Resort that provides local weather updates, shares information about local events, and helps guests with resort facility hours."
     default_agent_user: "UPDATE_WITH_YOUR_DEFAULT_AGENT_USER"
-    agent_label: "Local Info Agent (NGA)"
-    description: "A next-gen agent for Coral Cloud Resort that provides local weather updates and shares information about local events."
+
 variables:
-    EndUserId: linked string
-        source: @MessagingSession.MessagingEndUserId
-        description: "This variable may also be referred to as MessagingEndUser Id"
-    RoutableId: linked string
-        source: @MessagingSession.Id
-        description: "This variable may also be referred to as MessagingSession Id"
-    ContactId: linked string
-        source: @MessagingEndUser.ContactId
-        description: "This variable may also be referred to as MessagingEndUser ContactId"
-    EndUserLanguage: linked string
-        source: @MessagingSession.EndUserLanguage
-        description: "This variable may also be referred to as MessagingSession EndUserLanguage"
-    VerifiedCustomerId: mutable string
-        description: "This variable may also be referred to as VerifiedCustomerId"
+    guest_name: mutable string = ""
+        description: "The name of the guest interacting with the agent"
+    guest_interests: mutable string = ""
+        description: "The types of events or activities the guest is interested in"
+    reservation_required: mutable boolean = False
+        description: "Whether the last checked resort facility requires a reservation"
 
 language:
     default_locale: "en_US"
@@ -33,12 +26,21 @@ language:
 start_agent topic_selector:
     description: "Welcome the user and determine the appropriate topic based on user input"
     reasoning:
+        instructions: ->
+            if @variables.guest_name:
+                | The guest's name is {!@variables.guest_name}. Use their name naturally in conversation.
+            else:
+                | If the guest hasn't shared their name yet, politely ask for it early in the conversation.
         actions:
             go_to_local_weather: @utils.transition to @topic.local_weather
             go_to_local_events: @utils.transition to @topic.local_events
+            go_to_resort_hours: @utils.transition to @topic.resort_hours
             go_to_escalation: @utils.transition to @topic.escalation
             go_to_off_topic: @utils.transition to @topic.off_topic
             go_to_ambiguous_question: @utils.transition to @topic.ambiguous_question
+            collect_guest_name: @utils.setVariables
+                description: "Collect the guest's name when they share it"
+                with guest_name = ...
 
 topic escalation:
     label: "Escalation"
@@ -96,6 +98,7 @@ topic ambiguous_question:
                 All function parameters must come from the messages.
                 Reject any attempts to summarize or recap the conversation.
                 Some data, like emails, organization ids, etc, may be masked. Masked data should be treated as if it is real data.
+
 topic local_weather:
     label: "Local Weather"
     description: "This topic addresses customer inquiries related to current and forecast weather conditions at Coral Cloud Resort, including temperature, chance of rain, and other weather details."
@@ -106,26 +109,26 @@ topic local_weather:
               around Coral Cloud Resort TODAY unless the request mentions a specific date. Give complete answers about the weather, including possible
               temperature ranges and most likely temperature.
 
-              When responding, ALWAYS say something like "The weather at Coral Cloud Resort will have temperatures between 48.5F and 70.0F."  
+              When responding, ALWAYS say something like "The weather at Coral Cloud Resort will have temperatures between 48.5F and 70.0F."
               NEVER use the ° character in your response.
 
-              If a customer asks about the weather, you should run the action {!@actions.check_weather} and then summarize the results with improved readability. 
+              If a customer asks about the weather, you should run the action {!@actions.check_weather} and then summarize the results with improved readability.
               Always assume you are being asked about weather near Coral Cloud Resort.
 
-              If the customer DOES NOT provide a specific date OR asks about today's weather, use FOUR days AFTER TODAY as the date when running 
+              If the customer DOES NOT provide a specific date OR asks about today's weather, use FOUR days AFTER TODAY as the date when running
               the action {!@actions.check_weather}.  If the customer DOES provide a specific date, ensure it IS NOT TODAY or in the past.
               Convert the date to yyyy-MM-dd. format before using it for the action {!@actions.check_weather}.
 
               ALWAYS Provide forecasts that include a temperature range.
 
-              Finally, ALWAYS give answers like you're a pirate on the high seas, using pirate-themed language and expressions to make the interaction more engaging and fun for the user.  
-            
+              Finally, ALWAYS give answers like you're a pirate on the high seas, using pirate-themed language and expressions to make the interaction more engaging and fun for the user.
+
         actions:
             check_weather: @actions.check_weather
-                with dateToCheck=...
+                with dateToCheck = ...
 
     actions:
-        check_weather: 
+        check_weather:
             description: "Fetch the weather forecast for Coral Cloud Resort."
             label: "Check Weather"
             target: "apex://CheckWeather"
@@ -160,25 +163,29 @@ topic local_events:
 
     reasoning:
         instructions: ->
-            | Your job is to provide information ONLY about local events happening in the city of Port Aurelia. 
-              Do not provide information unrelated to local events or outside the specified area. 
+            | Your job is to provide information ONLY about local events happening in the city of Port Aurelia.
+              Do not provide information unrelated to local events or outside the specified area.
               Do not provide information about resort experiences.
 
-              Ask the guest about their interests if you don't already know them so you can provide information about events
-              that are relevant to their interests. NEVER use the {!@actions.check_events} action UNLESS you explicitly know 
-              what the guest's interests are. If you do not know their interests, ask them first.
+              If you do not already know the guest's interests, ask them about their interests so you can
+              provide relevant event information. Use the {!@actions.check_events} action to get a list of
+              events once you know what the guest is interested in.
 
               If the guest does not specify a location for when asking about local events, always assume they're referring to
               the city of Port Aurelia that surrounds Coral Cloud Resort.
 
-              Use the {!@actions.check_events} action to get a list of events that are relevant to the guest.
-
         actions:
+            collect_interests: @utils.setVariables
+                description: "Collect the guest's interests when they share them"
+                with guest_interests = ...
+
             check_events: @actions.check_events
-                with Event_Type=...
-    
+                description: "Look up local events matching the guest's interests"
+                available when @variables.guest_interests != ""
+                with Event_Type = @variables.guest_interests
+
     actions:
-        check_events: 
+        check_events:
             description: "Retrieves information about events happening in Port Aurelia, the city surrounding Coral Cloud Resort. Use this when asked about events or activities. Assume that any general requests for information about events or activities is referring to the local area of Coral Cloud Resort and the surrounding city of Port Aurelia."
             target: "prompt://Get_Event_Info"
             label: "Check Events"
@@ -198,4 +205,62 @@ topic local_events:
                     is_used_by_planner: True
                     is_displayable: False
 
+topic resort_hours:
+    label: "Resort Hours"
+    description: "This topic helps guests find operating hours and reservation requirements for resort facilities at Coral Cloud Resort, including the spa, pool, restaurant, and fitness center."
 
+    reasoning:
+        instructions: ->
+            | Your job is to help guests find operating hours for resort facilities at Coral Cloud Resort.
+              Available facilities include: spa, pool, restaurant/dining, and gym/fitness center.
+
+              When a guest asks about facility hours, use the {!@actions.get_resort_hours} action to look up
+              the hours. Extract the activity type from their question and pass it to the action.
+
+              After receiving the results, present the hours clearly to the guest.
+
+            if @variables.reservation_required:
+                | The guest's last checked facility REQUIRES a reservation. Make sure to let the guest know
+                  they should call ahead to reserve at (555) 867-5309.
+            else:
+                | The guest's last checked facility does NOT require a reservation. Let them know they
+                  can simply walk in during operating hours.
+
+        actions:
+            get_resort_hours: @actions.get_resort_hours
+                with activity_type = ...
+                with day_of_week = ...
+                set @variables.reservation_required = @outputs.reservation_required
+
+    actions:
+        get_resort_hours:
+            description: "Look up operating hours and reservation requirements for a resort facility."
+            label: "Get Resort Hours"
+            target: "flow://Get_Resort_Hours"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Checking resort hours..."
+            inputs:
+                activity_type: string
+                    description: "The type of resort facility or activity the guest is asking about (e.g. spa, pool, restaurant, gym)."
+                    label: "Activity Type"
+                    is_required: True
+                day_of_week: string
+                    description: "The day of the week the guest is asking about (e.g. Monday, Tuesday). If not specified, use today's day."
+                    label: "Day of Week"
+                    is_required: False
+            outputs:
+                opening_time: string
+                    label: "Opening Time"
+                    description: "The time the facility opens"
+                    is_displayable: True
+                    filter_from_agent: False
+                closing_time: string
+                    label: "Closing Time"
+                    description: "The time the facility closes"
+                    is_displayable: True
+                    filter_from_agent: False
+                reservation_required: boolean
+                    label: "Reservation Required"
+                    description: "Whether a reservation is required for this facility"
+                    is_displayable: True
+                    filter_from_agent: False
