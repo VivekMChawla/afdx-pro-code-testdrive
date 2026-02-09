@@ -50,3 +50,6 @@ $RECYCLE.BIN/
 
 # Agentforce Vibes debug trace file
 trace.md
+
+# AI Tool Configurations
+.claude/
