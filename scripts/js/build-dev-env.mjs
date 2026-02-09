@@ -13,8 +13,8 @@
 // Import External Libraries & Modules
 
 // Import Internal Classes & Functions
-import { alternativeBrowser, deploymentStatusPage, devOrgAlias, devOrgConfigFile, 
-         packageDependencies }  from './toolbelt.mjs';
+import { agentUsername, alternativeBrowser, deploymentStatusPage, devOrgAlias,
+         devOrgConfigFile, packageDependencies }  from './toolbelt.mjs';
 import { TaskRunner }           from './sfdx-falcon/task-runner/index.mjs';
 import { SfdxTask }             from './sfdx-falcon/task-runner/sfdx-task.mjs';
 import { SfdxFalconError }      from './sfdx-falcon/error/index.mjs';
@@ -100,21 +100,31 @@ export async function buildDevEnv() {
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
-  // Assign "All Access" permission sets to the Dev/Test admin user.
+  // Assign admin permissions to the current user.
   tr.addTask(new SfdxTask(
-    `Assign "All Access" perm set`,
-    `sf org assign permset -n All_Access_DEV_TEST`,
+    `Assign "AFDX_User_Perms" to admin user`,
+    `sf org assign permset -n AFDX_User_Perms`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
-  // Run data generation scripts in the new scratch org.
+  // Create the agent user from data-import/User.json.
   tr.addTask(new SfdxTask(
-    `Generate dev/test data`,
-    `sf apex run -f scripts/apex/create-test-data.apex`,
-    {suppressErrors: true}
+    `Create agent user (${agentUsername})`,
+    `sf data import tree --files data-import/User.json`,
+    {suppressErrors: false, renderStdioOnError: true}
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
+  // Assign agent permissions to the agent user.
+  tr.addTask(new SfdxTask(
+    `Assign "AFDX_Agent_Perms" to ${agentUsername}`,
+    `sf org assign permset -n AFDX_Agent_Perms -b ${agentUsername}`,
+    {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
