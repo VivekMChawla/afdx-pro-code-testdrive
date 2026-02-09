@@ -9,6 +9,6 @@
     <permissionSets>force__CopilotSalesforceUser</permissionSets>
     <permissionSets>force__EinsteinGPTPromptTemplateManager</permissionSets>
     <permissionSets>force__EinsteinGPTPromptTemplateUser</permissionSets>
-    <permissionSets>force__ServiceUserPsl</permissionSets>
+
     <status>Updated</status>
 </PermissionSetGroup>
