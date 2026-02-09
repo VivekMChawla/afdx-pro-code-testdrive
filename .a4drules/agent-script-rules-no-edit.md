@@ -71,21 +71,21 @@ sf agent validate authoring-bundle --api-name NAME_OF_AGENT_FILE_WITHOUT_EXTENSI
 Top-level blocks MUST appear in this order:
 
 ```agentscript
-# 1. CONFIG (required) - Agent metadata
-config:
-    agent_name: "DescriptiveName"
-    ...
-
-# 2. VARIABLES (optional) - State management
-variables:
-    ...
-
-# 3. SYSTEM (required) - Global settings
+# 1. SYSTEM (required) - Global instructions and messages
 system:
     instructions: "..."
     messages:
         welcome: "..."
         error: "..."
+
+# 2. CONFIG (required) - Agent metadata
+config:
+    agent_name: "DescriptiveName"
+    ...
+
+# 3. VARIABLES (optional) - State management
+variables:
+    ...
 
 # 4. CONNECTIONS (optional) - Escalation routing
 connections:
