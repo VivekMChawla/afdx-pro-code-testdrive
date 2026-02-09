@@ -110,11 +110,11 @@ export const alternativeBrowser = "firefox";
  */
 export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
 /**
- * The username of the agent user defined in `data-import/User.json`.
- * Read at startup so it can be used in task titles and CLI commands.
+ * A unique username for the agent user, generated at startup.
+ * Used in task titles, CLI commands, and written to `data-import/User.json`
+ * before the agent user is created.
  */
-const userJson = fs.readJsonSync('data-import/User.json');
-export const agentUsername = userJson.records[0].Username;
+export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@scratch.org');
 SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
 
 // Run the process defined in `build-dev-env.mjs`.

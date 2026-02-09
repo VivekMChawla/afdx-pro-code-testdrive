@@ -11,10 +11,11 @@
  */
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
 // Import External Libraries & Modules
+import { fs }                   from "zx";
 
 // Import Internal Classes & Functions
 import { agentUsername, alternativeBrowser, deploymentStatusPage, devOrgAlias,
-         devOrgConfigFile, packageDependencies }  from './toolbelt.mjs';
+         devOrgConfigFile }     from './toolbelt.mjs';
 import { TaskRunner }           from './sfdx-falcon/task-runner/index.mjs';
 import { SfdxTask }             from './sfdx-falcon/task-runner/sfdx-task.mjs';
 import { SfdxFalconError }      from './sfdx-falcon/error/index.mjs';
@@ -106,6 +107,35 @@ export async function buildDevEnv() {
     `sf org assign permset -n AFDX_User_Perms`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
+  // Query for the Einstein Agent User profile ID.
+  tr.addTask(new SfdxTask(
+    `Query for Einstein Agent User profile ID`,
+    `sf data query -q "SELECT Id FROM Profile WHERE Name='Einstein Agent User'"`,
+    {suppressErrors: false, renderStdioOnError: true,
+      onSuccess: async (processPromise, ctx, task) => {
+        ctx.profileId = processPromise.stdoutJson.result.records[0].Id;
+        task.title = `Query for Einstein Agent User profile ID (${ctx.profileId})`;
+      }
+    }
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
+  // Update data-import/User.json with the profile ID and a unique username.
+  tr.addTask({
+    title: `Update User.json (${agentUsername})`,
+    task: async (ctx, task) => {
+      const userJson = fs.readJsonSync('data-import/User.json');
+      userJson.records[0].ProfileId = ctx.profileId;
+      userJson.records[0].Username = agentUsername;
+      fs.writeJsonSync('data-import/User.json', userJson, { spaces: 4 });
+    }
+  });
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
