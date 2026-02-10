@@ -71,6 +71,18 @@ export async function buildDevEnv() {
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
+  // Assign Prompt Template perm sets to the scratch org user before deployment.
+  // Without these, AiAuthoringBundle deployment fails validation because it can't
+  // "see" the GenAiPromptTemplate metadata even though it's already in the org.
+  tr.addTask(new SfdxTask(
+    `Assign Prompt Template perm sets`,
+    `sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser`,
+    {suppressErrors: false, renderStdioOnError: true}
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
   // Open the "Deployment Status" page in the developer's non-default browser.
   tr.addTask(new SfdxTask(
     `Open the Deployment Status page`,
@@ -80,22 +92,12 @@ export async function buildDevEnv() {
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
-  /*
-  // Install package dependendencies in the new scratch org.
-  //
-  //
-  // TODO: Add implementation
-  //
-  //
-  //*/
-  //───────────────────────────────────────────────────────────────────────────────────────────────┘
-  //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
   // Deploy project source to the new scratch org.
   tr.addTask(new SfdxTask(
     `Deploy project source`,
     `sf project deploy start`,
-    {suppressErrors: false, renderStdioOnError: false}
+    {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
