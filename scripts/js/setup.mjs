@@ -11,6 +11,7 @@
  */
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
 import { $, argv, cd, chalk, fs, question, path } from "zx";
+import { buildOrgEnv }                 from './build-org-env.mjs';
 import { buildScratchEnv }             from './build-scratch-env.mjs';
 import { SfdxFalconDebug }            from './sfdx-falcon/debug/index.mjs';
 import { SfdxFalconError }            from './sfdx-falcon/error/index.mjs';
@@ -116,13 +117,16 @@ export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
 export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@scratch.org');
 SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
 
-// Run the process defined in `build-scratch-env.mjs`.
+// Route to the appropriate build script based on the --scratch-org flag.
+// Default: build-org-env.mjs (for DE orgs, sandboxes, etc.)
+// With --scratch-org: build-scratch-env.mjs (creates and configures a new scratch org)
+const buildFn = argv['scratch-org'] ? buildScratchEnv : buildOrgEnv;
 try {
-  await buildScratchEnv();
+  await buildFn();
 } catch (buildError) {
   // Something failed.
   console.log(SfdxFalconError.renderError(buildError));
   process.exit(1);
 }
-// Everything succeded.
+// Everything succeeded.
 process.exit(0);
