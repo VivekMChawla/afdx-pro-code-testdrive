@@ -48,10 +48,22 @@ export async function buildOrgEnv() {
 
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
-  // Deploy project source to the org using the manifest.
+  // Assign Prompt Template perm sets before deployment.
+  // Without these, AiAuthoringBundle deployment fails validation because it can't
+  // "see" the GenAiPromptTemplate metadata even though it's already in the org.
+  tr.addTask(new SfdxTask(
+    `Assign Prompt Template perm sets`,
+    `sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser`,
+    {suppressErrors: false, renderStdioOnError: true}
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
+  // Deploy project source to the org.
   tr.addTask(new SfdxTask(
     `Deploy project source`,
-    `sf project deploy start --manifest manifests/Deploy.package.xml`,
+    `sf project deploy start --source-dir force-app`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/

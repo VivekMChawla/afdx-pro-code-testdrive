@@ -35,7 +35,7 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
    ```
 4. Deploy the project.
    ```
-   sf project deploy start --manifest manifests/Deploy.package.xml
+   sf project deploy start --source-dir force-app
    ```
 
 ### STEP THREE: Assign permissions and create the Agent User
