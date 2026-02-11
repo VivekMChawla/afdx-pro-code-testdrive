@@ -9,6 +9,7 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
 - A **Salesforce Developer Edition (DE)** org *(free at [developer.salesforce.com/signup](https://developer.salesforce.com/signup))*
 - **Salesforce CLI** (`sf`) installed *(see [developer.salesforce.com/tools/sfdxcli](https://developer.salesforce.com/tools/sfdxcli))*
 - **VS Code** with the **Salesforce Extensions** pack and the **Agentforce DX** extension
+- **Node.js** (v20 or later) — required by the setup script *(if you already have the Salesforce CLI installed, you have Node.js)*
 
 ## Setup
 
@@ -20,54 +21,54 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
      - Reload your browser tab after enabling Einstein so Agentforce becomes available in your Setup tree.
    - **Agentforce** *(Setup > Einstein > Einstein Generative AI > Agentforce Studio > Agentforce Agents)*
 
-### STEP TWO: Clone and deploy the project
+### STEP TWO: Clone and open in VS Code
 1. Clone this repo.
    ```
-   git clone https://github.com/VivekMChawla/afdx-pro-code-testdrive.git
+   git clone https://github.com/forcedotcom/afdx-pro-code-testdrive.git
    ```
-2. Navigate into the cloned folder.
-   ```
-   cd afdx-pro-code-testdrive
-   ```
-3. Authenticate the Salesforce CLI to your DE org.
-   ```
-   sf org login web -s -a AFDX-Testdrive
-   ```
-4. Deploy the project.
-   ```
-   sf project deploy start --source-dir force-app
-   ```
+2. Open the `afdx-pro-code-testdrive` folder in VS Code.
+3. Open the **integrated terminal** in VS Code. *(Navigate to the top menu and select View > Terminal)*
 
-### STEP THREE: Assign permissions and create the Agent User
-1. Assign AFDX permissions to yourself.
-   ```
-   sf org assign permset -n AFDX_User_Perms
-   ```
-2. Get the ID of the **Einstein Agent User** profile.
-   ```
-   sf data query -q "SELECT Id FROM Profile WHERE Name='Einstein Agent User'"
-   ```
-3. Update `data-import/User.json`:
-   ![Update line 8 with the Einstein Agent User profile ID from the previous step. Update line 9 with something unique to you to ensure a globally unique username is specified.](images/agent-user-data-import.png)
-4. Create the agent user.
-   ```
-   sf data import tree --files data-import/User.json
-   ```
-5. Assign permissions to the agent user.
-   ```
-   sf org assign permset -n AFDX_Agent_Perms -b USERNAME_OF_YOUR_AGENT_USER
-   ```
+✴️ All remaining commands should be run from the VS Code integrated terminal.
 
-### STEP FOUR: Configure and deploy the `Local_Info_Agent` authoring bundle
+### STEP THREE: Connect to your org
+Authenticate the Salesforce CLI to your DE org.
+```
+sf org login web -s -a AFDX-Testdrive
+```
+
+### STEP FOUR: Run the setup script
+The setup script deploys source, assigns permissions, and creates a dedicated **agent user**. Agentforce agents run as a dedicated user with the **Einstein Agent User** profile — this user is the runtime identity for your agent.
+
+Run the setup script from the VS Code integrated terminal:
+
+**macOS / Linux / WSL:**
+```
+./setup
+```
+**Windows (Command Prompt):**
+```
+setup.cmd
+```
+
+When the script finishes, note the **agent username** in the output. It appears in the task titled `Create agent user (afdx-agent-XXXXXXXX@testdrive.org)`. You'll need this username in the next step.
+
+> **💡Tip:** You can also find the agent username by opening `data-import/User.json` and checking the `Username` field on line 9.
+
+### STEP FIVE: Configure and deploy the agent
 1. Open `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`.
-2. Replace the value on **Line 11** for `default_agent_user` with the username of the agent user you created in **STEP THREE**.
-3. Deploy the updated agent.
+2. Replace the value on **line 11** (`default_agent_user`) with the agent username from the previous step.
+3. Deploy the updated agent from the VS Code integrated terminal:
    ```
    sf project deploy start -m AiAuthoringBundle:Local_Info_Agent
    ```
 
-### STEP FIVE: Preview the agent
-1. Open the Local Info Agent in Agent Builder.
+This is your first look at **Agent Script** — the file you just edited defines the entire agent (its topics, reasoning instructions, variables, and actions) in a single readable script.
+
+## What to Do Next
+
+### Preview the agent
+1. Open the Local Info Agent in Agent Builder:
    ```
    sf org open agent --api-name Local_Info_Agent
    ```
@@ -75,6 +76,16 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
    - *"What's the weather like today?"* — triggers the **Apex** action
    - *"I'm interested in movies. What's showing nearby?"* — triggers the **Prompt Template** action
    - *"When does the spa open?"* — triggers the **Flow** action
+
+### Learning exercise
+Open `Local_Info_Agent.agent` in VS Code and look at the `local_weather` topic. Notice the pirate-themed instruction at the end of the reasoning block. This single line controls how the agent responds — try changing it:
+
+1. Preview the agent and ask about the weather — notice the pirate-themed response.
+2. Remove the pirate instruction from the Agent Script.
+3. Redeploy the agent: `sf project deploy start -m AiAuthoringBundle:Local_Info_Agent`
+4. Preview again and ask the same question — the response should now be in a normal tone.
+
+This demonstrates how Agent Script reasoning instructions directly control agent behavior.
 
 ## What's Inside
 
@@ -91,13 +102,31 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
 | `AFDX_Agent_Perms` | Permission Set Group | Bundles agent user permissions for assignment |
 | `AFDX_User_Perms` | Permission Set Group | Bundles admin user permissions for assignment |
 
-## Learning Exercise
+## Manual Setup
 
-Open `Local_Info_Agent.agent` and look at the `local_weather` topic. Notice the pirate-themed instruction at the end of the reasoning block. Try the following:
+If the setup script fails (e.g. due to a firewall blocking npm), you can run the equivalent steps manually from the VS Code integrated terminal. Start from **STEP THREE** above, then continue with the steps below.
 
-1. Preview the agent and ask about the weather — notice the pirate-themed response.
-2. Remove the pirate instruction from the Agent Script.
-3. Redeploy the agent: `sf project deploy start -m AiAuthoringBundle:Local_Info_Agent`
-4. Preview again and ask the same question — the response should now be in a normal tone.
+**Deploy and assign permissions:**
+```
+sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser
+sf project deploy start --source-dir force-app
+sf org assign permset -n AFDX_User_Perms
+```
 
-This demonstrates how Agent Script reasoning instructions directly control agent behavior.
+**Create the agent user:**
+
+Agentforce agents run as a dedicated user with the **Einstein Agent User** profile. Query for the profile ID, update `data-import/User.json` with the results, then import the user.
+
+1. Get the profile ID:
+   ```
+   sf data query -q "SELECT Id FROM Profile WHERE Name='Einstein Agent User'"
+   ```
+2. Open `data-import/User.json`. Replace the `ProfileId` value on line 8 with the ID from the query. Replace `SOMETHING_UNIQUE` in the `Username` value on line 9 with something unique to you (e.g. your name).
+   ![Update User.json with the profile ID and a unique username.](images/agent-user-data-import.png)
+3. Import the user and assign permissions:
+   ```
+   sf data import tree --files data-import/User.json
+   sf org assign permset -n AFDX_Agent_Perms -b USERNAME_OF_YOUR_AGENT_USER
+   ```
+
+After completing these steps, continue with **STEP FIVE** above.
