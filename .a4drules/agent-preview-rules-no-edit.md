@@ -41,7 +41,7 @@ Use exactly one of these mutually exclusive flags:
 
 ---
 
-## Programmatic Workflow: Start → Send → End
+## Programmatic Workflow
 
 ALWAYS pass `--json` when calling from an AI assistant or script.
 
@@ -53,7 +53,7 @@ sf agent preview start --authoring-bundle <BUNDLE_NAME> --json
 
 Returns a session ID. ALWAYS capture this value — you need it for every subsequent command.
 
-### Send Utterances (Repeat for Multi-Turn)
+### Send Utterances
 
 ```bash
 sf agent preview send --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> -u "<MESSAGE>" --json
@@ -61,15 +61,17 @@ sf agent preview send --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID>
 
 - ALWAYS pass `--session-id` with the value returned by `start`. Multiple agents may have concurrent sessions against the same agent.
 - You MUST pass the same `--authoring-bundle` or `--api-name` used in `start`.
+- You can send multiple utterances across a session. The session stays open between sends — you do NOT need to end and restart between turns. Keep the session open if the user may want additional turns after reviewing results.
 
-### End the Session
+### End a Session (Optional)
 
 ```bash
 sf agent preview end --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> --json
 ```
 
 - ALWAYS pass `--session-id` with the value returned by `start`.
-- ALWAYS end sessions when done — abandoned sessions consume server resources.
+- `end` returns the location of session trace logs. Call it when you need the trace files or when the conversation is fully complete.
+- Do NOT end a session preemptively. If the user may ask follow-up questions, keep the session open. Sessions time out automatically on the server.
 
 ---
 
