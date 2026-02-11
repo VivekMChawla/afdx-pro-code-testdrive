@@ -137,17 +137,6 @@ topic my_topic:
 
 ---
 
-## Required Elements
-
-Every Agent Script MUST have:
-
-- `config` block with `agent_name`
-- `system` block with `messages.welcome`, `messages.error`, and `instructions`
-- `start_agent` block with `description` and `reasoning.actions`
-- At least one `topic` block with `description` and `reasoning`
-
----
-
 ## Naming Rules
 
 All names (agent_name, topic names, variable names, action names):
@@ -163,20 +152,27 @@ All names (agent_name, topic names, variable names, action names):
 
 ## Indentation & Comments
 
-- Use spaces (not tabs)
-- Recommended: 4 spaces per level
-- Maintain consistent indentation throughout
-- Use `#` for comments (Python-style)
-
-```agentscript
-# This is a comment
-config:
-    agent_name: "My_Agent"  # Inline comment
-```
+- Use 4 spaces per indent level (NEVER tabs)
+- Use `#` for comments (standalone or inline)
 
 ---
 
 ## Block Reference
+
+### System Block
+
+```agentscript
+system:
+    messages:
+        welcome: "Welcome message shown when conversation starts"
+        error: "Error message shown when something goes wrong"
+
+    # The | (pipe) indicates multiline prompt instructions before/after deterministic logic
+    instructions: ->
+        | You are a helpful assistant.
+          Always be polite and professional.
+          Never share sensitive information.
+```
 
 ### Config Block
 
@@ -202,7 +198,7 @@ variables:
 
     my_number: mutable number = 0
 
-    my_bool: mutable boolean = False  
+    my_bool: mutable boolean = False
 
     my_list: mutable list[string] = []
 
@@ -214,43 +210,16 @@ variables:
         source: @session.sessionID
 ```
 
-**Boolean variable values MUST be capitalized:** 
+**Boolean variable values MUST be capitalized:**
 - ALWAYS `True` or `False`
 - NEVER `true` or `false`
 
-**Type Support Matrix:**
+**Valid Types by Context:**
 
-| Type        | Mutable | Linked | Actions |
-| ----------- | ------- | ------ | ------- |
-| `string`    | ✅      | ✅     | ✅      |
-| `number`    | ✅      | ✅     | ✅      |
-| `boolean`   | ✅      | ✅     | ✅      |
-| `object`    | ✅      | ❌     | ✅      |
-| `date`      | ✅      | ✅     | ✅      |
-| `timestamp` | ✅      | ✅     | ✅      |
-| `currency`  | ✅      | ✅     | ✅      |
-| `id`        | ✅      | ✅     | ✅      |
-| `list[T]`   | ✅      | ❌     | ✅      |
-| `datetime`  | ❌      | ❌     | ✅      |
-| `time`      | ❌      | ❌     | ✅      |
-| `integer`   | ❌      | ❌     | ✅      |
-| `long`      | ❌      | ❌     | ✅      |
+- **Mutable variable types:** `string`, `number`, `boolean`, `object`, `date`, `timestamp`, `currency`, `id`, `list[T]`
+- **Linked variable types:** `string`, `number`, `boolean`, `date`, `timestamp`, `currency`, `id`
+- **Action parameter types:** `string`, `number`, `boolean`, `object`, `date`, `timestamp`, `currency`, `id`, `list[T]`, `datetime`, `time`, `integer`, `long`
 
-
-### System Block
-
-```agentscript
-system:
-    messages:
-        welcome: "Welcome message shown when conversation starts"
-        error: "Error message shown when something goes wrong"
-
-    # The | (pipe) indicates multiline prompt instructions before/after deterministic logic
-    instructions: ->
-        | You are a helpful assistant.
-          Always be polite and professional.
-          Never share sensitive information.
-```
 
 ### Topic Block Structure
 
@@ -310,18 +279,18 @@ topic my_topic:
 
 ### Target Formats
 
-| Short                     | Long                      | Use Case         |
-| ------------------------- | ------------------------- | ---------------- |
-| `flow`                    | `flow`                    | Salesforce Flow  |
-| `apex`                    | `apex`                    | Apex Class       |
-| `prompt`                  | `generatePromptResponse`  | Prompt Template  |
-| `standardInvocableAction` | `standardInvocableAction` | Built-in Actions |
-| `externalService`         | `externalService`         | External APIs    |
-| `quickAction`             | `quickAction`             | Quick Actions    |
-| `api`                     | `api`                     | REST API         |
-| `apexRest`                | `apexRest`                | Apex REST        |
+Use the format `"type://Name"` in the `target` field. Common target types:
 
-Additional types: `serviceCatalog`, `integrationProcedureAction`, `expressionSet`, `cdpMlPrediction`, `externalConnector`, `slack`, `namedQuery`, `auraEnabled`, `mcpTool`, `retriever`
+- `flow` — Salesforce Flow (e.g., `"flow://GetCustomerInfo"`)
+- `apex` — Apex Class (e.g., `"apex://CheckWeather"`)
+- `prompt` — Prompt Template (e.g., `"prompt://Get_Event_Info"`). Long form: `generatePromptResponse`
+- `standardInvocableAction` — Built-in Actions
+- `externalService` — External APIs
+- `quickAction` — Quick Actions
+- `api` — REST API
+- `apexRest` — Apex REST
+
+Additional target types: `serviceCatalog`, `integrationProcedureAction`, `expressionSet`, `cdpMlPrediction`, `externalConnector`, `slack`, `namedQuery`, `auraEnabled`, `mcpTool`, `retriever`
 
 ### Full Action Syntax
 
@@ -394,12 +363,10 @@ reasoning:
 
 ### Utility Actions (reasoning.actions only)
 
-| Utility                | Purpose               | Syntax                                          |
-| ---------------------- | --------------------- | ----------------------------------------------- |
-| `@utils.escalate`      | Escalate to human     | `name: @utils.escalate`                         |
-| `@utils.transition to` | Permanent handoff     | `name: @utils.transition to @topic.X`           |
-| `@utils.setVariables`  | Set variables via LLM | `name: @utils.setVariables` with `with var=...` |
-| `@topic.<name>`        | Delegate (can return) | `name: @topic.X`                                |
+- `@utils.escalate` — Escalate to a human agent. Syntax: `name: @utils.escalate`
+- `@utils.transition to` — Permanent handoff to another topic. Syntax: `name: @utils.transition to @topic.X`
+- `@utils.setVariables` — Set variables via LLM slot-filling. Syntax: `name: @utils.setVariables` with `with var = ...`
+- `@topic.<name>` — Delegate to another topic (can return). Syntax: `name: @topic.X`
 
 ```agentscript
 reasoning:
@@ -532,13 +499,11 @@ instructions: ->
 
 ### Supported Operators
 
-| Category    | Operators                                        |
-| ----------- | ------------------------------------------------ |
-| Comparison  | `==`, `!=`, `<`, `<=`, `>`, `>=`, `is`, `is not` |
-| Logical     | `and`, `or`, `not`                               |
-| Arithmetic  | `+`, `-` (no `*`, `/`, `%`)                      |
-| Access      | `.` (property), `[]` (index)                     |
-| Conditional | `x if condition else y`                          |
+- Comparison operators: `==`, `!=`, `<`, `<=`, `>`, `>=`, `is`, `is not`
+- Logical operators: `and`, `or`, `not`
+- Arithmetic operators: `+`, `-` only (no `*`, `/`, `%`)
+- Access operators: `.` (property access), `[]` (index access)
+- Conditional expressions: `x if condition else y`
 
 ### Resource References
 
@@ -551,98 +516,97 @@ instructions: ->
 
 ---
 
-## Common Patterns
+## Comprehensive Example
 
-### Simple Q&A Agent
+This example demonstrates all block types: system, config, variables (mutable + linked), start_agent, multiple topics with transitions, action definitions with inputs/outputs, before_reasoning, reasoning with conditionals and actions, and after_reasoning.
 
 ```agentscript
-config:
-    agent_name: "Simple_QA"
-
 system:
+    instructions: "You are a helpful customer service assistant. Be professional and concise."
     messages:
         welcome: "Hello! How can I help you today?"
-        error: "Sorry, something went wrong."
-    instructions: "You are a helpful assistant. Answer questions clearly."
+        error: "Sorry, something went wrong. Please try again."
 
-start_agent topic_selector:
-    description: "Entry point"
-    reasoning:
-        actions:
-            start: @utils.transition to @topic.main
+config:
+    agent_name: "Customer_Service_Agent"
+    agent_type: "AgentforceServiceAgent"
+    default_agent_user: "serviceuser@example.com"
+    description: "Handles customer inquiries about orders and accounts."
 
-topic main:
-    description: "Answer user questions"
-    reasoning:
-        instructions: ->
-            | Help the user with their questions.
-```
-
-### Multi-Topic with Transitions
-
-```agentscript
-start_agent topic_selector:
-    description: "Route to appropriate topic"
-    reasoning:
-        actions:
-            go_sales: @utils.transition to @topic.sales
-                description: "Handle sales inquiries"
-            go_support: @utils.transition to @topic.support
-                description: "Handle support issues"
-
-topic sales:
-    description: "Handle sales"
-    reasoning:
-        instructions: ->
-            | Help the customer with purchasing.
-        actions:
-            need_support: @utils.transition to @topic.support
-                description: "Transfer to support"
-
-topic support:
-    description: "Handle support"
-    reasoning:
-        instructions: ->
-            | Help resolve the customer's issue.
-        actions:
-            need_sales: @utils.transition to @topic.sales
-                description: "Transfer to sales"
-```
-
-### Action with State Management
-
-```agentscript
 variables:
-    customer_id: mutable string = ""
     customer_name: mutable string = ""
-    customer_loaded: mutable boolean = False
+        description: "The customer's name"
+    EndUserId: linked string
+        source: @MessagingSession.MessagingEndUserId
+        description: "This variable may also be referred to as MessagingEndUser Id"
 
-topic customer_service:
-    description: "Customer service with data loading"
+start_agent topic_selector:
+    description: "Route the customer to the appropriate topic"
+    reasoning:
+        actions:
+            go_order_info: @utils.transition to @topic.order_info
+                description: "Route to order info when the customer asks about an order"
+            go_account_help: @utils.transition to @topic.account_help
+                description: "Route to account help for account-related questions"
 
-    actions:
-        fetch_customer:
-            target: "flow://FetchCustomer"
-            description: "Get customer details"
-            inputs:
-                id: string
-            outputs:
-                name: string
-                email: string
+topic order_info:
+    description: "Look up order status and provide updates to the customer"
 
     before_reasoning:
-        if @variables.customer_id and not @variables.customer_loaded:
-            run @actions.fetch_customer
-                with id=@variables.customer_id
-                set @variables.customer_name = @outputs.name
-                set @variables.customer_loaded = True
+        if @variables.customer_name:
+            run @actions.fetch_order
+                with customer_id = @variables.customer_name
 
     reasoning:
-        instructions:->
+        instructions: ->
             if @variables.customer_name:
-                | Hello, {!@variables.customer_name}!
+                | The customer's name is {!@variables.customer_name}.
             else:
-                | Please provide your customer ID.
+                | Ask the customer for their name.
+            | Help the customer with their order inquiry.
+
+        actions:
+            check_order: @actions.fetch_order
+                description: "Look up order status by customer ID"
+                with customer_id = ...
+
+            go_account: @utils.transition to @topic.account_help
+                description: "Switch to account help if the customer asks about their account"
+
+    after_reasoning:
+        if @variables.customer_name:
+            transition to @topic.account_help
+
+    actions:
+        fetch_order:
+            target: "flow://GetOrderStatus"
+            description: "Fetch the status of a customer's order"
+            label: "Get Order Status"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Looking up your order..."
+            inputs:
+                customer_id: string
+                    description: "The customer's unique identifier"
+                    is_required: True
+            outputs:
+                status: string
+                    description: "Current order status"
+                    is_displayable: True
+                    filter_from_agent: False
+
+topic account_help:
+    description: "Help customers with account-related questions"
+
+    reasoning:
+        instructions: ->
+            | Help the customer with their account questions.
+              You can assist with password resets, profile updates, and billing inquiries.
+
+        actions:
+            go_order: @utils.transition to @topic.order_info
+                description: "Switch to order info if the customer asks about an order"
+            escalate: @utils.escalate
+                description: "Connect with a human agent if the customer requests it"
 ```
 
 ---
@@ -651,7 +615,7 @@ topic customer_service:
 
 Before finalizing an Agent Script, verify:
 
-- [ ] Block ordering is correct (config → variables → system → connections → knowledge → language → start_agent → topics)
+- [ ] Block ordering is correct (system → config → variables → connections → knowledge → language → start_agent → topics)
 - [ ] `config` block has `agent_name` (and `default_agent_user` for service agents)
 - [ ] `system` block has `messages.welcome`, `messages.error`, and `instructions`
 - [ ] `start_agent` block exists with at least one transition action
