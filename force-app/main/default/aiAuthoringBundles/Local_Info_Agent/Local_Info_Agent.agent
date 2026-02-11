@@ -115,8 +115,8 @@ topic local_weather:
               If a customer asks about the weather, you should run the action {!@actions.check_weather} and then summarize the results with improved readability.
               Always assume you are being asked about weather near Coral Cloud Resort.
 
-              If the customer DOES NOT provide a specific date OR asks about today's weather, use FOUR days AFTER TODAY as the date when running
-              the action {!@actions.check_weather}.  If the customer DOES provide a specific date, ensure it IS NOT TODAY or in the past.
+              If the customer DOES NOT provide a specific date OR asks about today's weather, use today's date when running
+              the action {!@actions.check_weather}.  If the customer DOES provide a specific date, ensure it IS NOT in the past.
               Convert the date to yyyy-MM-dd. format before using it for the action {!@actions.check_weather}.
 
               ALWAYS Provide forecasts that include a temperature range.
