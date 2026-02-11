@@ -1,5 +1,4 @@
 #!/bin/bash
 #
-# Proxy for the Node.js-based SFDX Toolbelt.
-# TODO: Figure out how to forward ALL arguments to toolbelt.mjs.
-./scripts/js/toolbelt.mjs $1 $2
+# Proxy for the Node.js-based setup script.
+./scripts/js/setup.mjs "$@"

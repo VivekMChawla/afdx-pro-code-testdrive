@@ -1,11 +1,11 @@
 //─────────────────────────────────────────────────────────────────────────────────────────────────┐
 /**
- * @file          sfdx-falcon/build-dev-env.mjs
+ * @file          build-scratch-env.mjs
  * @copyright     Vivek M. Chawla - 2023
  * @author        Vivek M. Chawla <@VivekMChawla>
- * @summary       Implements a series of CLI commands that build the DEV environment for this project.
- * @description   When an SFDX Toolbelt users seclect the option to build a DEV environment, the 
- *                `buildDevEnv()` function is called to perform the teardown/setup actions.
+ * @summary       Implements a series of CLI commands that build a scratch org environment.
+ * @description   Creates a new scratch org, deploys source, and configures users and permissions
+ *                for the AFDX Pro-Code Testdrive project.
  * @version       1.0.0
  * @license       BSD-3-Clause
  */
@@ -15,35 +15,33 @@ import { fs }                   from "zx";
 
 // Import Internal Classes & Functions
 import { agentUsername, alternativeBrowser, deploymentStatusPage, devOrgAlias,
-         devOrgConfigFile }     from './toolbelt.mjs';
+         devOrgConfigFile }     from './setup.mjs';
 import { TaskRunner }           from './sfdx-falcon/task-runner/index.mjs';
 import { SfdxTask }             from './sfdx-falcon/task-runner/sfdx-task.mjs';
 import { SfdxFalconError }      from './sfdx-falcon/error/index.mjs';
 import { SfdxFalconDebug }      from './sfdx-falcon/debug/index.mjs';
 
 // Set the File Local Debug Namespace
-const dbgNs = 'BuildDevEnv';
+const dbgNs = 'BuildScratchEnv';
 SfdxFalconDebug.msg(`${dbgNs}`, `Debugging initialized for ${dbgNs}`);
 //─────────────────────────────────────────────────────────────────────────────────────────────────┐
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 //─────────────────────────────────────────────────────────────────────────────────────────────────┐
 /**
- * @function    buildDevEnv
- * @returns     {Promise<void>} 
+ * @function    buildScratchEnv
+ * @returns     {Promise<void>}
  * @summary     Builds a scratch org-based development environment.
- * @description Executes multiple Salesforce CLI commands which typically include deleting the 
- *              previous dev scratch org, creating a new scratch org, installing package
- *              dependencies, pushing source, loading test data, and performing any other post
- *              deploy/install configuration changes required by developers.
+ * @description Creates a new scratch org, deploys project source, configures permissions,
+ *              creates the agent user, and assigns agent permissions.
  * @public
  * @example
  * ```
- * await buildDevEnv();
+ * await buildScratchEnv();
  * ```
  */
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
-export async function buildDevEnv() {
+export async function buildScratchEnv() {
 
   const ctx = {};
   const tr  = TaskRunner.getInstance();

@@ -1,24 +1,23 @@
 #!/usr/bin/env node
 //─────────────────────────────────────────────────────────────────────────────────────────────────┐
 /**
- * @file          sfdx-falcon/toolbelt.mjs
+ * @file          setup.mjs
  * @copyright     Vivek M. Chawla - 2023
  * @author        Vivek M. Chawla <@VivekMChawla>
- * @summary       Entry point for the SFDX-Falcon Toolbelt.
- * @description   The SFDX-Falcon Toolbelt automates several tasks that SFDX developers regularly
- *                perform.
+ * @summary       Entry point for the AFDX setup script.
+ * @description   Automates Salesforce org setup for the AFDX Pro-Code Testdrive project.
  * @version       1.0.0
  * @license       BSD-3-Clause
  */
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
 import { $, argv, cd, chalk, fs, question, path } from "zx";
-import { buildDevEnv }                from './build-dev-env.mjs';
+import { buildScratchEnv }             from './build-scratch-env.mjs';
 import { SfdxFalconDebug }            from './sfdx-falcon/debug/index.mjs';
 import { SfdxFalconError }            from './sfdx-falcon/error/index.mjs';
 import  * as SfdxUtils                from './sfdx-falcon/utilities/sfdx.mjs';
 
 // Set the File Local Debug Namespace
-const dbgNs = 'Toolbelt';
+const dbgNs = 'Setup';
 SfdxFalconDebug.msg(`${dbgNs}`, `Debugging initialized for ${dbgNs}`);
 //─────────────────────────────────────────────────────────────────────────────────────────────────┐
 //─────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -30,7 +29,7 @@ SfdxFalconDebug.msg(`${dbgNs}`, `Debugging initialized for ${dbgNs}`);
  * you'd like to see output for. 
  * @example
  * ```
- * $> ./toolbelt --sfdx-falcon-debug "UTIL:SFDX,Toolbelt"
+ * $> ./setup --sfdx-falcon-debug "UTIL:SFDX,Setup"
  * ```
  */
 SfdxFalconDebug.init(argv);
@@ -49,12 +48,12 @@ $.quote = (arg) => {
 $.verbose = false;
 /**
  * Parsed JSON representation of `sfdx-project.json` in the directory
- * the toolbelt was run in.
+ * the setup script was run in.
  */
 export const sfdxProjectJson = SfdxUtils.getSfdxProjectJson();
 SfdxFalconDebug.obj(`${dbgNs}:sfdxProjectJson`, sfdxProjectJson);
 /**
- * The name of the SFDX project in the directory the toolbelt was run in. 
+ * The name of the SFDX project in the directory the setup script was run in.
  * Reverts to `packaging-project` if the `name` key in `sfdx-project.json`
  * is `undefined`.
  */
@@ -117,9 +116,9 @@ export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
 export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@scratch.org');
 SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
 
-// Run the process defined in `build-dev-env.mjs`.
+// Run the process defined in `build-scratch-env.mjs`.
 try {
-  await buildDevEnv();
+  await buildScratchEnv();
 } catch (buildError) {
   // Something failed.
   console.log(SfdxFalconError.renderError(buildError));
