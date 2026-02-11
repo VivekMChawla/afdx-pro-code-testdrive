@@ -51,7 +51,7 @@ ALWAYS pass `--json` when calling from an AI assistant or script.
 sf agent preview start --authoring-bundle <BUNDLE_NAME> --json
 ```
 
-Returns a session ID for use in subsequent commands.
+Returns a session ID. ALWAYS capture this value — you need it for every subsequent command.
 
 ### Send Utterances (Repeat for Multi-Turn)
 
@@ -59,7 +59,7 @@ Returns a session ID for use in subsequent commands.
 sf agent preview send --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> -u "<MESSAGE>" --json
 ```
 
-- `--session-id` can be omitted when the agent has exactly one active session.
+- ALWAYS pass `--session-id` with the value returned by `start`. Multiple agents may have concurrent sessions against the same agent.
 - You MUST pass the same `--authoring-bundle` or `--api-name` used in `start`.
 
 ### End the Session
@@ -68,15 +68,8 @@ sf agent preview send --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID>
 sf agent preview end --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> --json
 ```
 
-Returns the trace file location. ALWAYS end sessions when done — abandoned sessions consume server resources.
-
-### List Active Sessions
-
-```bash
-sf agent preview sessions --json
-```
-
-Use this to discover or disambiguate session IDs when an agent has multiple active sessions.
+- ALWAYS pass `--session-id` with the value returned by `start`.
+- ALWAYS end sessions when done — abandoned sessions consume server resources.
 
 ---
 
@@ -130,5 +123,15 @@ Use this to discover or disambiguate session IDs when an agent has multiple acti
     sf agent preview send --session-id <ID> -u "Hello" --json
 
     # CORRECT
+    sf agent preview send --authoring-bundle My_Bundle --session-id <ID> -u "Hello" --json
+    ```
+
+6. **Omitting `--session-id` on `send` or `end`:**
+
+    ```bash
+    # WRONG — concurrent sessions will collide
+    sf agent preview send --authoring-bundle My_Bundle -u "Hello" --json
+
+    # CORRECT — always pass the session ID from start
     sf agent preview send --authoring-bundle My_Bundle --session-id <ID> -u "Hello" --json
     ```
