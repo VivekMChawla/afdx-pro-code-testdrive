@@ -87,7 +87,7 @@ export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
  * Used in task titles, CLI commands, and written to `data-import/User.json`
  * before the agent user is created.
  */
-export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@scratch.org');
+export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@testdrive.org');
 SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
 
 // Route to the appropriate build script based on the --scratch-org flag.
