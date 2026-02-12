@@ -32,7 +32,8 @@ agent-script-skill/
 └── references/
     ├── syntax-rules.md         # Adapted from .a4drules/agent-script-rules-no-edit.md
     ├── preview-rules.md        # Adapted from .a4drules/agent-preview-rules-no-edit.md
-    └── testing-rules.md        # Adapted from .a4drules/agent-testing-rules-no-edit.md
+    ├── testing-rules.md        # Adapted from .a4drules/agent-testing-rules-no-edit.md
+    └── debugging-rules.md      # Adapted from .a4drules/agent-debugging-rules-no-edit.md
 ```
 
 ## Key Requirements
@@ -55,8 +56,12 @@ agent-script-skill/
 
 5. **Reference files adapt existing content** — The `.a4drules/` files are solid reference
    material. Copy and adapt them into `references/` — don't duplicate content between
-   SKILL.md and the reference files. The main SKILL.md should teach concepts and point
-   to references for detailed rules.
+   SKILL.md and the reference files. There are now FOUR source files:
+   - `agent-script-rules-no-edit.md` — syntax and validation
+   - `agent-preview-rules-no-edit.md` — preview CLI commands
+   - `agent-testing-rules-no-edit.md` — test spec format
+   - `agent-debugging-rules-no-edit.md` — session trace analysis and diagnostic patterns
+   The main SKILL.md should teach concepts and point to references for detailed rules.
 
 6. **Format the description field for trigger optimization** — Include all relevant keywords:
    Agent Script, .agent files, authoring bundles, AiAuthoringBundle, NGA, next-gen agents,

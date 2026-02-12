@@ -144,6 +144,7 @@ The project already has three reference documents in `.a4drules/`:
 | `agent-script-rules-no-edit.md` | 716 | Complete syntax reference with validation checklist and error prevention | Good — covers all constructs | No execution model. No explanation of WHY constructs exist. Rules-focused, not teaching-focused. |
 | `agent-preview-rules-no-edit.md` | 140 | Preview CLI commands (interactive vs. programmatic, execution modes) | Good — clear and actionable | Nothing major missing |
 | `agent-testing-rules-no-edit.md` | 224 | Test spec YAML format, metrics, CLI commands | Good — complete schema reference | Nothing major missing |
+| `agent-debugging-rules-no-edit.md` | ~180 | Session trace analysis, diagnostic patterns, grounding retry mechanism | Good — comprehensive methodology | New file, created Feb 2026 |
 
 **Key gap**: The syntax rules file (716 lines) tells you WHAT is valid but not HOW
 the runtime uses it. The Skill needs to fill this gap with the execution model (P1)
@@ -165,7 +166,8 @@ agent-script/
 └── references/                 # Optional: detailed reference docs loaded on demand
     ├── syntax-rules.md         # Agent Script grammar and validation rules
     ├── preview-rules.md        # Preview CLI commands and modes
-    └── testing-rules.md        # Test spec format and CLI commands
+    ├── testing-rules.md        # Test spec format and CLI commands
+    └── debugging-rules.md      # Session trace analysis and diagnostic patterns
 ```
 
 ### SKILL.md Structure
