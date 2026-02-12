@@ -617,6 +617,69 @@ topic account_help:
 
 ---
 
+## Writing Effective Instructions
+
+Instructions in Agent Script are prompts to an LLM. The LLM's behavior is probabilistic — it complies more reliably with strong, specific directives than with soft suggestions.
+
+### Strong vs. Soft Directives
+
+- Use mandatory language ("You MUST", "ALWAYS", "NEVER") for required behaviors. Reserve softer language ("try to", "consider", "when appropriate") for genuine preferences.
+- Be specific about timing: "In your FIRST response, ask for the guest's name" is stronger than "ask for the name early in the conversation."
+- Pair positive instructions with negative constraints: "Present the results directly. Do NOT call the action again" is more reliable than either statement alone.
+
+### Post-Action Instructions
+
+The moment after an action returns results is where the LLM is most likely to go off-track. Always tell the agent explicitly what to do with the results:
+
+```agentscript
+# WEAK — doesn't say what to do after getting results
+| Use the {!@actions.check_events} action to get a list of events.
+
+# STRONG — explicit post-action behavior
+| Use the {!@actions.check_events} action to get a list of events.
+  After receiving event results, summarize them for the guest in your response.
+  Do NOT call the action again — present the results directly.
+```
+
+---
+
+## Action Loop Prevention
+
+Each reasoning cycle, the LLM sees all available actions and decides which to call. If an action remains available after executing and the instructions don't say "stop," the LLM may call it repeatedly.
+
+### What Causes Loops
+
+An action enters a loop when two conditions are both true:
+1. The `available when` condition remains satisfied after the action runs (e.g., `available when @variables.interest != ""` — the variable stays set after the action executes).
+2. The instructions don't tell the agent to stop calling the action after receiving results.
+
+Variable-bound inputs (e.g., `with param = @variables.x`) increase loop risk because the action is "ready to go" every cycle — no slot-filling decision required. LLM-slot-filled inputs (`with param = ...`) add natural decision friction.
+
+### Mitigations
+
+- **Instructions (most common fix)**: Add explicit post-action instructions: "After receiving results from {!@actions.X}, present them to the guest. Do NOT call the action again."
+- **Post-action transitions**: Use `transition to @topic.other_topic` after the action completes to move the agent out of the topic, breaking the cycle.
+- **Input binding**: Use `...` (LLM slot-fill) instead of variable binding when appropriate — this requires the LLM to actively decide to fill the input each cycle.
+
+---
+
+## Grounding Considerations
+
+The platform's grounding checker compares the agent's response text against action output data. If the agent paraphrases or transforms data values, the grounding checker may not be able to verify the claim and will flag the response as UNGROUNDED.
+
+### Key Rules
+
+- Instruct the agent to use specific data values from action results. "Use the actual date from the results" passes grounding; "say 'today'" may not — the grounding checker cannot always infer that a specific date equals "today."
+- Avoid instructions that encourage transforming data into relative or colloquial forms (dates → "today"/"tomorrow", units → converted values without originals).
+- Instructions that encourage embellishment (e.g., "respond like a pirate") increase grounding risk — embellished content has no action output to ground against.
+- Always closely paraphrase or directly quote data from action results. The closer the response text matches the action output, the more reliably it passes grounding.
+
+### Testing Grounding
+
+Grounding behavior can only be validated with **live mode** preview (`--use-live-actions`). Simulated mode generates fake action outputs, so the grounding checker has no real data to validate against. See the Agent Preview Rules for details.
+
+---
+
 ## Validation Checklist
 
 Before finalizing an Agent Script, verify:
