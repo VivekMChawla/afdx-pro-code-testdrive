@@ -55,7 +55,7 @@ setup.cmd
 
 When the script finishes, note the **agent username** in the output. It appears in the task titled `Create agent user (afdx-agent-XXXXXXXX@testdrive.org)`. You'll need this username in the next step.
 
-> 💡 The agent username is also found in `Username` field on line 9 of `data-import/User.json`.
+> 💡 The agent username is also found in the `Username` field on line 9 of `data-import/User.json`.
 
 ### STEP FIVE: Configure and deploy the agent
 1. Open `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`.
@@ -67,7 +67,7 @@ When the script finishes, note the **agent username** in the output. It appears 
 
 This is your first look at **Agent Script** — the file you just edited defines the entire agent (its topics, reasoning instructions, variables, and actions) in a single readable script.
 
-## What's Inside
+## What's Inside This Project
 
 | Component | Type | Purpose |
 |---|---|---|
