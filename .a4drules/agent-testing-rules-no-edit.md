@@ -4,6 +4,23 @@ This document provides rules and guidance for creating and managing agent test s
 
 ---
 
+## Test Specs and AiEvaluationDefinitions
+
+A **test spec** is a local YAML file (in `specs/`) that defines test cases for an agent. It is the human-readable, source-controlled definition of a test.
+
+An **AiEvaluationDefinition** is the Salesforce metadata type that represents a deployed test in the org. It lives in `force-app/main/default/aiEvaluationDefinitions/` after creation.
+
+These are two different artifacts:
+
+| Artifact | Location | Purpose |
+|----------|----------|---------|
+| Test spec (YAML) | `specs/` (local project) | Author and version-control test definitions |
+| AiEvaluationDefinition (metadata) | Org + `aiEvaluationDefinitions/` | Execute tests in the org |
+
+A test spec existing locally does **NOT** mean the test exists in the org. You must explicitly create the AiEvaluationDefinition using `sf agent test create` before you can run it with `sf agent test run`.
+
+---
+
 ## Test Spec File Format
 
 Test specs are YAML files that define test cases for a specific agent. They are the local, human-readable equivalent of the `AiEvaluationDefinition` metadata component.
@@ -152,6 +169,38 @@ Context variable API names correspond to field names on the `MessagingSession` s
 
 ---
 
+## Workflow
+
+Agent testing follows a strict sequence. Skipping steps will cause failures.
+
+### 1. Author the Test Spec
+
+Create or edit a YAML file in `specs/`. See [Test Spec File Format](#test-spec-file-format) for the schema.
+
+### 2. Create the Test in the Org
+
+```bash
+sf agent test create --spec specs/My_Agent-testSpec.yaml --api-name My_Agent_Test
+```
+
+This deploys the spec as an `AiEvaluationDefinition` in the target org and retrieves the metadata to your local project. The `--api-name` you choose becomes the identifier for all subsequent `run` commands.
+
+### 3. Run the Test
+
+```bash
+sf agent test run --api-name My_Agent_Test
+```
+
+This executes the test **that already exists in the org**. If the AiEvaluationDefinition does not exist, the command will fail.
+
+### Important: Create Before Run
+
+- `sf agent test run` requires an AiEvaluationDefinition **in the org**. A local test spec YAML file is not sufficient.
+- NEVER assume a test exists in the org. If you did not just create it, verify by checking for `AiEvaluationDefinition` metadata in the `aiEvaluationDefinitions/` subdirectory within your package directory.
+- If you update a test spec, you must re-run `sf agent test create` to update the org's AiEvaluationDefinition.
+
+---
+
 ## CLI Commands
 
 ### Generate a Test Spec Interactively
@@ -210,7 +259,13 @@ sf org open --path /lightning/setup/TestingCenter/home
 
 - Test specs live in the `specs/` directory at the project root.
 - Default naming convention: `{Agent_API_Name}-testSpec.yaml`
-- The corresponding `AiEvaluationDefinition` metadata is stored in `force-app/main/default/aiEvaluationDefinitions/` after `sf agent test create` runs.
+- The corresponding `AiEvaluationDefinition` metadata is retrieved to the `aiEvaluationDefinitions/` subdirectory within your package directory after `sf agent test create` runs.
+
+---
+
+## Metadata Locations
+
+Metadata source paths depend on the package directories defined in `sfdx-project.json` at the project root. Check the `packageDirectories` array for the correct base path. `force-app` is a common default but is not guaranteed. Metadata type subdirectories (e.g., `aiEvaluationDefinitions/`) are relative to `<packageDirectory>/main/default/`.
 
 ---
 
@@ -221,3 +276,5 @@ sf org open --path /lightning/setup/TestingCenter/home
 - **Omitting `expectedActions`**: Always include this field. Use `[]` when no action is expected.
 - **Using `expectedOutcome` as a literal match**: The expected outcome is a natural language description evaluated by the testing framework. Write it as a description of what should happen, not as an exact string to match.
 - **Forgetting `topic` on agent conversation history entries**: Every `role: agent` entry in `conversationHistory` must include a `topic` field.
+- **Running a test that hasn't been created in the org**: A test spec YAML in `specs/` does NOT mean the test exists in the org. You must run `sf agent test create` before `sf agent test run`. If you skip the create step, the run command will fail.
+- **Guessing or constructing the `--api-name` for `sf agent test run`**: The `--api-name` must match an `AiEvaluationDefinition` that has been created in the org. Do not infer this name from the agent name, test spec filename, or task instructions. Verify it exists by checking for metadata in the `aiEvaluationDefinitions/` subdirectory within your package directory, or by confirming you just created it with `sf agent test create`.
