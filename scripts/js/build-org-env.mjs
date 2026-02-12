@@ -20,6 +20,8 @@ import { TaskRunner }           from './sfdx-falcon/task-runner/index.mjs';
 import { SfdxTask }             from './sfdx-falcon/task-runner/sfdx-task.mjs';
 import { SfdxFalconError }      from './sfdx-falcon/error/index.mjs';
 import { SfdxFalconDebug }      from './sfdx-falcon/debug/index.mjs';
+import { isDuplicatePermSetAssignment }
+                                from './sfdx-falcon/utilities/sfdx.mjs';
 
 // Set the File Local Debug Namespace
 const dbgNs = 'BuildOrgEnv';
@@ -55,7 +57,7 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Assign Prompt Template perm sets`,
     `sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser`,
-    {suppressErrors: true}
+    {suppressErrors: isDuplicatePermSetAssignment, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -115,7 +117,7 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Assign "AFDX_User_Perms" to admin user`,
     `sf org assign permset -n AFDX_User_Perms`,
-    {suppressErrors: false, renderStdioOnError: true}
+    {suppressErrors: isDuplicatePermSetAssignment, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -125,7 +127,7 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Assign "AFDX_Agent_Perms" to ${agentUsername}`,
     `sf org assign permset -n AFDX_Agent_Perms -b ${agentUsername}`,
-    {suppressErrors: false, renderStdioOnError: true}
+    {suppressErrors: isDuplicatePermSetAssignment, renderStdioOnError: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
