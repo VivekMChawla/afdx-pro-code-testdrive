@@ -40,7 +40,7 @@ sf org login web -s -a AFDX-Testdrive
 ### STEP FOUR: Run the setup script
 The setup script deploys source, assigns permissions, and creates a dedicated **agent user**. Agentforce agents run as a dedicated user with the **Einstein Agent User** profile — this user is the runtime identity for your agent.
 
-> 💡 If the setup script fails, follow the **Manual Setup** instructions at the end of this readme to continue.
+> ⚠️ If the setup script fails, follow the **Manual Setup** instructions at the end of this readme to continue.
 
 Run the setup script from the VS Code integrated terminal:
 
@@ -55,7 +55,7 @@ setup.cmd
 
 When the script finishes, note the **agent username** in the output. It appears in the task titled `Create agent user (afdx-agent-XXXXXXXX@testdrive.org)`. You'll need this username in the next step.
 
-> **💡Tip:** You can also find the agent username by opening `data-import/User.json` and checking the `Username` field on line 9.
+> 💡 The agent username is also found in `Username` field on line 9 of `data-import/User.json`.
 
 ### STEP FIVE: Configure and deploy the agent
 1. Open `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`.
