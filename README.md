@@ -9,7 +9,7 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
 - A **Salesforce Developer Edition (DE)** org *(free at [developer.salesforce.com/signup](https://developer.salesforce.com/signup))*
 - **Salesforce CLI** (`sf`) installed *(see [developer.salesforce.com/tools/sfdxcli](https://developer.salesforce.com/tools/sfdxcli))*
 - **VS Code** with the **Salesforce Extensions** pack and the **Agentforce DX** extension
-- **Node.js** (v20 or later) — required by the setup script *(if you already have the Salesforce CLI installed, you have Node.js)*
+- **Node.js** (v20 or later) and NPM *(if the Salesforce CLI installed, you should have Node.js)*
 
 ## Setup
 
@@ -29,7 +29,7 @@ This project contains a pre-built agent for **Coral Cloud Resort** called the **
 2. Open the `afdx-pro-code-testdrive` folder in VS Code.
 3. Open the **integrated terminal** in VS Code. *(Navigate to the top menu and select View > Terminal)*
 
-✴️ All remaining commands should be run from the VS Code integrated terminal.
+> ⚠️ Run All CLI commands from the VS Code integrated terminal from this point forward.
 
 ### STEP THREE: Connect to your org
 Authenticate the Salesforce CLI to your DE org.
@@ -40,7 +40,7 @@ sf org login web -s -a AFDX-Testdrive
 ### STEP FOUR: Run the setup script
 The setup script deploys source, assigns permissions, and creates a dedicated **agent user**. Agentforce agents run as a dedicated user with the **Einstein Agent User** profile — this user is the runtime identity for your agent.
 
-> **💡Tip:** If you can't use the setup script, or it fails for any reason, follow the **Manual Setup** instructions at the end of this readme to continue.
+> 💡 If the setup script fails, follow the **Manual Setup** instructions at the end of this readme to continue.
 
 Run the setup script from the VS Code integrated terminal:
 
