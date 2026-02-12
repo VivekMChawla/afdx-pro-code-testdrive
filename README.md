@@ -40,6 +40,8 @@ sf org login web -s -a AFDX-Testdrive
 ### STEP FOUR: Run the setup script
 The setup script deploys source, assigns permissions, and creates a dedicated **agent user**. Agentforce agents run as a dedicated user with the **Einstein Agent User** profile — this user is the runtime identity for your agent.
 
+> **💡Tip:** If you can't use the setup script, or it fails for any reason, follow the **Manual Setup** instructions at the end of this readme to continue.
+
 Run the setup script from the VS Code integrated terminal:
 
 **macOS / Linux / WSL:**
@@ -65,28 +67,6 @@ When the script finishes, note the **agent username** in the output. It appears 
 
 This is your first look at **Agent Script** — the file you just edited defines the entire agent (its topics, reasoning instructions, variables, and actions) in a single readable script.
 
-## What to Do Next
-
-### Preview the agent
-1. Open the Local Info Agent in Agent Builder:
-   ```
-   sf org open agent --api-name Local_Info_Agent
-   ```
-2. Use the **Preview** panel to interact with the agent. Try asking:
-   - *"What's the weather like today?"* — triggers the **Apex** action
-   - *"I'm interested in movies. What's showing nearby?"* — triggers the **Prompt Template** action
-   - *"When does the spa open?"* — triggers the **Flow** action
-
-### Learning exercise
-Open `Local_Info_Agent.agent` in VS Code and look at the `local_weather` topic. Notice the pirate-themed instruction at the end of the reasoning block. This single line controls how the agent responds — try changing it:
-
-1. Preview the agent and ask about the weather — notice the pirate-themed response.
-2. Remove the pirate instruction from the Agent Script.
-3. Redeploy the agent: `sf project deploy start -m AiAuthoringBundle:Local_Info_Agent`
-4. Preview again and ask the same question — the response should now be in a normal tone.
-
-This demonstrates how Agent Script reasoning instructions directly control agent behavior.
-
 ## What's Inside
 
 | Component | Type | Purpose |
@@ -101,6 +81,30 @@ This demonstrates how Agent Script reasoning instructions directly control agent
 | `Coral_Cloud_Admin` | Permission Set | Admin/developer Apex class access |
 | `AFDX_Agent_Perms` | Permission Set Group | Bundles agent user permissions for assignment |
 | `AFDX_User_Perms` | Permission Set Group | Bundles admin user permissions for assignment |
+
+## Learning Exercise
+
+Use the Agentforce DX panel in VS Code to start a conversation with the Local Info Agent.
+
+1. Open the `Local_Info_Agent.agent` Agent Script file.
+2. Right-click inside the agent and select **AFDX: Preview this Agent**.
+3. Click the **Start Simulation** button. If you see **Start Live Test** instead, click the down-arrow and select **Simulation** first.
+
+### Suggested Prompts
+Try these prompts to see each type of agent action in action:
+
+- *"What's the weather like today?"* — triggers an **Apex** action
+- *"I'm interested in movies. What's showing nearby?"* — triggers a **Prompt Template** action
+- *"When does the spa open?"* — triggers a **Flow** action
+
+Return to `Local_Info_Agent.agent` in the editor and inspect the `local_weather` topic. Notice the pirate-themed instruction at the end of the reasoning block. This single line controls how the agent responds — try changing it:
+
+1. Remove the pirate instruction from the Agent Script.
+2. Right-click inside the agent and select **AFDX: Validate this Agent**
+3. Click the **Compile & Restart** button in the Preview Panel to test your changes.
+4. Ask about the weather again — the response should now be in a normal tone.
+
+This demonstrates how Agent Script reasoning instructions directly control agent behavior — no redeployment required.
 
 ## Manual Setup
 
