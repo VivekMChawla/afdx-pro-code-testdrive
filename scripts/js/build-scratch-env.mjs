@@ -75,7 +75,7 @@ export async function buildScratchEnv() {
   tr.addTask(new SfdxTask(
     `Assign Prompt Template perm sets`,
     `sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser`,
-    {suppressErrors: false, renderStdioOnError: true}
+    {suppressErrors: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -95,16 +95,6 @@ export async function buildScratchEnv() {
   tr.addTask(new SfdxTask(
     `Deploy project source`,
     `sf project deploy start`,
-    {suppressErrors: false, renderStdioOnError: true}
-  ));
-  //*/
-  //───────────────────────────────────────────────────────────────────────────────────────────────┘
-  //───────────────────────────────────────────────────────────────────────────────────────────────┐
-  //*
-  // Assign admin permissions to the current user.
-  tr.addTask(new SfdxTask(
-    `Assign "AFDX_User_Perms" to admin user`,
-    `sf org assign permset -n AFDX_User_Perms`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
@@ -150,6 +140,16 @@ export async function buildScratchEnv() {
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
   //───────────────────────────────────────────────────────────────────────────────────────────────┐
   //*
+  // Assign admin permissions to the current user.
+  tr.addTask(new SfdxTask(
+    `Assign "AFDX_User_Perms" to admin user`,
+    `sf org assign permset -n AFDX_User_Perms`,
+    {suppressErrors: false, renderStdioOnError: true}
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
   // Assign agent permissions to the agent user.
   tr.addTask(new SfdxTask(
     `Assign "AFDX_Agent_Perms" to ${agentUsername}`,
@@ -158,17 +158,6 @@ export async function buildScratchEnv() {
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
-  //───────────────────────────────────────────────────────────────────────────────────────────────┐
-  /* // Uncomment this if you disabled the "Open the Deployment Status page" task above.
-  // Open the new scratch org in the developer's non-default browser.
-  tr.addTask(new SfdxTask(
-    `Open the new scratch org`,
-    `sf org open -b ${alternativeBrowser}`,
-    {suppressErrors: true}
-  ));
-  //*/
-  //───────────────────────────────────────────────────────────────────────────────────────────────┘
-
   // Run the tasks.
   try {
     return tr.runTasks();

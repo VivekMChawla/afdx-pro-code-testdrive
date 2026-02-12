@@ -89,7 +89,12 @@ export const deploymentStatusPage = "lightning/setup/DeployStatus/home";
  */
 export const agentUsername = SfdxUtils.createUniqueUsername('afdx-agent@testdrive.org');
 SfdxFalconDebug.str(`${dbgNs}:agentUsername`, agentUsername);
-
+/**
+ * A unique CommunityNickname for the agent user, generated at startup.
+ * Written to `data-import/User.json` before the agent user is created.
+ */
+export const agentNickname = SfdxUtils.createUniqueUsername('afdx@nick.name').substring(0, 40); // CommunityNickname has a max length of 40 characters.
+SfdxFalconDebug.str(`${dbgNs}:agentNickname`, agentNickname);
 // Route to the appropriate build script based on the --scratch-org flag.
 // Default: build-org-env.mjs (for DE orgs, sandboxes, etc.)
 // With --scratch-org: build-scratch-env.mjs (creates and configures a new scratch org)

@@ -14,7 +14,8 @@
 import { fs }                   from "zx";
 
 // Import Internal Classes & Functions
-import { agentUsername }        from './setup.mjs';
+import { agentUsername, 
+         agentNickname }        from './setup.mjs';
 import { TaskRunner }           from './sfdx-falcon/task-runner/index.mjs';
 import { SfdxTask }             from './sfdx-falcon/task-runner/sfdx-task.mjs';
 import { SfdxFalconError }      from './sfdx-falcon/error/index.mjs';
@@ -54,7 +55,7 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Assign Prompt Template perm sets`,
     `sf org assign permset -n EinsteinGPTPromptTemplateManager -n EinsteinGPTPromptTemplateUser`,
-    {suppressErrors: false, renderStdioOnError: true}
+    {suppressErrors: true}
   ));
   //*/
   //───────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -64,16 +65,6 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Deploy project source`,
     `sf project deploy start --source-dir force-app`,
-    {suppressErrors: false, renderStdioOnError: true}
-  ));
-  //*/
-  //───────────────────────────────────────────────────────────────────────────────────────────────┘
-  //───────────────────────────────────────────────────────────────────────────────────────────────┐
-  //*
-  // Assign admin permissions to the current user.
-  tr.addTask(new SfdxTask(
-    `Assign "AFDX_User_Perms" to admin user`,
-    `sf org assign permset -n AFDX_User_Perms`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
@@ -102,6 +93,7 @@ export async function buildOrgEnv() {
       const userJson = fs.readJsonSync('data-import/User.json');
       userJson.records[0].ProfileId = ctx.profileId;
       userJson.records[0].Username = agentUsername;
+      userJson.records[0].CommunityNickname = agentNickname;
       fs.writeJsonSync('data-import/User.json', userJson, { spaces: 4 });
     }
   });
@@ -113,6 +105,16 @@ export async function buildOrgEnv() {
   tr.addTask(new SfdxTask(
     `Create agent user (${agentUsername})`,
     `sf data import tree --files data-import/User.json`,
+    {suppressErrors: false, renderStdioOnError: true}
+  ));
+  //*/
+  //───────────────────────────────────────────────────────────────────────────────────────────────┘
+  //───────────────────────────────────────────────────────────────────────────────────────────────┐
+  //*
+  // Assign AFDX user permissions to the default user.
+  tr.addTask(new SfdxTask(
+    `Assign "AFDX_User_Perms" to admin user`,
+    `sf org assign permset -n AFDX_User_Perms`,
     {suppressErrors: false, renderStdioOnError: true}
   ));
   //*/
