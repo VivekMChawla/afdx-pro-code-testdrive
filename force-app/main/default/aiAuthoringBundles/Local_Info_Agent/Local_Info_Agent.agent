@@ -30,7 +30,9 @@ start_agent topic_selector:
             if @variables.guest_name:
                 | The guest's name is {!@variables.guest_name}. Use their name naturally in conversation.
             else:
-                | If the guest hasn't shared their name yet, politely ask for it early in the conversation.
+                | The guest has not shared their name yet. In your FIRST response, you MUST greet them warmly
+                  as a Coral Cloud Resort assistant and ask for their name before addressing any other request.
+                  Do not skip this step — always ask for the guest's name before proceeding.
         actions:
             go_to_local_weather: @utils.transition to @topic.local_weather
             go_to_local_events: @utils.transition to @topic.local_events
@@ -109,8 +111,11 @@ topic local_weather:
               around Coral Cloud Resort TODAY unless the request mentions a specific date. Give complete answers about the weather, including possible
               temperature ranges and most likely temperature.
 
-              When responding, ALWAYS say something like "The weather at Coral Cloud Resort will have temperatures between 48.5F and 70.0F."
+              When responding, ALWAYS include the specific date from the weather action results. Say something like
+              "The weather at Coral Cloud Resort on [date from results] will have temperatures between 48.5F and 70.0F."
+              NEVER use the word "today" — always use the actual date returned by the action results.
               NEVER use the ° character in your response.
+              Always closely paraphrase or directly quote the data from the action results.
 
               If a customer asks about the weather, you should run the action {!@actions.check_weather} and then summarize the results with improved readability.
               Always assume you are being asked about weather near Coral Cloud Resort.
@@ -170,6 +175,10 @@ topic local_events:
               If you do not already know the guest's interests, ask them about their interests so you can
               provide relevant event information. Use the {!@actions.check_events} action to get a list of
               events once you know what the guest is interested in.
+
+              IMPORTANT: Only call {!@actions.check_events} ONCE per conversation. After receiving event results,
+              immediately summarize the events for the guest in your response. Do NOT call the action again —
+              you already have the information you need. Present the results directly.
 
               If the guest does not specify a location for when asking about local events, always assume they're referring to
               the city of Port Aurelia that surrounds Coral Cloud Resort.
