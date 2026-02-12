@@ -84,19 +84,32 @@ export class SfdxTask {
    */
   onError = null;
   /**
-   * @type        {boolean}
+   * @type        {boolean|function}
    * @summary     Prevents a caught CLI error from being re-thrown to the `Listr` task engine.
-   * @description Stops any errors caught from the CLI command execution from being re-thrown to
+   * @description Controls whether errors caught from CLI command execution are re-thrown to
    *              the `Listr` task engine. Does not stop execution of the `onError` handler
-   *              function (if defined). 
+   *              function (if defined).
+   *
+   *              Accepts a `boolean` or a `function`. When a function is provided, it is called
+   *              at runtime with `(processError, ctx, task)` and must return `true` to suppress
+   *              the error or `false` to re-throw it. This enables conditional error handling
+   *              based on the error content (e.g. exit code, stderr message).
+   * @example
+   * ```
+   * // Boolean: always suppress errors.
+   * {suppressErrors: true}
+   *
+   * // Function: suppress only "already assigned" errors.
+   * {suppressErrors: (err) => err.stdout?.includes('already assigned')}
+   * ```
    */
   suppressErrors = null;
   /**
    * @type        {boolean}
    * @summary     Renders `stderr` and `stdout` before throwing to the `Listr` task engine.
-   * @description If `suppressErrors` is `true`, renders the output from `stderr` and `stdout` 
-   *              immediately following execution of the `onError` handler function (if defined),
-   *              and right before throwing to the `Listr` task engine. 
+   * @description When `true` and the error is NOT suppressed, renders the output from `stderr`
+   *              and `stdout` immediately following execution of the `onError` handler function
+   *              (if defined), and right before throwing to the `Listr` task engine.
    */
   renderStdioOnError = null;
   /**
@@ -170,7 +183,9 @@ export class SfdxTask {
                                 ...options};
     this.onSuccess            = this.options.onSuccess;
     this.onError              = this.options.onError;
-    this.suppressErrors       = this.options.suppressErrors ? true : false;       // Ensure "truthy" values become TRUE.
+    this.suppressErrors       = typeof this.options.suppressErrors === 'function'  // Preserve functions for conditional suppression.
+                                ? this.options.suppressErrors                     // Keep the function as-is.
+                                : this.options.suppressErrors ? true : false;     // Coerce booleans: ensure "truthy" values become TRUE.
     this.renderStdioOnError   = this.options.renderStdioOnError ? true : false;   // Ensure "truthy" values become TRUE.
     this.concurrent           = this.options.concurrent ? true : false;           // Ensure "truthy" values become TRUE.
     this.lisrTask             = buildListrTask(this);
@@ -234,16 +249,24 @@ function buildListrTask(sfdxTask) {
       } catch (processError) {
         SfdxFalconDebug.msg(`ASYNC:${localDbgNs}`, `Salesforce CLI Command Execution Failure`);
         SfdxFalconDebug.obj(`ASYNC:${localDbgNs}`, processError, `processError:`);
+
+        // Convert any JSON found in stdout/stderr buffers to actual objects.
+        // Done early so parsed JSON is available to onError and suppressErrors handlers.
+        processError.stderrJson = stdioToJson(processError.stderr);
+        processError.stdoutJson = stdioToJson(processError.stdout);
+
         // Call error handler, if present.
         if (typeof sfdxTask.onError === 'function') {
           await sfdxTask.onError(processError, ctx, task);
-        }  
-        // Throw error if errors are not suppressed for this task.
-        if (sfdxTask.suppressErrors === false) {
-          // Convert any JSON found in stdout/stderr buffers to actual objects.
-          processError.stderrJson = stdioToJson(processError.stderr);
-          processError.stdoutJson = stdioToJson(processError.stdout);
+        }
+        // Determine whether to suppress this error.
+        // When suppressErrors is a function, call it with the error context to decide at runtime.
+        const shouldSuppress = typeof sfdxTask.suppressErrors === 'function'
+          ? sfdxTask.suppressErrors(processError, ctx, task)
+          : sfdxTask.suppressErrors;
 
+        // Throw error if errors are not suppressed for this task.
+        if (shouldSuppress === false) {
           // Optionally render STDERR and STDOUT.
           if (sfdxTask.renderStdioOnError === true) {
             SfdxFalconDebug.debugMessage(`SfdxTask:ERROR`,    chalk.red(`Salesforce CLI command terminated with errors (Exit Code=${processError.exitCode}).`) +

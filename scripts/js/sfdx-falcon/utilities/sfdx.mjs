@@ -379,3 +379,43 @@ export function createUniqueUsername(baseUsername) {
       throw new SfdxFalconError(`Username can not be longer than ${usernameMaxLength} chars to keep room for appending a UUID`, `InvalidUsername`);
   return baseUsername + uuid();
 }
+// ────────────────────────────────────────────────────────────────────────────────────────────────┐
+/**
+ * @function    isDuplicatePermSetAssignment
+ * @param       {Object} processError  The processError object from a failed CLI command.
+ *                                     Must have a `stdoutJson` property containing the parsed
+ *                                     JSON response from the Salesforce CLI.
+ * @returns     {boolean}  Returns `true` to suppress the error if every failure is a
+ *                         duplicate permission set assignment. Returns `false` for all other errors.
+ * @summary     Conditional `suppressErrors` handler for permission set assignment tasks.
+ * @description Inspects the parsed CLI response to determine if all failures are benign
+ *              "Duplicate PermissionSetAssignment" errors. Designed to be passed as the
+ *              `suppressErrors` option to an `SfdxTask` constructor, enabling conditional
+ *              error suppression at runtime.
+ *
+ *              Suppresses ONLY when there is at least one failure AND every failure's `message`
+ *              contains "Duplicate PermissionSetAssignment". If ANY failure is not a duplicate
+ *              assignment — including mixed results — the error is re-thrown to the task engine.
+ * @public
+ * @example
+ * ```
+ * const sfdxTask = new SfdxTask(
+ *   `Assign admin permissions`,
+ *   `sf org assign permset -n MyPermSet`,
+ *   {suppressErrors: isDuplicatePermSetAssignment, renderStdioOnError: true}
+ * );
+ * ```
+ */
+// ────────────────────────────────────────────────────────────────────────────────────────────────┘
+export function isDuplicatePermSetAssignment(processError) {
+  // Guard: if the CLI response isn't parseable or has an unexpected shape, don't suppress.
+  const failures = processError?.stdoutJson?.result?.failures;
+  if (!Array.isArray(failures) || failures.length === 0) return false;
+
+  // Suppress ONLY if every failure is a duplicate assignment.
+  // If any failure has an unexpected shape or a non-duplicate message, don't suppress.
+  return failures.every(f =>
+    typeof f.message === 'string'
+    && f.message.includes('Duplicate PermissionSetAssignment')
+  );
+}
