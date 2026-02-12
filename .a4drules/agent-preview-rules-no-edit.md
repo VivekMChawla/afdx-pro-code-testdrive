@@ -45,6 +45,21 @@ Metadata source paths depend on the package directories defined in `sfdx-project
 - Pass `--use-live-actions` ONLY when backing implementations are deployed and you want to test real behavior.
 - `--use-live-actions` is ONLY valid with `--authoring-bundle`. Published agents (`--api-name`) always execute real actions — do NOT pass `--use-live-actions` with `--api-name`.
 
+### Choosing a Mode
+
+**Simulated mode** (default) generates action outputs via LLM — the data is fake. **Live mode** (`--use-live-actions`) executes real backing code (Apex, Flows, Prompt Templates) and returns real outputs.
+
+Use simulated mode when:
+- **Backing code doesn't exist yet**: You're experimenting with instructions, topic routing, and conversation flow before building the actions. Simulated mode avoids needing to stub out actions.
+- **No default agent user configured**: Live preview requires a real, active user created and assigned as the agent's `default_agent_user`. Simulated mode skips this requirement, reducing setup friction for initial experimentation and test drives.
+
+**Prefer live mode** (`--use-live-actions`) whenever backing code is deployed and a default agent user is configured. Live mode gives you real grounding behavior, real data flow through variables, and real action output formatting. If neither of the simulated mode scenarios above applies, use live mode.
+
+Live mode is specifically required when your test depends on what action outputs actually contain:
+- **Grounding**: The platform's grounding checker validates the agent's response against real action output data. Simulated mode cannot reproduce grounding failures.
+- **Variable-driven branching**: Actions that set variables via `set @variables.x = @outputs.y` need real outputs to produce correct values for downstream conditional logic.
+- **Output formatting**: Real action output strings may differ from what the LLM invents in simulated mode.
+
 ---
 
 ## Programmatic Workflow
@@ -78,6 +93,22 @@ sf agent preview end --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> 
 - ALWAYS pass `--session-id` with the value returned by `start`.
 - `end` returns the location of session trace logs. Call it when you need the trace files or when the conversation is fully complete.
 - Do NOT end a session preemptively. If the user may ask follow-up questions, keep the session open. Sessions time out automatically on the server.
+
+---
+
+## Session Traces
+
+A trace file is written after every conversation turn. Traces are available immediately after each `send` — you do not need to end the session to access them. The `sf agent preview end` command returns the `tracesPath` for convenience, but you can read traces at any point during the session.
+
+### Trace Location
+
+Traces are stored locally at `.sfdx/agents/<BUNDLE_NAME>/sessions/<SESSION_ID>/` within the project directory.
+
+### When to Use Traces
+
+- **Debugging unexpected behavior**: If the agent routes to the wrong topic, calls the wrong action, or produces an unexpected response, traces show the full reasoning chain — topic selection, action decisions, and response generation.
+- **Diagnosing grounding failures**: Traces include grounding check results showing which parts of the response were flagged as UNGROUNDED and why. This is essential for understanding intermittent grounding errors.
+- **Understanding action data flow**: Traces show the raw inputs sent to actions and outputs received, which helps verify variable binding and conditional branching.
 
 ---
 
