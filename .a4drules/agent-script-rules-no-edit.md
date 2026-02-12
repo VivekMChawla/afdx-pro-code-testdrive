@@ -66,6 +66,12 @@ sf agent validate authoring-bundle --api-name NAME_OF_AGENT_FILE_WITHOUT_EXTENSI
 
 ---
 
+## Metadata Locations
+
+Metadata source paths depend on the package directories defined in `sfdx-project.json` at the project root. Check the `packageDirectories` array for the correct base path. `force-app` is a common default but is not guaranteed. Metadata type subdirectories (e.g., `aiAuthoringBundles/`, `classes/`) are relative to `<packageDirectory>/main/default/`.
+
+---
+
 ## File Structure & Block Ordering
 
 Top-level blocks MUST appear in this order:
