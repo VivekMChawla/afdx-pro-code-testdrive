@@ -33,6 +33,12 @@ Use exactly one of these mutually exclusive flags:
 
 ---
 
+## Metadata Locations
+
+Metadata source paths depend on the package directories defined in `sfdx-project.json` at the project root. Check the `packageDirectories` array for the correct base path. `force-app` is a common default but is not guaranteed. Metadata type subdirectories (e.g., `aiAuthoringBundles/`, `bots/`) are relative to `<packageDirectory>/main/default/`.
+
+---
+
 ## Execution Modes (Authoring Bundle Only)
 
 - Use **simulated mode** (the default) when backing Apex/Flows/Prompt Templates are not deployed or don't exist yet. Do not pass any extra flag.
