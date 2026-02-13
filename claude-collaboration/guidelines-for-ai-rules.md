@@ -1,6 +1,6 @@
 # Guidelines for Writing AI Rules Files
 
-Best practices for authoring effective AI rules (e.g., files in `.a4drules/`) that guide LLM agents through CLI workflows. Derived from iterative development of AFDX pro-code rules files.
+Best practices for authoring effective AI rules (e.g., files in `afdx-pro-code-testdrive/.a4drules/`) that guide LLM agents through CLI workflows. Derived from iterative development of AFDX pro-code rules files.
 
 ---
 

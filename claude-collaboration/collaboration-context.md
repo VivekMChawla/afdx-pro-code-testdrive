@@ -111,7 +111,7 @@ a Skill for Python or JavaScript where the model already knows the language.
 
 ### Current State (as of Session 1)
 
-A first draft exists at `agent-script-skill/` with:
+A first draft exists at `afdx-pro-code-testdrive/agent-script-skill/` with:
 - `SKILL.md` (499 lines) — main skill definition
 - `references/syntax-rules.md` (658 lines)
 - `references/preview-rules.md` (168 lines)
@@ -126,19 +126,19 @@ finished artifact.
 
 ### File Locations
 
-- Skill files: `agent-script-skill/`
-- Collaboration docs: `claude-collaboration/`
-- Agent Script source example: `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/`
-- Existing rules (read-only): `.a4drules/`
-- Test spec example: `specs/Local_Info_Agent-testSpec.yaml`
-- **Do NOT use files in `temp/`** — stale/inaccurate content. Always ask Vivek first.
+- Skill files: `afdx-pro-code-testdrive/agent-script-skill/`
+- Collaboration docs: `afdx-pro-code-testdrive/claude-collaboration/`
+- Agent Script source example: `afdx-pro-code-testdrive/force-app/main/default/aiAuthoringBundles/Local_Info_Agent/`
+- Existing rules (read-only): `afdx-pro-code-testdrive/.a4drules/`
+- Test spec example: `afdx-pro-code-testdrive/specs/Local_Info_Agent-testSpec.yaml`
+- **Do NOT use files in `afdx-pro-code-testdrive/temp/`** — stale/inaccurate content. Always ask Vivek first.
 
 ---
 
 ## 5. Design Principles (Research-Backed)
 
 These come from in-context learning research and are documented in detail in
-`claude-collaboration/AGENT_SCRIPT_SKILL_CONTEXT.md`. Summarized here:
+`afdx-pro-code-testdrive/claude-collaboration/AGENT_SCRIPT_SKILL_CONTEXT.md`. Summarized here:
 
 1. **Teach the execution model first** (P1) — Explain HOW Agent Script runs at runtime,
    not just syntax. The "notional machine" concept. This is the most important section.
@@ -171,13 +171,13 @@ description, quick reference table up top, task-organized sections.
 
 ### Primary Example Agent
 
-The Local Info Agent at `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/`
+The Local Info Agent at `afdx-pro-code-testdrive/force-app/main/default/aiAuthoringBundles/Local_Info_Agent/`
 is the primary example. It demonstrates all major constructs.
 
 ### What NOT to Modify
 
-- `.a4drules/` files are shared with other tools — read-only for us
-- Files in `temp/` are stale — do not use without asking Vivek
+- `afdx-pro-code-testdrive/.a4drules/` files are shared with other tools — read-only for us
+- Files in `afdx-pro-code-testdrive/temp/` are stale — do not use without asking Vivek
 
 ---
 
@@ -241,7 +241,7 @@ that work in that context may not transfer to our standalone skill.
 ## 9. Guiding Cautions
 
 - **Don't rush.** Build incrementally, check in with Vivek, let him push back.
-- **Don't use `temp/` files** without asking Vivek first — stale content.
+- **Don't use `afdx-pro-code-testdrive/temp/` files** without asking Vivek first — stale content.
 - **Don't assume other teams' approaches are correct** — evaluate against our principles.
 - **Don't produce finished artifacts without collaborative iteration** — the process
   matters as much as the output (Objective 3).

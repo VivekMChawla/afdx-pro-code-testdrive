@@ -13,7 +13,7 @@ The agent needs to work reliably as a teaching example. Learners will preview it
 ## Project Structure
 
 ```
-force-app/main/default/
+afdx-pro-code-testdrive/force-app/main/default/
   aiAuthoringBundles/Local_Info_Agent/
     Local_Info_Agent.agent          ← Agent Script (the file you'll be editing)
     Local_Info_Agent.bundle-meta.xml
@@ -35,7 +35,7 @@ force-app/main/default/
     AFDX_User_Perms.permissionsetgroup-meta.xml
 specs/
   Local_Info_Agent-testSpec.yaml    ← Agent test specification
-.a4drules/
+afdx-pro-code-testdrive/.a4drules/
   agent-script-rules-no-edit.md     ← Agent Script language reference (AI rules)
   agent-preview-rules-no-edit.md    ← Agent preview CLI reference (AI rules)
   agent-testing-rules-no-edit.md    ← Agent testing CLI reference (AI rules)
@@ -142,7 +142,7 @@ The test spec at `specs/Local_Info_Agent-testSpec.yaml` defines 9 test cases cov
 
 ## AI Rules Reference
 
-The `.a4drules/` directory contains AI rules files that define Agent Script syntax, preview commands, and testing commands. These are loaded automatically by the Agentforce DX extension. If you need to understand Agent Script syntax or available keywords, read `.a4drules/agent-script-rules-no-edit.md`.
+The `afdx-pro-code-testdrive/.a4drules/` directory contains AI rules files that define Agent Script syntax, preview commands, and testing commands. These are loaded automatically by the Agentforce DX extension. If you need to understand Agent Script syntax or available keywords, read `afdx-pro-code-testdrive/.a4drules/agent-script-rules-no-edit.md`.
 
 ## Refinement Goals
 

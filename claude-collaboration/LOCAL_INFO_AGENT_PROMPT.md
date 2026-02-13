@@ -18,10 +18,10 @@ project structure, agent script overview, backing implementation details, known 
 validation/preview/deploy commands, and refinement goals.
 
 The Agent Script source file is at:
-`force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`
+`afdx-pro-code-testdrive/force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`
 
 The Agent Script syntax rules are at:
-`.a4drules/agent-script-rules-no-edit.md`
+`afdx-pro-code-testdrive/.a4drules/agent-script-rules-no-edit.md`
 
 The org is connected — the default target org is set and all backing code
 (Apex, Flow, Prompt Template) is deployed.
@@ -141,9 +141,9 @@ Prompt Template Get_Event_Info, Flow Get_Resort_Hours) are historically known-go
 is newer and less battle-tested, but start by assuming the Agent Script is the issue.
 
 If Agent Script changes don't resolve a behavior, THEN investigate backing implementations:
-- Apex: `force-app/main/default/classes/CheckWeather.cls`
-- Prompt Template: `force-app/main/default/genAiPromptTemplateActvs/Get_Event_Info.*`
-- Flow: look for `Get_Resort_Hours` in `force-app/main/default/flows/`
+- Apex: `afdx-pro-code-testdrive/force-app/main/default/classes/CheckWeather.cls`
+- Prompt Template: `afdx-pro-code-testdrive/force-app/main/default/genAiPromptTemplateActvs/Get_Event_Info.*`
+- Flow: look for `Get_Resort_Hours` in `afdx-pro-code-testdrive/force-app/main/default/flows/`
 
 ## Workflow
 
@@ -180,7 +180,7 @@ sf agent test run --api-name Local_Info_Agent_Test
 ## What NOT to Do
 
 - Don't rewrite the entire agent from scratch — make targeted fixes
-- Don't modify `.a4drules/` files — they're shared reference docs
+- Don't modify `afdx-pro-code-testdrive/.a4drules/` files — they're shared reference docs
 - Don't deploy the AiAuthoringBundle until all three issues are addressed
 - Don't change backing implementations unless Agent Script fixes are insufficient
 - Don't add new topics or actions — fix what's there

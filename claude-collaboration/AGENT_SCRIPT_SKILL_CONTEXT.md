@@ -137,7 +137,7 @@ first child. Validation will fail without it."
 
 ## 3. Existing Materials Assessment
 
-The project already has three reference documents in `.a4drules/`:
+The project already has three reference documents in `afdx-pro-code-testdrive/.a4drules/`:
 
 | File | Lines | Content | Quality | What's Missing |
 |------|-------|---------|---------|----------------|
@@ -150,7 +150,7 @@ The project already has three reference documents in `.a4drules/`:
 the runtime uses it. The Skill needs to fill this gap with the execution model (P1)
 and annotated examples (P2).
 
-**The existing `.a4drules` files should NOT be duplicated into the Skill.** The Skill should
+**The existing `afdx-pro-code-testdrive/.a4drules` files should NOT be duplicated into the Skill.** The Skill should
 reference them as bundled resources. The Skill's main SKILL.md should add what's missing:
 the notional machine, analogies, patterns, and anti-patterns.
 
@@ -206,7 +206,7 @@ description: "**Agent Script Authoring**: Create, edit, validate, preview, and t
 
 ### Complete Agent Script Example: Local Info Agent
 
-Location: `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`
+Location: `afdx-pro-code-testdrive/force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.agent`
 
 This is a fully functional agent with:
 - `system` block with instructions and messages
@@ -220,21 +220,21 @@ This is a fully functional agent with:
 
 ### Simpler Agent Script Example: My_First_NGA_Agent
 
-Location: `temp/demoTemp/aiAuthoringBundles/My_First_NGA_Agent/My_First_NGA_Agent.agent`
+Location: `afdx-pro-code-testdrive/temp/demoTemp/aiAuthoringBundles/My_First_NGA_Agent/My_First_NGA_Agent.agent`
 
 Simpler agent demonstrating linked variables, basic topic structure, and minimal configuration.
 
 ### Test Specification Example
 
-Location: `specs/Local_Info_Agent-testSpec.yaml`
+Location: `afdx-pro-code-testdrive/specs/Local_Info_Agent-testSpec.yaml`
 
 Shows test cases with: single-turn tests, multi-turn tests (conversationHistory), metric selection, expectedActions (including empty array for "should NOT invoke action").
 
 ### Existing Rules Files
 
-- `.a4drules/agent-script-rules-no-edit.md` — 716 lines, complete syntax reference
-- `.a4drules/agent-preview-rules-no-edit.md` — 140 lines, preview CLI commands
-- `.a4drules/agent-testing-rules-no-edit.md` — 224 lines, test spec format and CLI commands
+- `afdx-pro-code-testdrive/.a4drules/agent-script-rules-no-edit.md` — 716 lines, complete syntax reference
+- `afdx-pro-code-testdrive/.a4drules/agent-preview-rules-no-edit.md` — 140 lines, preview CLI commands
+- `afdx-pro-code-testdrive/.a4drules/agent-testing-rules-no-edit.md` — 224 lines, test spec format and CLI commands
 
 ---
 
@@ -343,7 +343,7 @@ Run `sf agent validate authoring-bundle` on every generated/modified script.
 
 - The Skill is for Claude (Anthropic's model), not a generic LLM
 - The Skill format follows Anthropic's open standard (see Section 4)
-- The existing `.a4drules` files are **not editable** — the Skill can reference them
+- The existing `afdx-pro-code-testdrive/.a4drules` files are **not editable** — the Skill can reference them
   but not modify them
 - The Skill should work in both Cowork mode (desktop app) and Claude Code (CLI)
 - Keep SKILL.md under 500 lines
