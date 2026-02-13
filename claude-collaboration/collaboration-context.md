@@ -267,3 +267,22 @@ collaborative iteration. Recognized and acknowledged. Future work should be incr
 
 **Unresolved at session end**: North stars, Jag's repo review, section-by-section SKILL.md
 review, reference file verification, evaluation approach.
+
+### Session 1 (continued) — February 13, 2026
+
+**What happened**:
+- Rewrote `AGENT_SCRIPT_SKILL_PROMPT.md` from an 86-line build specification to a 35-line
+  collaboration-first session-opener. Points to collaboration-context.md instead of repeating
+  context. Explicitly sets collaborative mode ("not a build task").
+- Updated all file paths in `claude-collaboration/` to include `afdx-pro-code-testdrive/`
+  prefix — Vivek plans to mount `~/git` as the root folder for future sessions so he can
+  access multiple repos (including Jag's sf-skills repo).
+- Files updated: collaboration-context.md, AGENT_SCRIPT_SKILL_CONTEXT.md,
+  AGENT_SCRIPT_SKILL_PROMPT.md, LOCAL_INFO_AGENT_PROMPT.md, LOCAL_INFO_AGENT_REFINEMENT.md,
+  guidelines-for-ai-rules.md
+- Files intentionally NOT updated: SAMPLE-CLAUDE-INSTRUCTIONS-FROM-OTHER-TEAM.md (other
+  team's document, paths are theirs), agent-script-skill/ files (project-relative paths
+  correct for skill context)
+
+**Still unresolved**: Same as Session 1 — north stars, Jag's repo review, section-by-section
+SKILL.md review, reference file verification, evaluation approach.

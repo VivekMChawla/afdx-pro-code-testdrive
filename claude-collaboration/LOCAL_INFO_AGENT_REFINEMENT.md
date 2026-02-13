@@ -33,7 +33,7 @@ afdx-pro-code-testdrive/force-app/main/default/
   permissionsetgroups/
     AFDX_Agent_Perms.permissionsetgroup-meta.xml
     AFDX_User_Perms.permissionsetgroup-meta.xml
-specs/
+afdx-pro-code-testdrive/specs/
   Local_Info_Agent-testSpec.yaml    ← Agent test specification
 afdx-pro-code-testdrive/.a4drules/
   agent-script-rules-no-edit.md     ← Agent Script language reference (AI rules)
