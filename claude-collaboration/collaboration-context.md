@@ -23,7 +23,7 @@ Vivek is a Product Management Director at Salesforce DX Services (IC, multi-prod
 engineering management, and product management. Expert in Salesforce Platform, SFDX,
 ISV ecosystem. Currently deepening PM craft and AI concepts knowledge.
 
-### How He Works
+### How Vivek Works
 
 - Processes through conversation, not solo work. Blank pages trigger paralysis — he needs
   structure first, then creativity flows.
@@ -33,7 +33,7 @@ ISV ecosystem. Currently deepening PM craft and AI concepts knowledge.
 - Ask questions only when genuinely needed, not as exercises.
 - Directness over agreeableness — push back if he's going suboptimal.
 
-### What He Needs From Claude
+### What Vivek Needs From Claude
 
 - **Collaboration, not transaction.** Don't rush to produce finished artifacts. Reason
   through decisions together so Vivek understands the "why."
@@ -44,7 +44,7 @@ ISV ecosystem. Currently deepening PM craft and AI concepts knowledge.
 - **Always ask if he has a template** before proposing one.
 - **Be honest about uncertainty.** If you don't know something or are guessing, say so.
 
-### His Expertise (What to Assume)
+### Vivek's Expertise (What to Assume)
 
 - Software engineering, architecture, public speaking, solid PM fundamentals
 - Deep SFDX/Salesforce Platform knowledge — don't explain basic Salesforce concepts
