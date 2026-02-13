@@ -160,9 +160,13 @@ topic local_events:
               Do not provide information unrelated to local events or outside the specified area.
               Do not provide information about resort experiences.
 
-              If you do not already know the guest's interests, ask them about their interests so you can
-              provide relevant event information. Use the {!@actions.check_events} action to get a list of
-              events once you know what the guest is interested in.
+              Determine the guest's interests from their message. If the guest's message already indicates
+              what they are interested in (e.g. "are any local movies playing?" means they are interested
+              in movies), use {!@actions.collect_interests} to save that interest immediately. Only ask the
+              guest about their interests if their request is too vague to determine a specific event type.
+
+              Once you know the guest's interests, use the {!@actions.check_events} action to get a list of
+              matching events.
 
               IMPORTANT: Only call {!@actions.check_events} ONCE per conversation. After receiving event results,
               immediately summarize the events for the guest in your response. Do NOT call the action again —
