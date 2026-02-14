@@ -133,25 +133,31 @@ Each steel thread has two sections:
 ### Build Instructions
 
 1. **Comprehend the existing agent** — before modifying, parse the existing
-   agent's structure (topics, variables, actions, transitions) to understand
-   what's already there and avoid breaking it
+   agent's structure: topics, variables, actions, transitions, backing logic,
+   and flow control
 
-2. **Design the modification** — update the existing design doc and Mermaid
-   flowchart to show the new topic, its transitions, and how it integrates
+2. **Produce an Agent Spec** — consolidate comprehension into an Agent Spec
+   as the baseline. This is both the starting reference and the artifact the
+   developer reviews before changes begin
+
+3. **Design the modification** — update the Agent Spec to show the new
+   topic, its transitions, backing logic requirements, and how it integrates
    with the existing topic graph
 
 3. **Analyze available backing logic** — scan the project for Apex classes,
    Flows, and Prompt Templates that could serve the booking and availability
    actions. Map existing implementations or articulate gaps with stubbed
-   requirements
+   requirements. Record findings in the Agent Spec
 
 4. **Implement the new topic with these characteristics:**
    - New topic with correct block structure
    - Multi-condition gating: availability check must complete before booking
      confirmation, room number must be collected before charging
    - `@utils.setVariables` to collect room number before the gated action
-   - Correctly stubbed action targets for availability check, booking
-     confirmation, and folio charge
+   - Action targets for availability check, booking confirmation, and folio
+     charge with declared protocols, input/output variable specifications
+     (including correct data types), and comments describing what the backing
+     implementation must do
    - Proper transitions connecting the new topic to the existing topic graph
    - No regressions to existing topics (weather, events, facility hours)
 
@@ -162,19 +168,19 @@ Each steel thread has two sections:
 
 ### Acceptance Criteria
 
-- Updated Mermaid flowchart shows new topic integrated with existing graph
-  (no orphaned topics, no broken transitions)
-- Backing logic analysis is present for all new actions
+- Agent Spec is produced for the existing agent, then updated to reflect the
+  planned modification (no orphaned topics, no broken transitions)
+- Backing logic analysis is present in the Agent Spec for all new actions
 - The modified `.agent` file compiles cleanly on `sf agent validate authoring-bundle`
 - New variables (room number, treatment preference) are correctly declared
   with appropriate types
 - Booking confirmation cannot be triggered until availability is checked AND
   room number is collected (multi-condition gate)
-- All three original topics (weather, events, facility hours) still route
-  correctly from the topic selector in preview — no regressions
-- New spa booking topic is reachable from the topic selector
 - Availability check fires before booking confirmation (order is enforced,
   not coincidental)
+- New spa booking topic is reachable from the topic selector
+- All three original topics (weather, events, facility hours) still route
+  correctly from the topic selector in preview — no regressions
 
 ---
 
