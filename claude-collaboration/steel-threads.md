@@ -84,43 +84,40 @@ Each steel thread has two sections:
 ### Build Instructions
 
 1. **Locate the agent** — the skill must teach enough about Agentforce metadata
-   structure (AAB directory conventions, `sfdx-project.json` package directories) and
-   Salesforce CLI retrieval to find the `.agent` file, whether it's already in the
-   local project or needs to be retrieved from the org
+   structure (AAB directory conventions, `sfdx-project.json` package directories)
+   and Salesforce CLI retrieval to find the `.agent` file, whether it's already
+   in the local project or needs to be retrieved from the org
 
-2. **Parse the agent's structure** — identify all blocks, topics, variables, actions,
-   and transitions
+2. **Comprehend the agent** — parse all blocks, topics, variables, actions, and
+   transitions. Trace flow control: how conversations move through topics, what
+   gates exist, what triggers transitions. Analyze action integration: each
+   action's target protocol, inputs/outputs, and backing logic
 
-3. **Trace the flow control** — map how conversations move through topics, what gates
-   exist, what triggers transitions
+3. **Produce an Agent Spec** — consolidate comprehension into an Agent Spec:
+   purpose, topic graph as Mermaid flowchart (with transition types and gating
+   conditions), actions with backing logic mappings, variables (where set,
+   where read, what gates they control), gating logic, and behavioral intent
 
-4. **Analyze action integration** — identify each action's target protocol, inputs/outputs,
-   and what backing logic it requires
-
-5. **Produce inline `#` comment annotations** explaining flow decisions, gating rationale,
-   and topic relationships
-
-6. **Generate a Mermaid flowchart** showing the topic graph with transition types
-   (handoff vs. delegation) and gating conditions
-
-7. **Produce a Markdown design doc** summarizing: agent purpose, topic responsibilities,
-   variable usage, action dependencies, and flow control rationale
+4. **Produce inline `#` comment annotations** on the `.agent` file explaining
+   flow decisions, gating rationale, and topic relationships
 
 ### Acceptance Criteria
 
-- The agent is located correctly, whether from local project structure or retrieved
-  from the org
-- The Mermaid flowchart accurately represents all topics and transitions (no missing
-  topics, no phantom transitions)
+- The agent is located correctly, whether from local project structure or
+  retrieved from the org
+- An Agent Spec is produced that accurately represents the agent's structure,
+  including topic graph as Mermaid flowchart
 - Transition types are correctly identified (handoff vs. delegation)
 - Gated actions are called out with their gating conditions
-- The Markdown summary correctly describes the purpose of each topic
-- Variable usage is traced correctly (where set, where read, what gates they control)
-- Action targets and their backing requirements are identified
-- Inline comments, when applied to the `.agent` file, don't break compilation
-  (`sf agent validate` still passes)
-- A developer unfamiliar with the agent could read the outputs and accurately explain
-  the agent's behavior without reading the `.agent` file directly
+- Variable usage is traced correctly (where set, where read, what gates
+  they control)
+- Action targets and their backing requirements are identified in the
+  Agent Spec
+- Inline comments, when applied to the `.agent` file, don't break
+  compilation (`sf agent validate` still passes)
+- A developer unfamiliar with the agent could read the Agent Spec and
+  accurately explain the agent's behavior without reading the `.agent`
+  file directly
 
 ---
 
