@@ -191,7 +191,8 @@ Each steel thread has two sections:
 3. **Diagnose errors** — for each validation error, the skill must guide the
    LLM to:
    - Identify the root cause (not just the symptom the validator reports)
-   - Explain *why* Agent Script requires this (connect to the execution model)
+   - Explain *why* Agent Script requires this (connect to the Agent Script
+     execution model)
    - Propose a specific fix with correct syntax
 
 4. **Apply fixes** — make targeted edits that resolve the errors without
@@ -227,8 +228,8 @@ from each category:
   infinite loops of fix-break-fix)
 - Each fix is targeted — only the broken parts change, existing working
   behavior is preserved
-- Explanations connect errors to the execution model (not just "this is
-  the correct syntax" but *why* it needs to be that way)
+- Explanations connect errors to the Agent Script execution model (not just
+  "this is the correct syntax" but *why* it needs to be that way)
 - The agent's intended behavior is unchanged after fixes (the developer's
   design intent is preserved)
 - Block ordering errors are fixed by moving blocks, not rewriting content
@@ -240,50 +241,63 @@ from each category:
 
 ### Prompt
 
-> "My agent validates fine, but it's not working right. When a guest asks about
-> local events, the agent just keeps calling the check_events action over and
-> over without ever responding. And sometimes it answers off-topic questions
-> instead of redirecting them."
+> "My resort agent isn't working right. When a guest asks about local events,
+> the agent seems to get stuck and never actually answers the question. And
+> sometimes it tries to help with things it shouldn't, like giving restaurant
+> recommendations when that's not part of the agent."
 
 ### Build Instructions
 
-1. **Comprehend the agent** — parse the agent's structure, topics, actions,
-   transitions, and gating logic
+1. **Validate first** — run `sf agent validate authoring-bundle` to rule out
+   structural issues before investigating behavioral ones
 
-2. **Analyze the described symptoms against the execution model** — map each
-   symptom to a likely root cause:
-   - Action loop → missing "call only ONCE" directive, or missing gate that
-     would prevent re-invocation
-   - Off-topic leakage → topic selector instructions too broad, or missing
-     guardrail topic, or guardrail topic not triggering correctly
+2. **Comprehend the agent and produce an Agent Spec** — parse structure,
+   topics, actions, transitions, gating logic, and backing logic. Generate
+   an Agent Spec (purpose, topic graph as Mermaid flowchart, actions with
+   backing logic mappings, variables, gating conditions, behavioral intent)
+   as the baseline artifact. Present to the developer — structural or flow
+   control issues may be immediately apparent in the spec
 
-3. **Trace the flow control** — walk through the conversation path that would
-   produce each symptom, identifying where the agent's logic diverges from
-   the developer's intent
+3. **Form hypotheses using the Agent Script execution model** — map each
+   described symptom to likely root causes based on how Agent Script processes
+   topics, actions, and gating at runtime (e.g., action re-invocation without
+   gating, topic selector instructions too broad, missing guardrail topic)
 
-4. **Propose targeted fixes** — for each behavioral issue:
-   - Explain the root cause in terms of how the Atlas Reasoning Engine
-     processes the agent's instructions
-   - Propose a specific change (instruction wording, gating condition,
-     transition adjustment)
-   - Explain why this fix addresses the root cause
+4. **Reproduce symptoms in preview and analyze session trace data** — use
+   `sf agent preview` to actually execute the conversation paths described
+   by the developer (do not reason about expected behavior from code alone —
+   the Agent Spec represents intended design, not actual runtime behavior).
+   Then examine the session trace output to find deeper issues that
+   conversation observation alone won't reveal (e.g., the grounding service
+   masking successful action results as failures, causing the agent to retry
+   or stall)
 
-5. **Apply fixes and verify** — make the changes, validate compilation still
-   passes, then test in preview to confirm the behavioral issues are resolved
+5. **Propose targeted fixes** — for each issue, explain root cause in terms
+   of the Agent Script execution model, propose a specific change
+   (instruction wording, gating condition, transition adjustment), and explain
+   why the fix addresses the root cause
+
+6. **Apply fixes and verify** — make changes, validate compilation still
+   passes, then test in preview to confirm behavioral issues are resolved.
+   Compare the post-fix agent against the original Agent Spec to confirm the
+   agent's intended structure was preserved
 
 ### Acceptance Criteria
 
-- Action loop is eliminated — `check_events` fires once per user request,
-  not repeatedly
-- Off-topic questions are redirected by the guardrail topic, not answered
-  by domain topics
+- Agent Spec is produced during comprehension and used as a baseline to
+  verify fixes didn't alter the agent's intended structure
+- Diagnosis includes session trace analysis, not just conversation replay —
+  hidden issues like grounding service masking are surfaced
+- Explanations reference the Agent Script execution model to explain *why*
+  the behavior occurred
 - Fixes are instruction-level changes (wording, gating, transitions), not
-  structural rewrites — the agent's topic graph and action definitions remain
-  intact
-- Explanations reference the Atlas Reasoning Engine's processing cycle to
-  explain *why* the behavior occurred (not just what to change)
+  structural rewrites
 - Compilation still passes after behavioral fixes
-- Existing correct behavior (weather inquiries, facility hours) is unaffected
+- Agent responds to the user's question rather than stalling or looping on
+  the same action
+- Off-topic requests are redirected by the guardrail topic, not answered by
+  domain topics
+- Existing correct behavior is unaffected by the changes
 
 ---
 
