@@ -84,7 +84,7 @@ Each steel thread has two sections:
 ### Build Instructions
 
 1. **Locate the agent** — the skill must teach enough about Agentforce metadata
-   structure (AAB directory conventions, `sfdx-project.json` package directories)
+   structure (`AiAuthoringBundle` directory conventions, `sfdx-project.json` package directories)
    and Salesforce CLI retrieval to find the `.agent` file, whether it's already
    in the local project or needs to be retrieved from the org
 
@@ -316,40 +316,47 @@ from each category:
 
 ### Prompt
 
-> "My agent is working well in preview. How do I get it deployed to my org so
-> other people can use it?"
+> "My agent is working well in preview. Deploy it so my team can start
+> using it."
 
 ### Build Instructions
 
-1. **Verify readiness** — confirm the agent validates cleanly and the developer
-   has tested in preview
+1. **Verify readiness** — confirm the agent validates cleanly and the
+   developer has tested in preview
 
-2. **Explain the publish/deploy pipeline** — walk through what happens when an
-   agent goes from local AAB files to a running agent in the org:
-   - Source deploy (`sf project deploy start`)
-   - Agent activation in the org
-   - Any org-level configuration needed (connected apps, permissions, channels)
+2. **Deploy the `AiAuthoringBundle` and all dependencies** — run
+   `sf project deploy start` to push the `AiAuthoringBundle` and its
+   backing logic (Apex classes, Flows, Prompt Templates, etc.) to the org.
+   All dependencies must be deployed prior to, or concurrent with, the
+   deployment of the `AiAuthoringBundle`. Publishing will fail if any
+   dependencies are not deployed to the org.
 
-3. **Execute deployment** — run the appropriate CLI commands to deploy the
-   agent metadata to the org
+3. **Publish the agent** — run `sf agent publish authoring-bundle` to
+   commit the current version and hydrate Bot/GenAi* metadata. Confirm
+   the hydrated metadata is auto-retrieved to the local project
 
-4. **Verify deployment** — confirm the agent metadata arrived in the org
-   correctly
+4. **Activate the agent** — run `sf agent activate` to make the published
+   version live
 
-5. **Handle deployment errors** — if deploy fails, diagnose the error
-   (metadata conflicts, missing dependencies, permission issues) and guide
-   the developer through resolution
+5. **Verify the published agent** — preview the agent using `--api-name`
+   instead of `--authoring-bundle` (which routes through the runtime path,
+   confirming the full deploy → publish → activate pipeline succeeded)
+
+6. **Handle errors** — if any step fails, diagnose the error (metadata
+   conflicts, missing dependencies, permission issues) and guide the
+   developer through resolution
 
 ### Acceptance Criteria
 
-- The developer understands the distinction between local preview and org
-  deployment
-- Deployment commands are correct and execute successfully
-- Deployment errors (if any) are diagnosed with root cause, not just
+- All dependencies are deployed before publish is attempted
+- The agent version is published and the hydrated metadata is present
+  in the local project
+- The agent is activated and responds correctly when previewed with
+  `--api-name` (runtime path)
+- Pipeline errors (if any) are diagnosed with root cause, not just
   the CLI error message
-- The agent metadata is present in the org after deployment
-- The skill correctly identifies prerequisites that must be in place before
-  deployment (backing logic deployed, permissions configured)
+- If a previous version was active, it is correctly deactivated before
+  the new version is activated
 
 ---
 
