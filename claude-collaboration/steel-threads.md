@@ -118,34 +118,310 @@ Each steel thread has two sections:
 
 ## Steel Thread 3: Modify
 
-*To be defined*
+### Prompt
+
+> "I need to add appointment booking to my resort agent. Guests should be able
+> to book spa treatments, and the agent should check availability before
+> confirming. It should also ask for the guest's room number so we can charge
+> it to their folio."
+
+### Build Instructions
+
+1. **Comprehend the existing agent** — before modifying, parse the existing
+   agent's structure (topics, variables, actions, transitions) to understand
+   what's already there and avoid breaking it
+
+2. **Design the modification** — update the existing design doc and Mermaid
+   flowchart to show the new topic, its transitions, and how it integrates
+   with the existing topic graph
+
+3. **Analyze available backing logic** — scan the project for Apex classes,
+   Flows, and Prompt Templates that could serve the booking and availability
+   actions. Map existing implementations or articulate gaps with stubbed
+   requirements
+
+4. **Implement the new topic with these characteristics:**
+   - New topic with correct block structure
+   - Multi-condition gating: availability check must complete before booking
+     confirmation, room number must be collected before charging
+   - `@utils.setVariables` to collect room number before the gated action
+   - Correctly stubbed action targets for availability check, booking
+     confirmation, and folio charge
+   - Proper transitions connecting the new topic to the existing topic graph
+   - No regressions to existing topics (weather, events, facility hours)
+
+5. **Validate** via `sf agent validate authoring-bundle` and resolve errors
+
+6. **Verify behavior** via `sf agent preview` — test both new and existing
+   functionality
+
+### Acceptance Criteria
+
+- Updated Mermaid flowchart shows new topic integrated with existing graph
+  (no orphaned topics, no broken transitions)
+- Backing logic analysis is present for all new actions
+- The modified `.agent` file compiles cleanly on `sf agent validate authoring-bundle`
+- New variables (room number, treatment preference) are correctly declared
+  with appropriate types
+- Booking confirmation cannot be triggered until availability is checked AND
+  room number is collected (multi-condition gate)
+- All three original topics (weather, events, facility hours) still route
+  correctly from the topic selector in preview — no regressions
+- New spa booking topic is reachable from the topic selector
+- Availability check fires before booking confirmation (order is enforced,
+  not coincidental)
 
 ---
 
 ## Steel Thread 4: Diagnose (Compilation)
 
-*To be defined*
+### Prompt
+
+> "I'm trying to preview my agent but it's throwing errors. Can you help me
+> fix it?"
+
+### Build Instructions
+
+1. **Locate and read the agent** — find the `.agent` file in the project and
+   parse its structure
+
+2. **Run validation** — execute `sf agent validate authoring-bundle` and
+   capture the error output
+
+3. **Diagnose errors** — for each validation error, the skill must guide the
+   LLM to:
+   - Identify the root cause (not just the symptom the validator reports)
+   - Explain *why* Agent Script requires this (connect to the execution model)
+   - Propose a specific fix with correct syntax
+
+4. **Apply fixes** — make targeted edits that resolve the errors without
+   introducing new ones or changing the agent's intended behavior
+
+5. **Re-validate** — run `sf agent validate authoring-bundle` again to confirm
+   the fix worked. If new errors surface, repeat the diagnose-fix cycle
+
+6. **Explain what was wrong** — provide a brief summary of each error, its
+   root cause, and what was changed, so the developer learns (not just gets
+   a fix)
+
+### Error Categories to Cover
+
+The agent file used for this steel thread should contain at least one error
+from each category:
+
+- **Block ordering** — blocks in wrong sequence (e.g., topics before variables)
+- **Indentation** — incorrect indentation that changes block nesting or breaks
+  parent-child relationships (Agent Script is indentation-sensitive)
+- **Syntax** — malformed block syntax, wrong transition syntax for context
+  (`@utils.transition to` vs. bare `transition to`)
+- **Missing declarations** — variable referenced but not declared, action
+  used but not defined
+- **Type mismatches** — variable used in a context that conflicts with its
+  declared type
+- **Structural** — duplicate topic names, orphaned topics with no inbound
+  transitions
+
+### Acceptance Criteria
+
+- All validation errors are resolved in a single diagnose-fix cycle (no
+  infinite loops of fix-break-fix)
+- Each fix is targeted — only the broken parts change, existing working
+  behavior is preserved
+- Explanations connect errors to the execution model (not just "this is
+  the correct syntax" but *why* it needs to be that way)
+- The agent's intended behavior is unchanged after fixes (the developer's
+  design intent is preserved)
+- Block ordering errors are fixed by moving blocks, not rewriting content
+- Re-validation passes cleanly after all fixes are applied
 
 ---
 
 ## Steel Thread 5: Diagnose (Behavioral)
 
-*To be defined*
+### Prompt
+
+> "My agent validates fine, but it's not working right. When a guest asks about
+> local events, the agent just keeps calling the check_events action over and
+> over without ever responding. And sometimes it answers off-topic questions
+> instead of redirecting them."
+
+### Build Instructions
+
+1. **Comprehend the agent** — parse the agent's structure, topics, actions,
+   transitions, and gating logic
+
+2. **Analyze the described symptoms against the execution model** — map each
+   symptom to a likely root cause:
+   - Action loop → missing "call only ONCE" directive, or missing gate that
+     would prevent re-invocation
+   - Off-topic leakage → topic selector instructions too broad, or missing
+     guardrail topic, or guardrail topic not triggering correctly
+
+3. **Trace the flow control** — walk through the conversation path that would
+   produce each symptom, identifying where the agent's logic diverges from
+   the developer's intent
+
+4. **Propose targeted fixes** — for each behavioral issue:
+   - Explain the root cause in terms of how the Atlas Reasoning Engine
+     processes the agent's instructions
+   - Propose a specific change (instruction wording, gating condition,
+     transition adjustment)
+   - Explain why this fix addresses the root cause
+
+5. **Apply fixes and verify** — make the changes, validate compilation still
+   passes, then test in preview to confirm the behavioral issues are resolved
+
+### Acceptance Criteria
+
+- Action loop is eliminated — `check_events` fires once per user request,
+  not repeatedly
+- Off-topic questions are redirected by the guardrail topic, not answered
+  by domain topics
+- Fixes are instruction-level changes (wording, gating, transitions), not
+  structural rewrites — the agent's topic graph and action definitions remain
+  intact
+- Explanations reference the Atlas Reasoning Engine's processing cycle to
+  explain *why* the behavior occurred (not just what to change)
+- Compilation still passes after behavioral fixes
+- Existing correct behavior (weather inquiries, facility hours) is unaffected
 
 ---
 
 ## Steel Thread 6: Publish & Deploy
 
-*To be defined*
+### Prompt
+
+> "My agent is working well in preview. How do I get it deployed to my org so
+> other people can use it?"
+
+### Build Instructions
+
+1. **Verify readiness** — confirm the agent validates cleanly and the developer
+   has tested in preview
+
+2. **Explain the publish/deploy pipeline** — walk through what happens when an
+   agent goes from local AAB files to a running agent in the org:
+   - Source deploy (`sf project deploy start`)
+   - Agent activation in the org
+   - Any org-level configuration needed (connected apps, permissions, channels)
+
+3. **Execute deployment** — run the appropriate CLI commands to deploy the
+   agent metadata to the org
+
+4. **Verify deployment** — confirm the agent metadata arrived in the org
+   correctly
+
+5. **Handle deployment errors** — if deploy fails, diagnose the error
+   (metadata conflicts, missing dependencies, permission issues) and guide
+   the developer through resolution
+
+### Acceptance Criteria
+
+- The developer understands the distinction between local preview and org
+  deployment
+- Deployment commands are correct and execute successfully
+- Deployment errors (if any) are diagnosed with root cause, not just
+  the CLI error message
+- The agent metadata is present in the org after deployment
+- The skill correctly identifies prerequisites that must be in place before
+  deployment (backing logic deployed, permissions configured)
 
 ---
 
 ## Steel Thread 7: Delete & Rename
 
-*To be defined*
+### Prompt
+
+> "I need to rename my agent from 'Local Info Agent' to 'Coral Cloud Concierge'.
+> Also, the old 'dining_recommendations' topic is no longer needed — can you
+> remove it completely?"
+
+### Build Instructions
+
+1. **Understand the rename scope** — Agent Script names appear in multiple
+   locations (agent file, metadata references, possibly directory names).
+   The skill must guide identification of all locations that need updating
+
+2. **Execute the rename** — update all references consistently, ensuring no
+   orphaned references to the old name
+
+3. **Understand deletion scope** — before deleting a topic, trace its
+   connections: inbound transitions, outbound transitions, variables it sets
+   that other topics read, actions it defines that might be shared
+
+4. **Execute the deletion** — remove the topic and all its associated
+   references (transitions pointing to it, variables only it used, actions
+   only it invoked)
+
+5. **Validate** — run `sf agent validate authoring-bundle` to confirm the
+   rename and deletion didn't break anything
+
+6. **Verify** — confirm in preview that remaining topics still work and
+   the deleted topic is no longer reachable
+
+### Acceptance Criteria
+
+- Agent name is updated consistently across all locations (no orphaned
+  references to old name)
+- Deleted topic is fully removed: no dangling transitions pointing to it,
+  no orphaned variables or actions that only it used
+- Variables and actions shared with other topics are preserved (only
+  topic-specific elements are removed)
+- The agent validates cleanly after both operations
+- Remaining topics still route correctly in preview
+- The deleted topic is not reachable from the topic selector
 
 ---
 
 ## Steel Thread 8: Test
 
-*To be defined*
+### Prompt
+
+> "I want to make sure my agent handles edge cases well before I deploy it.
+> Can you help me create test specs I can run automatically?"
+
+### Build Instructions
+
+1. **Comprehend the agent** — parse the agent's structure to understand all
+   topics, transitions, gating conditions, and action dependencies
+
+2. **Explore behavior in preview** — use `sf agent preview` to interactively
+   exercise the agent's topics, observe how it handles various inputs, and
+   identify behavioral patterns that need test coverage. This is the discovery
+   step, not the deliverable
+
+3. **Design test scenarios** — based on comprehension and preview exploration,
+   produce a structured set of test cases that exercise:
+   - **Happy paths** — each topic's primary flow from entry to resolution
+   - **Gating conditions** — confirm gates block when unsatisfied and pass
+     when satisfied
+   - **Transitions** — verify each transition type works correctly (handoff
+     returns, delegation doesn't)
+   - **Guardrails** — off-topic redirection, escalation triggering
+   - **Edge cases** — ambiguous inputs that could match multiple topics,
+     rapid topic switching, empty/null variable states
+
+4. **Generate AiEvaluationDefinition YAML specs** — translate test scenarios
+   into valid AiEvaluationDefinition metadata files that can be deployed and
+   executed as automated tests. Each spec must include:
+   - Test name and description
+   - User utterance(s) that trigger the scenario
+   - Expected outcomes (topic activation, action invocation, response content)
+   - Pass/fail evaluation criteria
+
+5. **Validate the test specs** — ensure the generated YAML is structurally
+   valid and deployable as AiEvaluationDefinition metadata
+
+### Acceptance Criteria
+
+- Test scenarios cover all topics (no untested topics)
+- Gating conditions are tested in both satisfied and unsatisfied states
+- At least one edge case per topic is included
+- Off-topic and escalation guardrails are tested
+- Test cases are specific enough that pass/fail is unambiguous (not
+  "agent should respond appropriately")
+- All test scenarios are expressed as valid AiEvaluationDefinition YAML specs,
+  not just prose descriptions
+- Generated YAML is structurally valid and deployable as metadata
+- Preview was used for behavioral exploration, not as the test execution
+  mechanism
