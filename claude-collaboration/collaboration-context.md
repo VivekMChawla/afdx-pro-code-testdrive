@@ -196,18 +196,18 @@ steel thread scenarios that prove each one works.
    identify incorrect topic routing, unexpected action selection, grounding failures,
    and instruction evaluation issues.
 
-6. **Publish & Deploy** — Three-step pipeline to go from local AAB to a running agent:
-   deploy AAB + all dependencies (`sf project deploy start`), publish the agent
+6. **Publish & Deploy** — Three-step pipeline to go from local `AiAuthoringBundle` to a
+   running agent: deploy `AiAuthoringBundle` + all dependencies (`sf project deploy start`), publish the agent
    (`sf agent publish authoring-bundle` — commits the version, hydrates Bot/GenAi*
    metadata, auto-retrieves to local project), then activate the published version.
    Publishing will fail if dependencies are missing from the org. A given agent can
    have multiple published versions but only one active at a time.
 
-7. **Delete & Rename** — Maintenance tasks complicated by AAB versioning. May have
+7. **Delete & Rename** — Maintenance tasks complicated by `AiAuthoringBundle` versioning. May have
    significant restrictions, especially rename. Needs discovery.
 
 8. **Test** — Create `AiEvaluationDefinition` tests. Open question: do these run against
-   AAB (Agent Script) agents or only published (Bot/GenAi*) agents? This affects when
+   `AiAuthoringBundle` (Agent Script) agents or only published (Bot/GenAi*) agents? This affects when
    in the workflow testing is viable.
    
 
@@ -288,7 +288,7 @@ The distinction is preview APIs vs. Runtime Agent API, not local vs. org.
 
 **Agent version lifecycle:**
 
-1. **Draft** — the working state during development (AAB files)
+1. **Draft** — the working state during development (`AiAuthoringBundle` files)
 2. **Published** — a committed version. Publishing locks the version — no further
    changes are possible to that version. Published versions start in an inactive
    state. A new draft version is created if changes are needed.
@@ -298,11 +298,13 @@ The distinction is preview APIs vs. Runtime Agent API, not local vs. org.
 
 **Deploy → Publish → Activate pipeline:**
 
-1. Deploy AAB + all dependencies via `sf project deploy start` (must happen first —
+1. Deploy `AiAuthoringBundle` + all dependencies via `sf project deploy start` (must happen first —
    publish fails if dependencies are missing from the org)
 2. Publish via `sf agent publish authoring-bundle` (commits version, hydrates
    Bot/GenAi* metadata, auto-retrieves hydrated metadata to local project)
-3. Activate via `sf agent activate` to make a published version live for runtime access
+3. Activate via `sf agent activate` to make a published version live for runtime
+   access (`sf agent deactivate` to take it offline or before replacing with a
+   different published version)
 
 #### Design-First Workflow (Recommended for Create, Valuable for Comprehend)
 
