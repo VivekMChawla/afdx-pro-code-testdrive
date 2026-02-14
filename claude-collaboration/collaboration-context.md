@@ -96,24 +96,30 @@ decision we make on this skill.
    serves it. Token discipline, structural elegance, and teaching quality are means
    to this end — not ends in themselves.
 
-2. **Build deep understanding, not just syntax knowledge.** The LLM has zero prior
+2. **Design for developers who know what they want, not how to implement it.** 
+   The skill should enable a developer who can describe their agent's purpose
+   and behavior in plain language — without requiring knowledge of Salesforce metadata types,
+   CLI commands, or backing implementation details. Designing for this persona ensures
+   more capable developers also succeed.
+
+3. **Build deep understanding, not just syntax knowledge.** The LLM has zero prior
    knowledge of Agent Script. It must understand Agent Script deeply enough to make
    correct *design* decisions — not just produce code that compiles. Syntax knowledge
-   produces valid code. Deep understanding produces code that woks as intended.
+   produces valid code. Deep understanding produces code that works as intended.
 
-3. **The skill must work standalone.** No assumed ecosystem — no other skills, no MCP
+4. **The skill must work standalone.** No assumed ecosystem — no other skills, no MCP
    servers, no custom tooling. A developer with this skill, the Salesforce CLI, and a
    Salesforce org can build a functional agent.
 
-4. **Earn every token.** The skill operates under a hard context budget imposed by
+5. **Earn every token.** The skill operates under a hard context budget imposed by
    Agentforce Vibes (AFV) and the Agent Skills spec. Every line must justify its
    place. Wasteful token consumption is a **product quality failure** for AFV customers.
 
-5. **Validate through automated testing.** Skill accuracy must be systematically
+6. **Validate through automated testing.** Skill accuracy must be systematically
    verifiable against a live org, not dependent on manual review or assumptions.
    Build testing into the process so claims stay current as the platform evolves.
 
-6. **Platform truth over documentation truth.** When Salesforce docs and the compiler
+7. **Platform truth over documentation truth.** When Salesforce docs and the compiler
    disagree, the compiler wins. Test results are the source of truth for what the
    skill documents.
 
@@ -235,8 +241,17 @@ chooses to use it.
 Steel threads are specific prompt-based scenarios with concrete success criteria.
 Each one exercises a task domain and proves the skill works for that domain.
 
-Status: Task domains defined. Steel thread prompts and acceptance criteria are the
-next work item.
+**Steel thread design principle**: Prompts should assume a developer who knows *what
+they want* but not necessarily *how Salesforce implements it technically*. No metadata
+type names, no CLI commands, no backing implementation details in the prompt. If we
+design for this persona, more capable developers automatically succeed too.
+
+Each steel thread has two sections:
+- **Build Instructions** — what the skill must teach the LLM to do (informs skill content)
+- **Acceptance Criteria** — pass/fail checks an evaluator can run on the output
+
+Status: In progress. See `afdx-pro-code-testdrive/claude-collaboration/steel-threads.md`
+for the full steel thread definitions.
 
 ---
 
