@@ -196,10 +196,12 @@ steel thread scenarios that prove each one works.
    identify incorrect topic routing, unexpected action selection, grounding failures,
    and instruction evaluation issues.
 
-6. **Publish & Deploy** — Convert AAB to published agent (Bot/GenAi* metadata), then
-   move metadata org-to-org. Open question: is the two-step process (MDAPI deploy of
-   AAB + publish API call) still required, or has externalizable agent graph metadata
-   changed this?
+6. **Publish & Deploy** — Three-step pipeline to go from local AAB to a running agent:
+   deploy AAB + all dependencies (`sf project deploy start`), publish the agent
+   (`sf agent publish authoring-bundle` — commits the version, hydrates Bot/GenAi*
+   metadata, auto-retrieves to local project), then activate the published version.
+   Publishing will fail if dependencies are missing from the org. A given agent can
+   have multiple published versions but only one active at a time.
 
 7. **Delete & Rename** — Maintenance tasks complicated by AAB versioning. May have
    significant restrictions, especially rename. Needs discovery.
@@ -267,6 +269,40 @@ generation pipeline. Product decision owned by Vivek.
 first output of comprehension and the foundation for every other operation. It is
 the consistent ground truth the dev agent works from, and the consistent artifact
 the developer reviews and reacts to.
+
+#### Execution Contexts and Agent Lifecycle
+
+Established in Session 2. Critical platform knowledge for the skill.
+
+**Two execution contexts (same underlying APIs, different clients):**
+
+- **Preview** — developer-facing, using preview APIs. Same APIs whether in
+  VS Code/CLI or the NGA Web UI (Agent Builder). Used during development for
+  inner-loop dev/test/debug.
+- **Runtime** — the published + activated agent running via the Runtime Agent API.
+  Can be accessed from CLI/VS Code/NGA Web for developer testing, but critically,
+  can also be surfaced in customer-facing channels like the Embedded Service App
+  on Experience Cloud sites.
+
+The distinction is preview APIs vs. Runtime Agent API, not local vs. org.
+
+**Agent version lifecycle:**
+
+1. **Draft** — the working state during development (AAB files)
+2. **Published** — a committed version. Publishing locks the version — no further
+   changes are possible to that version. Published versions start in an inactive
+   state. A new draft version is created if changes are needed.
+3. **Activated** — one published version is made live. A given agent can have
+   multiple published versions, but only one can be active at a time. There are
+   specific CLI commands to activate/deactivate agents.
+
+**Deploy → Publish → Activate pipeline:**
+
+1. Deploy AAB + all dependencies via `sf project deploy start` (must happen first —
+   publish fails if dependencies are missing from the org)
+2. Publish via `sf agent publish authoring-bundle` (commits version, hydrates
+   Bot/GenAi* metadata, auto-retrieves hydrated metadata to local project)
+3. Activate via `sf agent activate` to make a published version live for runtime access
 
 #### Design-First Workflow (Recommended for Create, Valuable for Comprehend)
 
