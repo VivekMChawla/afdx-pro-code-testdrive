@@ -24,24 +24,29 @@ Each steel thread has two sections:
 
 ### Build Instructions
 
-1. **Produce a design doc** — Markdown with Mermaid flowchart showing topic graph,
-   transition types, gating logic, and action requirements
+1. **Produce an Agent Spec** — purpose, topic graph as Mermaid flowchart,
+   actions with backing logic analysis, variables, gating conditions, and
+   behavioral intent
 
-2. **Analyze available backing logic** — scan the project for Apex classes, Flows,
-   and Prompt Templates that could serve each topic's needs. For each action, either
-   recommend an existing implementation with rationale, or articulate what's missing
-   and stub with specific input/output requirements
+2. **Analyze available backing logic** — scan the project for Apex classes,
+   Flows, and Prompt Templates that could serve each topic's needs. For each
+   action, either recommend an existing implementation with rationale, or
+   articulate what's missing and stub with specific input/output requirements.
+   Record findings in the Agent Spec
 
 3. **Implement an agent with these characteristics:**
-   - Correct block ordering (system → config → variables → language → start_agent → topics)
-   - Gated action pattern for events lookup (gated behind guest interests being populated)
+   - Correct block ordering (system → config → variables → language →
+     start_agent → topics)
+   - Gated action pattern for events lookup (gated behind guest interests
+     being populated)
    - `@utils.setVariables` to collect guest interests before the gated action
-   - Action loop prevention in instructions (explicit "call only ONCE" directives)
-   - Correctly stubbed action targets with proper protocols, I/O declarations, and
-     comments describing what backing implementations need to do
+   - Action loop prevention in instructions (explicit "call only ONCE"
+     directives)
+   - Correctly stubbed action targets with proper protocols, I/O declarations,
+     and comments describing what backing implementations need to do
    - Off-topic and escalation guardrail topics
-   - Correct transition syntax per context (`@utils.transition to` in reasoning.actions,
-     bare `transition to` in directive blocks)
+   - Correct transition syntax per context (`@utils.transition to` in
+     reasoning.actions, bare `transition to` in directive blocks)
 
 4. **Validate** via `sf agent validate authoring-bundle` and resolve errors
 
@@ -49,20 +54,23 @@ Each steel thread has two sections:
 
 ### Acceptance Criteria
 
-- A design doc exists with a Mermaid flowchart that accurately represents the agent's
-  topic graph
-- Backing logic analysis is present: each action either maps to existing project code
-  with rationale, or has a clearly articulated gap with stubbed requirements
+- An Agent Spec is produced that accurately represents the agent's structure
+  and intent, including topic graph as Mermaid flowchart
+- Backing logic analysis is present in the Agent Spec: each action either
+  maps to existing project code with rationale, or has a clearly articulated
+  gap with stubbed requirements
 - The `.agent` file compiles cleanly on `sf agent validate authoring-bundle`
-- Events lookup cannot be triggered in preview until guest interests are provided
-- No action enters a repeat loop (e.g., `check_events` called multiple times in
-  succession without new user input)
+- The agent uses correct transition syntax in each context (`@utils.transition
+  to` in reasoning.actions, bare `transition to` in directive blocks)
+- Events lookup cannot be triggered in preview until guest interests are
+  provided
+- No action enters a repeat loop (e.g., the same action called multiple
+  times in succession without new user input)
 - Off-topic user messages get redirected, not answered
-- Escalation topic exists with correct `@utils.escalate` wiring and is reachable from
-  the topic selector (end-to-end handoff is a platform limitation in preview, not testable)
+- Escalation topic exists with correct `@utils.escalate` wiring and is
+  reachable from the topic selector (end-to-end handoff is a platform
+  limitation in preview, not testable)
 - All three domain topics route correctly from the topic selector in preview
-- The agent uses correct transition syntax in each context (`@utils.transition to` in
-  reasoning.actions, bare `transition to` in directive blocks)
 
 ---
 
