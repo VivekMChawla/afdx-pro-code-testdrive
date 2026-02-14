@@ -219,10 +219,59 @@ steel thread scenarios that prove each one works.
   exercise flow control reasoning (topic graph design, transition type selection,
   gating patterns, escalation paths).
 
+#### The Agent Spec (Core Artifact)
+
+Established in Session 2. The **Agent Spec** is the canonical artifact that represents
+an agent's structure, intent, and dependencies at any point in its lifecycle. It is
+an official AFDX artifact — referenced in documentation, described in skills, and
+intended to become a standard pattern developers carry forward regardless of tooling.
+
+**Contents of an Agent Spec:**
+
+- **Purpose & scope** — what the agent does, in plain language
+- **Topic graph** — Mermaid flowchart showing topics, transitions, and flow control
+- **Actions & backing logic** — what each action does, what powers it (Apex, Flow,
+  Prompt Template), and whether that's implemented or needs stubbing
+- **Variables** — declarations, types, which topics use them
+- **Gating logic** — what conditions govern what, and why
+- **Behavioral intent** — what the agent is *supposed* to do (requirements-level,
+  not just what the code says)
+
+**The Agent Spec evolves with the agent:**
+
+- At **creation time**, it's sparse — role, topics, descriptions, directional notes
+  about backing logic. (This is essentially what `sf agent generate agent-spec`
+  produced as YAML, but richer.)
+- During **build**, it fills in — flowchart added, backing logic mapped, gating
+  documented.
+- During **comprehension**, it's reverse-engineered from an existing agent.
+- During **diagnosis**, it's the reference the dev agent compares actual behavior
+  against.
+- During **testing**, test coverage is noted against it.
+
+**Agent Spec entries can be directional or observational:**
+
+- Directional: "booking_confirm needs an Apex class that accepts X, returns Y —
+  stub contract defined here"
+- Observational: "check_events is backed by Apex class EventLookup, invoked via
+  the standard action pattern"
+
+**Platform context:** AFDX previously had `sf agent generate agent-spec` (REPL-style
+interview → YAML) and `sf agent create` (YAML → classic agent metadata via server-side
+API). Both were deprioritized when local GenAI tooling (Claude Code, AFV) made the
+server-side approach less compelling. The refined Agent Spec concept described here
+may warrant revisiting deprecation — the artifact has value beyond the original
+generation pipeline. Product decision owned by Vivek.
+
+**Role in the skill:** The dev agent always produces or updates an Agent Spec as the
+first output of comprehension and the foundation for every other operation. It is
+the consistent ground truth the dev agent works from, and the consistent artifact
+the developer reviews and reacts to.
+
 #### Design-First Workflow (Recommended for Create, Valuable for Comprehend)
 
-A key capability of the skill: before writing Agent Script, the agent produces a
-design document containing purpose, topic graph (as Mermaid flowchart), flow control
+A key capability of the skill: before writing Agent Script, the agent produces an
+**Agent Spec** containing purpose, topic graph (as Mermaid flowchart), flow control
 decisions, action requirements with backing logic analysis, and gating rationale.
 The human reviews and refines. Then the agent builds to that spec.
 
@@ -233,8 +282,8 @@ This serves three purposes:
   making implicit choices buried in code
 
 The skill should provide everything the agent needs for this capability (Mermaid
-patterns, design doc templates, flow analysis guidance) even if not every user
-chooses to use it.
+patterns, Agent Spec structure guidance, flow analysis patterns) even if not every
+user chooses to use it.
 
 #### Steel Threads (To Be Defined)
 
