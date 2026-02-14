@@ -155,6 +155,89 @@ finished artifact.
 - Test spec example: `afdx-pro-code-testdrive/specs/Local_Info_Agent-testSpec.yaml`
 - **Do NOT use files in `afdx-pro-code-testdrive/temp/`** — stale/inaccurate content. Always ask Vivek first.
 
+### Task Domains and Steel Threads
+
+Established in Session 2. These are the concrete tasks the skill must enable, and the
+steel thread scenarios that prove each one works.
+
+#### Task Domains
+
+1. **Create** — Build a new agent from scratch. Recommended workflow: design-first
+   (produce a Markdown design doc with Mermaid flowchart showing topic graph, flow
+   control, action requirements, gating rationale → human review → build to spec).
+   The design doc serves as acceptance criteria. Fast path (direct build) also supported.
+
+2. **Comprehend** — Understand an existing agent the developer didn't write. Outputs
+   include: inline `#` comment annotations explaining flow control decisions, gating
+   rationale, and topic relationships; a Mermaid flowchart of the topic graph and
+   transitions; and optionally a Markdown design doc reverse-engineered from the agent.
+   This capability is also the first step of Modify — the agent must comprehend before
+   it changes.
+
+3. **Modify** — Add, remove, or change topics, actions, and instructions on an existing
+   agent. Action integration is the hardest sub-task here: reasoning about what backing
+   logic (Apex, Flow, Prompt Template) exists, what's missing, and articulating specific
+   gaps. The skill can't cover Apex/Flow development but must know enough to stub actions
+   correctly and hand off context cleanly ("you need an Apex class that accepts X, returns
+   Y, implements Z — look for an Apex skill").
+
+4. **Diagnose (compilation)** — "Why won't this compile?" Interpret validation errors
+   from `sf agent validate authoring-bundle`, map cryptic error messages to root causes,
+   and produce fixes. Different thought process from behavioral diagnosis.
+
+5. **Diagnose (behavioral)** — "Why does the agent do this?" Debug agent behavior using
+   `sf agent preview` for inner-loop dev/test/debug. Analyze conversation traces to
+   identify incorrect topic routing, unexpected action selection, grounding failures,
+   and instruction evaluation issues.
+
+6. **Publish & Deploy** — Convert AAB to published agent (Bot/GenAi* metadata), then
+   move metadata org-to-org. Open question: is the two-step process (MDAPI deploy of
+   AAB + publish API call) still required, or has externalizable agent graph metadata
+   changed this?
+
+7. **Delete & Rename** — Maintenance tasks complicated by AAB versioning. May have
+   significant restrictions, especially rename. Needs discovery.
+
+8. **Test** — Create `AiEvaluationDefinition` tests. Open question: do these run against
+   AAB (Agent Script) agents or only published (Bot/GenAi*) agents? This affects when
+   in the workflow testing is viable.
+   
+
+#### Cross-Cutting Concerns (Not Steel Threads)
+
+- **Source discovery** — Approved sources for additional context when the agent gets
+  stuck. Possibly integrate with Context7. Should be a reference file the agent
+  consults, not a standalone task domain.
+- **Flow control reasoning** — The core design activity within Create and Modify.
+  Not a separate domain, but steel threads for Create and Modify must specifically
+  exercise flow control reasoning (topic graph design, transition type selection,
+  gating patterns, escalation paths).
+
+#### Design-First Workflow (Recommended for Create, Valuable for Comprehend)
+
+A key capability of the skill: before writing Agent Script, the agent produces a
+design document containing purpose, topic graph (as Mermaid flowchart), flow control
+decisions, action requirements with backing logic analysis, and gating rationale.
+The human reviews and refines. Then the agent builds to that spec.
+
+This serves three purposes:
+- Gives the human a visual, reviewable artifact before code exists
+- Creates acceptance criteria the agent script can be evaluated against
+- Forces the agent to reason through design decisions explicitly rather than
+  making implicit choices buried in code
+
+The skill should provide everything the agent needs for this capability (Mermaid
+patterns, design doc templates, flow analysis guidance) even if not every user
+chooses to use it.
+
+#### Steel Threads (To Be Defined)
+
+Steel threads are specific prompt-based scenarios with concrete success criteria.
+Each one exercises a task domain and proves the skill works for that domain.
+
+Status: Task domains defined. Steel thread prompts and acceptance criteria are the
+next work item.
+
 ---
 
 ## 5. Design Principles (Research-Backed)
