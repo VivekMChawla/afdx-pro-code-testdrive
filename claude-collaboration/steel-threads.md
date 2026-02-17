@@ -411,20 +411,23 @@ from each category:
 ### Prompt
 
 > "I want to make sure my agent handles edge cases well before I deploy it.
-> Can you help me create test specs I can run automatically?"
+> Help me create tests for it."
 
 ### Build Instructions
 
 1. **Comprehend the agent** — parse the agent's structure to understand all
    topics, transitions, gating conditions, and action dependencies
 
-2. **Explore behavior in preview** — use `sf agent preview` to interactively
-   exercise the agent's topics, observe how it handles various inputs, and
-   identify behavioral patterns that need test coverage. This is the discovery
-   step, not the deliverable
+2. **Produce an Agent Spec** — consolidate comprehension into an Agent Spec
+   as the baseline for designing test coverage
 
-3. **Design test scenarios** — based on comprehension and preview exploration,
-   produce a structured set of test cases that exercise:
+3. **Explore behavior in preview** — use `sf agent preview` to interactively
+   exercise the agent's topics, observe how it handles various inputs, and
+   identify behavioral patterns that need test coverage. This is the
+   discovery step, not the deliverable
+
+4. **Design test scenarios** — based on the Agent Spec and preview
+   exploration, produce a structured set of test cases that exercise:
    - **Happy paths** — each topic's primary flow from entry to resolution
    - **Gating conditions** — confirm gates block when unsatisfied and pass
      when satisfied
@@ -434,27 +437,34 @@ from each category:
    - **Edge cases** — ambiguous inputs that could match multiple topics,
      rapid topic switching, empty/null variable states
 
-4. **Generate AiEvaluationDefinition YAML specs** — translate test scenarios
-   into valid AiEvaluationDefinition metadata files that can be deployed and
-   executed as automated tests. Each spec must include:
-   - Test name and description
-   - User utterance(s) that trigger the scenario
-   - Expected outcomes (topic activation, action invocation, response content)
-   - Pass/fail evaluation criteria
+5. **Generate Agent Test Specs** — create YAML test spec files with:
+   - Utterances that trigger each scenario
+   - Expected topics (`topic_sequence_match`) and expected actions
+     (`action_sequence_match`) for each test case
+   - Expected outcomes (`bot_response_rating`)
+   - Quality metrics (coherence, completeness, conciseness, instruction
+     following, factuality) as appropriate per test case
+   - Performance metrics (output latency) where relevant
+   - Conversation history for multi-turn scenarios
+   - Custom evaluations (string/numeric comparisons) for specific value
+     checks
 
-5. **Validate the test specs** — ensure the generated YAML is structurally
-   valid and deployable as AiEvaluationDefinition metadata
+6. **Deploy tests** — run `sf agent test create` to deploy the Agent Test
+   Specs as `AiEvaluationDefinition` metadata to the org
+
+7. **Run tests and evaluate** — execute via `sf agent test run` and analyze
+   results
 
 ### Acceptance Criteria
 
+- Agent Spec is produced and used as the baseline for test design
 - Test scenarios cover all topics (no untested topics)
 - Gating conditions are tested in both satisfied and unsatisfied states
 - At least one edge case per topic is included
 - Off-topic and escalation guardrails are tested
-- Test cases are specific enough that pass/fail is unambiguous (not
-  "agent should respond appropriately")
-- All test scenarios are expressed as valid AiEvaluationDefinition YAML specs,
-  not just prose descriptions
-- Generated YAML is structurally valid and deployable as metadata
-- Preview was used for behavioral exploration, not as the test execution
-  mechanism
+- Test cases are specific enough that pass/fail is unambiguous
+- All test scenarios are expressed as valid Agent Test Spec YAML files
+- Each test case includes appropriate expectations (topic match, action
+  match, outcome) and metrics
+- Agent Test Specs deploy successfully as `AiEvaluationDefinition` metadata
+- Tests execute via `sf agent test run` and produce meaningful results
