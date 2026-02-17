@@ -1058,7 +1058,7 @@ Content:
 
 **Reference File 4: `references/metadata-and-lifecycle.md`** (category G)
 Trigger: "Read this file when you need to locate an agent, deploy, publish,
-activate, deactivate, delete, or rename an agent."
+activate, deactivate, delete, rename an agent, or run agent tests."
 Content:
 - `AiAuthoringBundle` directory conventions and file structure
 - Locating agents: local project structure, `sfdx-project.json`,
@@ -1070,11 +1070,17 @@ Content:
   verify cleanup
 - Rename mechanics: identify all references, assess published version
   impact, execute consistently, validate
-- Deploying test specs: `sf agent test create`
+- `AiEvaluationDefinition` metadata: what it is, how `sf agent test create`
+  creates it from test specs, and `sf agent test run` to execute tests.
+  Note: test specs are unofficial intermediate artifacts used to create
+  `AiEvaluationDefinition` metadata — they are not directly deployable.
+  Test spec authoring and result interpretation are covered in
+  `references/test-spec-authoring.md`; this file covers the metadata
+  and CLI operations.
 
 **Reference File 5: `references/test-spec-authoring.md`** (category H)
-Trigger: "Read this file when you need to create, deploy, or run Agent
-Test Specs."
+Trigger: "Read this file when you need to design test scenarios, write
+Agent Test Spec YAML files, or interpret test results."
 Content:
 - Agent Test Spec YAML format
 - Expectations: `topic_sequence_match`, `action_sequence_match`,
@@ -1085,8 +1091,14 @@ Content:
 - Conversation history for multi-turn scenarios
 - Custom evaluations (string/numeric comparisons)
 - Test design methodology: using Agent Spec as coverage baseline
-- CLI workflow: `sf agent generate test-spec`, `sf agent test create`,
-  `sf agent test run`
+- Interpreting test results: what pass/fail means for each expectation
+  and metric type
+- `sf agent generate test-spec` as a starting point for test spec
+  creation
+- Note: CLI operations for creating `AiEvaluationDefinition` metadata
+  and running tests (`sf agent test create`, `sf agent test run`) are
+  covered in `references/metadata-and-lifecycle.md`. This file focuses
+  on what goes into test specs and how to interpret what comes out.
 - Pointer to test spec template asset (if created)
 Asset: `assets/local-info-agent-testSpec.yaml` — example test spec
 showing format and expectations. Referenced from this file, not embedded.
