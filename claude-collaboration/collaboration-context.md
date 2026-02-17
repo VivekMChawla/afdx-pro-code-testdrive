@@ -29,9 +29,10 @@ If you're starting a new session on this project, read in this order:
    decision.
 5. **Section 10 (Reference File Architecture)** — start with the
    **Architecture Decision** at the top (the decision summary, reference
-   files, and load profiles). Only read the **Source Research (Deep
-   Dive)** subsection if you need to understand or challenge the
-   reasoning. Then read the **File Inventory** for content scope.
+   files, and load profiles). The **Source Research (Deep Dive)**
+   subsection contains the detailed reasoning — treat it as background
+   context, not required reading for action. Then read the **File
+   Inventory** for content scope per reference file.
 6. **Section 11 (Active Work Items)** — backlog with status tags and
    acceptance criteria. This tells you what to work on.
 7. **Sections 4-9 — read selectively based on your task:**
@@ -817,8 +818,9 @@ Core Language, Design & Agent Spec, Metadata & Lifecycle, Test Authoring
 ### Source Research (Deep Dive)
 
 The architecture decision above was derived from three source analyses and a
-systematic clustering methodology. Read this section if you need to understand
-or challenge the reasoning behind the decision.
+systematic clustering methodology. This section documents the detailed
+reasoning — treat it as background context supporting the decision summary
+above, not as required reading for executing work items.
 
 #### Source 1: Agent Skills Specification
 
