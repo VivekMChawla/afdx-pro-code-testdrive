@@ -857,12 +857,64 @@ Debugging, Metadata & Lifecycle Management, Agent Test Spec Authoring
   STs are ST2, ST6, ST7, ST8, ST9.
 - Agent Test Spec Authoring: unique to ST9.
 
+### Cluster Analysis and Reference File Bundles (Session 3)
+
+The co-occurrence patterns reveal three natural clusters and two independents.
+Categories that appear in exactly the same set of steel threads should be
+co-located in the same reference file — splitting them would force two file
+reads where one suffices.
+
+**Cluster 1 — "Core Language" (categories A+B):** Execution Model and Syntax
+& Block Structure appear in identical STs (ST1, ST2, ST3, ST4, ST5, ST9).
+They always travel together. Rationale: you cannot write or read Agent Script
+without understanding both the runtime behavior and the syntax rules.
+
+**Cluster 2 — "Design & Agent Spec" (categories C+D):** Flow Control & Design
+Patterns and Agent Spec Production appear in identical STs (ST1, ST2, ST3,
+ST5, ST9). They always travel together. Rationale: Agent Spec Production
+captures the output of design thinking — you never produce an Agent Spec
+without reasoning about flow control, and you never reason about flow control
+without recording it in the Agent Spec. (This reinforces the Session 2
+decision to make the Agent Spec a first-class artifact.)
+
+**Merged bundle — "Verify & Debug" (categories E+F):** Validation & Error
+Diagnosis and Preview & Behavioral Debugging are close but not identical (E
+appears in ST4/ST8 without F; F appears in ST9 without E). Decision: merge
+them into a single bundle. Rationale: validation is lightweight (CLI commands,
+interpreting return values), so loading it alongside preview/debugging
+knowledge is an acceptable token cost. Keeping them separate would force
+5 STs (ST1, ST3, ST5, ST6, ST8) to load two files where one suffices.
+
+**Standalone — "Metadata & Lifecycle Management" (category G):** Appears in
+ST2, ST6, ST7, ST8, ST9. Shares almost no overlap with Clusters 1 and 2
+(co-occurs with them only in ST2 and ST9). Clearly its own bundle.
+
+**Standalone — "Agent Test Spec Authoring" (category H):** Unique to ST9.
+Clearly its own bundle.
+
+This produces **5 reference file bundles**. Under the router model (SKILL.md
+routes, reference files carry domain knowledge), each ST loads SKILL.md plus
+the following bundles:
+
+- ST1 Create: Core Language, Design & Agent Spec, Verify & Debug (3 files)
+- ST2 Comprehend: Core Language, Design & Agent Spec, Metadata & Lifecycle (3 files)
+- ST3 Modify: Core Language, Design & Agent Spec, Verify & Debug (3 files)
+- ST4 Diagnose-Compilation: Core Language, Verify & Debug (2 files)
+- ST5 Diagnose-Behavioral: Core Language, Design & Agent Spec, Verify & Debug (3 files)
+- ST6 Deploy: Verify & Debug, Metadata & Lifecycle (2 files)
+- ST7 Delete: Metadata & Lifecycle (1 file)
+- ST8 Rename: Verify & Debug, Metadata & Lifecycle (2 files)
+- ST9 Test: Core Language, Design & Agent Spec, Metadata & Lifecycle, Test Spec Authoring (4 files)
+
+Load profile: most STs need 2-3 reference files. ST9 (the most complex task)
+needs 4. ST7 (the simplest) needs 1. This is proportional to actual task
+complexity.
+
 ### What still needs to happen
 
-- **Analyze clusters** — use the matrix to identify which categories should
-  be co-located (always travel together) vs separated (serve different STs)
-- **Pick the architecture** — evaluate candidate partitioning dimensions
-  against the observed clusters
+- **Pressure test the bundle assignments** — verify that no category is
+  misassigned and no edge cases break the clustering
+- **Decide SKILL.md's role** — router-only vs. router + foundational knowledge
 - **Sketch the file inventory** — name each file, write its "when to read"
   trigger, list approximate content
 - Then revise SKILL.md and write reference files to that architecture
