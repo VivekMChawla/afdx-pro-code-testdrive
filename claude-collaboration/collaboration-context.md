@@ -737,11 +737,110 @@ best fits our content.
 - No reference file should be needed for every task (that content belongs in body)
 - Token discipline: a typical task should load SKILL.md + 1 reference file, not 3-4
 
-**What still needs to happen** (next session):
-- Map each steel thread's knowledge requirements to see which partitioning
-  dimension minimizes cross-cutting reads
-- Decide the partitioning approach with Vivek
-- Sketch the reference file inventory (names, triggers, approximate content)
+### Knowledge Categories (Finalized, Session 3)
+
+Eight categories of knowledge the skill must contain, ordered by developer
+workflow progression:
+
+- **A. Execution Model** — how Agent Script processes topics, actions, and gating
+  at runtime. The "why" behind every syntax rule.
+- **B. Syntax & Block Structure** — correct block ordering, indentation rules,
+  transition syntax variants, variable declarations, action definitions. The
+  constructive knowledge for writing correct code.
+- **C. Flow Control & Design Patterns** — topic graph design, gating patterns
+  (single/multi-condition), transition types (handoff vs delegation), escalation,
+  guardrails, action loop prevention. The design thinking, not just syntax.
+- **D. Agent Spec Production** — how to produce, consume, and populate the
+  canonical Agent Spec artifact, including the investigative work of backing
+  logic analysis (scanning for Apex/Flow/Prompt Templates, mapping or stubbing
+  actions with protocols/I-O specs/data types). Backing logic analysis is merged
+  here because it is never a standalone activity — it always populates the
+  Agent Spec. This makes the Agent Spec a first-class, core requirement.
+- **E. Validation & Error Diagnosis** — running `sf agent validate`, interpreting
+  errors, mapping to root causes, error taxonomy (block ordering, indentation,
+  syntax, missing declarations, type mismatches, structural).
+- **F. Preview & Behavioral Debugging** — running `sf agent preview`, session
+  trace analysis, grounding service behavior, reproducing and diagnosing
+  behavioral symptoms.
+- **G. Metadata & Lifecycle Management** — `AiAuthoringBundle` directory
+  conventions, locating agents, `sfdx-project.json`, deploy → publish → activate
+  pipeline, deactivation, delete mechanics, rename mechanics, orphan cleanup.
+- **H. Agent Test Spec Authoring** — YAML format, expectations (topic/action
+  sequence match, bot_response_rating), quality/performance metrics, conversation
+  history, `sf agent test create/run`.
+
+### Steel Thread × Knowledge Category Matrix (Binary)
+
+Each entry lists the knowledge categories the agent needs to complete that
+steel thread. The agent either reads a reference file or it doesn't — there
+is no partial or "light" consumption. This binary framing was established
+after discovering that the earlier "required vs light" distinction didn't
+map to any real difference in agent behavior.
+
+**ST1 Create** (6 categories): Execution Model, Syntax & Block Structure,
+Flow Control & Design Patterns, Agent Spec Production, Validation & Error
+Diagnosis, Preview & Behavioral Debugging
+
+**ST2 Comprehend** (5 categories): Execution Model, Syntax & Block Structure,
+Flow Control & Design Patterns, Agent Spec Production, Metadata & Lifecycle
+Management
+
+**ST3 Modify** (6 categories): Execution Model, Syntax & Block Structure,
+Flow Control & Design Patterns, Agent Spec Production, Validation & Error
+Diagnosis, Preview & Behavioral Debugging
+
+**ST4 Diagnose-Compilation** (3 categories): Execution Model, Syntax & Block
+Structure, Validation & Error Diagnosis
+
+**ST5 Diagnose-Behavioral** (6 categories): Execution Model, Syntax & Block
+Structure, Flow Control & Design Patterns, Agent Spec Production, Validation
+& Error Diagnosis, Preview & Behavioral Debugging
+
+**ST6 Deploy** (3 categories): Validation & Error Diagnosis, Preview &
+Behavioral Debugging, Metadata & Lifecycle Management
+
+**ST7 Delete** (1 category): Metadata & Lifecycle Management
+
+**ST8 Rename** (3 categories): Validation & Error Diagnosis, Preview &
+Behavioral Debugging, Metadata & Lifecycle Management
+
+**ST9 Test** (7 categories): Execution Model, Syntax & Block Structure,
+Flow Control & Design Patterns, Agent Spec Production, Preview & Behavioral
+Debugging, Metadata & Lifecycle Management, Agent Test Spec Authoring
+
+**How many STs need each category:**
+
+- Execution Model: 6 (ST1, ST2, ST3, ST4, ST5, ST9)
+- Syntax & Block Structure: 6 (ST1, ST2, ST3, ST4, ST5, ST9)
+- Flow Control & Design Patterns: 5 (ST1, ST2, ST3, ST5, ST9)
+- Agent Spec Production: 5 (ST1, ST2, ST3, ST5, ST9)
+- Validation & Error Diagnosis: 6 (ST1, ST3, ST4, ST5, ST6, ST8)
+- Preview & Behavioral Debugging: 6 (ST1, ST3, ST5, ST6, ST8, ST9)
+- Metadata & Lifecycle Management: 5 (ST2, ST6, ST7, ST8, ST9)
+- Agent Test Spec Authoring: 1 (ST9)
+
+**Co-occurrence patterns (categories that appear in exactly the same STs):**
+
+- Execution Model and Syntax & Block Structure: identical — both appear in
+  ST1, ST2, ST3, ST4, ST5, ST9. They always travel together.
+- Flow Control & Design Patterns and Agent Spec Production: identical — both
+  appear in ST1, ST2, ST3, ST5, ST9. They always travel together.
+- Validation & Error Diagnosis and Preview & Behavioral Debugging: close but
+  NOT identical. Validation appears in ST4 and ST8 where Preview does not.
+  Preview appears in ST9 where Validation does not.
+- Metadata & Lifecycle Management: shares almost no overlap with the first
+  four categories (Execution Model, Syntax, Flow Control, Agent Spec). Its
+  STs are ST2, ST6, ST7, ST8, ST9.
+- Agent Test Spec Authoring: unique to ST9.
+
+### What still needs to happen
+
+- **Analyze clusters** — use the matrix to identify which categories should
+  be co-located (always travel together) vs separated (serve different STs)
+- **Pick the architecture** — evaluate candidate partitioning dimensions
+  against the observed clusters
+- **Sketch the file inventory** — name each file, write its "when to read"
+  trigger, list approximate content
 - Then revise SKILL.md and write reference files to that architecture
 
 ---
