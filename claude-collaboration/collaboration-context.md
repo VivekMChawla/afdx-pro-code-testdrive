@@ -535,7 +535,116 @@ Detailed findings recorded in Section 6 ("Lessons from Jag's sf-ai-agentscript S
 
 ---
 
-## 9. Open Questions
+## 9. Resource Inventory
+
+Established in Session 3. Catalog of all available source material for skill
+development. Resources are inventoried here but NOT bulk-ingested — pull targeted
+content on demand during skill writing. This follows the same progressive disclosure
+principle we apply to the skill itself.
+
+### Agent Script Source Examples
+
+- **Local Info Agent** (primary example):
+  `afdx-pro-code-testdrive/force-app/main/default/aiAuthoringBundles/Local_Info_Agent/`
+- **Agent Script Recipes** (DevRel samples, ~28 recipes organized by category):
+  `agent-script-recipes/force-app/`
+  - `main/01_languageEssentials/` — HelloWorld, TemplateExpressions,
+    LanguageSettings, VariableManagement, SystemInstructionOverrides
+  - `main/02_actionConfiguration/` — ActionDefinitions, ActionCallbacks,
+    AdvancedInputBindings, ActionDescriptionOverrides,
+    InstructionActionReferences, PromptTemplateActions
+  - `main/03_reasoningMechanics/` — AfterReasoning, ReasoningInstructions
+  - `main/04_architecturalPatterns/` — MultiStepWorkflows, ErrorHandling,
+    AdvancedReasoningPatterns, MultiTopicNavigation, SimpleQA,
+    SafetyAndGuardrails, BidirectionalNavigation, ExternalAPIIntegration
+  - `future_recipes/` — ConditionalLogicPatterns, ContextHandling,
+    MultiTopicOrchestration, ComplexStateManagement, EscalationPatterns,
+    DynamicActionRouting, CustomerServiceAgent, TopicDelegation
+  - **Caution**: These are authored by DevRel, not the platform team. Validate
+    patterns against compiler behavior before adopting. Use carefully when
+    integrating into the skill.
+
+### Salesforce AFDX Documentation
+
+Location: `salesforcedocs/genai-main/content/en-us/agentforce/`
+
+- **Guides** (`guides/agentforce/agent-dx/`):
+  - Agent Script authoring: `agent-dx-nga-author-agent.md`,
+    `agent-dx-nga-script.md`
+  - Agent Spec: `agent-dx-create-agent-spec.md`,
+    `agent-dx-generate-agent-spec.md`
+  - Agent creation: `agent-dx-create-agent.md`
+  - Preview: `agent-dx-preview.md`, `agent-dx-nga-preview.md`
+  - Publish: `agent-dx-nga-publish.md`
+  - Testing: `agent-dx-test.md`, `agent-dx-test-spec.md`,
+    `agent-dx-test-create.md`, `agent-dx-test-customize.md`,
+    `agent-dx-test-run.md`
+  - Metadata: `agent-dx-metadata.md`, `agent-dx-nga-authbundle.md`
+  - Management: `agent-dx-manage.md`, `agent-dx-modify.md`,
+    `agent-dx-synch.md`
+  - Setup: `agent-dx-set-up-env.md`
+  - Reference: `agent-dx-reference.md`
+- **References** (`references/`):
+  - Agent Script syntax: `agent-script/agent-script-reference.md`
+  - Testing metadata: `testing/testing-metadata-reference.md`,
+    `testing/testing-connect-reference.md`
+  - AFDX CLI reference: `agentforce-dx/agentforce-dx-reference.md`
+
+### Salesforce CLI Documentation
+
+**Gap**: CLI reference docs are only available on the Salesforce website, which
+blocks agent access. No local copy available. Current workaround: rely on AFDX
+docs (above) and Vivek's direct knowledge for CLI command accuracy.
+
+### Competing Skills
+
+- **Jag's sf-ai-agentscript** (reviewed Session 2):
+  `jaganpro/sf-skills/sf-ai-agentscript/`
+  - SKILL.md (1,400 lines), 12 resource files, 28 templates, syntax
+    validator hook
+  - Key resource files: `fsm-architecture.md`, `instruction-resolution.md`,
+    `syntax-reference.md`, `testing-guide.md`, `debugging-guide.md`,
+    `actions-reference.md`, `known-issues.md`
+  - Detailed findings in Section 6
+
+### Agent Skills Specification
+
+- **Canonical spec** (reviewed Session 2): `agentskills/docs/`
+  - `specification.mdx` — spec constraints (name, description, body limits)
+  - `what-are-skills.mdx` — progressive disclosure concept
+  - `integrate-skills.mdx` — how agents discover, load, and activate skills
+- **Reference implementation**: `agentskills/skills-ref/src/skills_ref/`
+  - `prompt.py`, `models.py`, `validator.py`
+
+### Cline / AFV Platform Documentation
+
+- **Cline Skills doc**: `cline/docs/customization/skills.mdx`
+- **Other Cline customization**: `cline/docs/customization/` — cline-rules,
+  clineignore, hooks, workflows
+
+### Our Current Skill Draft
+
+- `afdx-pro-code-testdrive/agent-script-skill/` — SKILL.md + reference files
+  (treated as rough draft, not reviewed section-by-section)
+
+### Existing Rules Files (Read-Only)
+
+- `afdx-pro-code-testdrive/.a4drules/` — agent-script-rules,
+  agent-preview-rules, agent-testing-rules, agent-debugging-rules
+  (shared with other tools, do not modify)
+
+### Test Spec Example
+
+- `afdx-pro-code-testdrive/specs/Local_Info_Agent-testSpec.yaml`
+
+### Skill-Creator Skill (Process Framework)
+
+- `.skills/skills/skill-creator/SKILL.md` — process framework, eval approach,
+  writing guide (reviewed Session 2)
+
+---
+
+## 10. Open Questions
 
 1. ~~**North stars**~~ — **RESOLVED** in Session 2. See Section 3.
 2. ~~**Jag's skills**~~ — **RESOLVED** in Session 2. See Section 6 and Section 8.
@@ -545,7 +654,7 @@ Detailed findings recorded in Section 6 ("Lessons from Jag's sf-ai-agentscript S
 5. **Evaluation approach** — How will we test the skill? The context doc suggests specific
    prompts + validation, but we haven't set this up yet.
 
-## 9.1 Future Workstreams
+## 10.1 Future Workstreams
 
 ### Agent Script Skill Validator (Separate Skill)
 
@@ -572,7 +681,7 @@ verified claims to test against. Building it before the skill is stable is prema
 
 ---
 
-## 10. Guiding Cautions
+## 11. Guiding Cautions
 
 - **Don't rush.** Build incrementally, check in with Vivek, let him push back.
 - **Don't use `afdx-pro-code-testdrive/temp/` files** without asking Vivek first — stale content.
@@ -583,7 +692,7 @@ verified claims to test against. Building it before the skill is stable is prema
 
 ---
 
-## 11. Session Log
+## 12. Session Log
 
 ### Session 1 — February 13, 2026
 
