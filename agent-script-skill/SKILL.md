@@ -13,6 +13,10 @@ and has zero training data in any AI model. You cannot rely on prior knowledge
 — everything you need to write, modify, diagnose, or deploy Agent Script
 agents is in this skill's reference files.
 
+**CRITICAL: Agent Script is NOT AppleScript, JavaScript, Python, or any other
+language. Do NOT confuse Agent Script syntax or semantics with any other
+language you have been trained on.**
+
 An Agent Script agent is defined as an `AiAuthoringBundle` — a directory of
 `.agent` files that describe the agent's topics, actions, instructions, flow
 control, and configuration. The agent processes user utterances by routing
@@ -23,15 +27,15 @@ This skill covers the full Agent Script lifecycle: designing agents,
 writing Agent Script code, validating and debugging, deploying and
 publishing, and testing.
 
-## How This Skill Is Organized
+## How to Use This Skill
 
-This is a **router skill**. This file helps you identify what you need to
-do, then directs you to the right reference file(s). All detailed knowledge
-— syntax rules, design patterns, CLI commands, debugging workflows — lives
-in reference files, not here.
+This file helps you identify the user's task and tells you which reference
+files to read. All detailed knowledge — syntax rules, design patterns, CLI
+commands, debugging workflows — lives in the reference files listed under
+each task domain below.
 
-Read the task descriptions below to identify the user's intent, then load
-the reference file(s) indicated.
+Identify the user's intent from the task descriptions below, then read
+the reference file(s) indicated before starting work.
 
 ## Task Domains
 
@@ -200,8 +204,8 @@ For Agent Spec structure and production methodology, read
 
 ## Assets
 
-The `assets/` directory contains templates and examples that are loaded
-only when needed — zero token cost until you read them.
+The `assets/` directory contains templates and examples. Read these
+when you need a starting point or a concrete reference.
 
 - **`assets/local-info-agent-annotated.agent`** — A complete annotated
   example based on the Local Info Agent, showing all major Agent Script
@@ -222,10 +226,10 @@ only when needed — zero token cost until you read them.
 
 ## Important Constraints
 
-- **This skill works standalone.** Do not assume any other skills, MCP
-  servers, or custom tooling are available. A developer with this skill,
-  the Salesforce CLI (`sf`), and a Salesforce org can build a functional
-  agent.
+- **Use only the Salesforce CLI and a Salesforce org.** Do not reference
+  or depend on other skills, MCP servers, or external tooling. All commands
+  in this skill use `sf` (Salesforce CLI). Always include the `--json` flag
+  when executing `sf` commands so output is machine-readable.
 
 - **Only certain backing logic types are valid for actions.** For example,
   only invocable Apex (not arbitrary Apex classes) can back an action.
