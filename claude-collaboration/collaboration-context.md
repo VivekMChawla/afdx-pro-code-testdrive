@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 13, 2026 — Session 1
+> **Last updated**: February 16, 2026 — Session 3 (reference file architecture research)
 
 ---
 
@@ -644,7 +644,109 @@ docs (above) and Vivek's direct knowledge for CLI command accuracy.
 
 ---
 
-## 10. Open Questions
+## 10. Reference File Architecture — Research Findings
+
+Established in Session 3. Three sources examined to inform how we partition the
+Agent Script skill's knowledge into reference files.
+
+### Source 1: Agent Skills Specification
+
+The spec defines three optional directories beyond SKILL.md:
+
+- `references/` — additional documentation loaded on demand. Examples:
+  REFERENCE.md, FORMS.md, domain-specific files (finance.md, legal.md).
+  Guidance: "Keep individual reference files focused. Agents load these on demand,
+  so smaller files mean less use of context."
+- `scripts/` — executable code. Should be self-contained with helpful error messages.
+- `assets/` — static resources (templates, images, data files, schemas).
+
+Key constraints from the spec:
+- File references should be **one level deep** from SKILL.md (no deeply nested chains)
+- SKILL.md body should stay under **500 lines** — move detailed reference material out
+- The three-tier model is explicit: Metadata → Instructions → Resources (as needed)
+
+### Source 2: Skill-Creator Skill (Process Framework)
+
+The skill-creator (763 lines, the most sophisticated built-in skill) adds:
+- "Reference files clearly from SKILL.md with guidance on **when to read them**"
+- "For large reference files (>300 lines), include a table of contents"
+- Domain organization pattern: organize by variant (aws.md, gcp.md, azure.md) so
+  "Claude reads only the relevant reference file"
+- Scripts can execute without being loaded into context (token-free execution)
+
+### Source 3: Built-In Skills — Observed Patterns
+
+Four distinct reference file architectures emerge across the built-in skills:
+
+**Pattern A — Flat (docx, xlsx)**: No reference files. Everything in SKILL.md
+(481 and 292 lines respectively). Works when the domain is small enough to fit
+in the body and every task needs most of the same knowledge.
+
+**Pattern B — Workflow-Split (pptx)**: Two reference files split by workflow
+variant — `editing.md` (edit existing) vs `pptxgenjs.md` (create from scratch).
+SKILL.md explicitly directs: "Read [editing.md](editing.md) for full details."
+Works when there are 2-3 distinct workflows that rarely overlap.
+
+**Pattern C — Conditional (pdf)**: Two reference files split by task type —
+`FORMS.md` (form filling, loaded first if forms detected) vs `REFERENCE.md`
+(advanced features). SKILL.md uses conditional triggers: "If you need to fill
+out a PDF form, first check... then go to FORMS.md." Works when tasks have
+clear branch points.
+
+**Pattern D — Hierarchical (skill-creator)**: Eight reference files organized
+into `references/` (4 mode-specific docs) and `agents/` (4 role-specific docs
+for subagent delegation). Files are loaded at specific workflow stages: "Read
+references/eval-mode.md at the beginning of Eval Mode." The most sophisticated
+architecture — works when the skill has multiple modes with distinct deep knowledge.
+
+### Synthesis: Implications for Agent Script Skill
+
+**Our domain is more complex than any built-in skill.** We have 9 steel threads
+across 8 task domains, each requiring different subsets of Agent Script knowledge.
+Pattern A (flat) won't work. The question is which combination of B, C, and D
+best fits our content.
+
+**Candidate partitioning dimensions** (to be decided with Vivek):
+
+1. **By steel thread / task domain** — one reference file per major task
+   (e.g., create.md, diagnose-compilation.md, deploy.md, test.md). Matches
+   Pattern B. Risk: some knowledge spans multiple tasks (Agent Spec, execution
+   model basics) and would either duplicate or need a shared foundation file.
+
+2. **By knowledge type** — syntax-rules.md, platform-gotchas.md,
+   cli-reference.md, patterns-library.md. Matches the current draft's structure.
+   Risk: a single task might need to read 3-4 files, defeating the purpose of
+   progressive disclosure.
+
+3. **By workflow phase** — comprehend.md (shared across Create/Modify/Diagnose),
+   build.md (Create/Modify), validate-and-fix.md (Diagnose), deploy.md
+   (Publish/Deploy/Test). Matches Pattern C with phase-based branching.
+   Advantage: aligns with how developers actually work (phase, not topic).
+
+4. **Hybrid** — SKILL.md body covers universals (execution model, block
+   structure, canonical example, Agent Spec guidance). Reference files organized
+   by workflow phase with conditional triggers. Shared knowledge in body,
+   phase-specific knowledge in references. This combines Pattern C's conditional
+   loading with Pattern D's staged reading.
+
+**Constraints to satisfy**:
+- SKILL.md under 500 lines (current draft is 499 — already at limit)
+- Reference files under 300 lines each (or add TOC if larger)
+- One level deep references from SKILL.md
+- Clear "when to read" triggers for every reference file
+- No reference file should be needed for every task (that content belongs in body)
+- Token discipline: a typical task should load SKILL.md + 1 reference file, not 3-4
+
+**What still needs to happen** (next session):
+- Map each steel thread's knowledge requirements to see which partitioning
+  dimension minimizes cross-cutting reads
+- Decide the partitioning approach with Vivek
+- Sketch the reference file inventory (names, triggers, approximate content)
+- Then revise SKILL.md and write reference files to that architecture
+
+---
+
+## 11. Open Questions
 
 1. ~~**North stars**~~ — **RESOLVED** in Session 2. See Section 3.
 2. ~~**Jag's skills**~~ — **RESOLVED** in Session 2. See Section 6 and Section 8.
@@ -654,7 +756,7 @@ docs (above) and Vivek's direct knowledge for CLI command accuracy.
 5. **Evaluation approach** — How will we test the skill? The context doc suggests specific
    prompts + validation, but we haven't set this up yet.
 
-## 10.1 Future Workstreams
+## 11.1 Future Workstreams
 
 ### Agent Script Skill Validator (Separate Skill)
 
@@ -681,7 +783,7 @@ verified claims to test against. Building it before the skill is stable is prema
 
 ---
 
-## 11. Guiding Cautions
+## 12. Guiding Cautions
 
 - **Don't rush.** Build incrementally, check in with Vivek, let him push back.
 - **Don't use `afdx-pro-code-testdrive/temp/` files** without asking Vivek first — stale content.
@@ -692,7 +794,7 @@ verified claims to test against. Building it before the skill is stable is prema
 
 ---
 
-## 12. Session Log
+## 13. Session Log
 
 ### Session 1 — February 13, 2026
 
@@ -729,3 +831,27 @@ review, reference file verification, evaluation approach.
 
 **Still unresolved**: Same as Session 1 — north stars, Jag's repo review, section-by-section
 SKILL.md review, reference file verification, evaluation approach.
+
+### Session 3 (partial) — February 16, 2026
+
+**What happened**:
+- Completed targeted reads for reference file architecture groundwork:
+  1. Skill-creator SKILL.md (763 lines) — read in Session 2, key guidance on
+     reference file sizing, "when to read" triggers, domain-based organization
+  2. Agent Skills specification (`specification.mdx`) — three-tier model confirmed,
+     `references/`, `scripts/`, `assets/` directory conventions, one-level-deep
+     file reference constraint
+  3. Built-in skills audit (docx, xlsx, pptx, pdf, skill-creator) — identified
+     four distinct reference file patterns (Flat, Workflow-Split, Conditional,
+     Hierarchical) with concrete examples of each
+- Synthesized findings into Section 10 (Reference File Architecture — Research
+  Findings) with four candidate partitioning dimensions and constraints to satisfy
+- Identified next steps: map steel thread knowledge requirements → decide
+  partitioning approach → sketch reference file inventory → revise skill
+
+**Context note**: This session was a context continuation from Session 2 (which
+ran out of context). The continuation summary preserved all decisions and file
+states from Session 2. Session 2's full log entry should be written when time
+permits — it covered steel thread refinement (ST1-ST9), Agent Spec establishment,
+execution contexts/lifecycle, resource inventory, and the start of reference file
+architecture planning.
