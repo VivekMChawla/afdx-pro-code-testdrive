@@ -17,11 +17,11 @@ agents is in this skill's reference files.
 language. Do NOT confuse Agent Script syntax or semantics with any other
 language you have been trained on.**
 
-An Agent Script agent is defined as an `AiAuthoringBundle` — a directory of
-`.agent` files that describe the agent's topics, actions, instructions, flow
-control, and configuration. The agent processes user utterances by routing
-them through topics, each with its own instructions and available actions
-backed by Apex, Flows, or Prompt Templates.
+An Agent Script agent is defined by `AiAuthoringBundle` metadata — a directory 
+containing two files. First, a single `.agent` file that describes the agent's topics, actions, 
+instructions, flow control, and configuration. Second, a `bundle-meta.xml` file that contains 
+metadata about the bundle. The agent processes user utterances by routing them through topics,
+each with its own instructions and available actions backed by Apex, Flows, or Prompt Templates.
 
 This skill covers the full Agent Script lifecycle: designing agents,
 writing Agent Script code, validating and debugging, deploying and
