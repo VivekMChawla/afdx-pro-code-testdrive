@@ -86,7 +86,7 @@ system:
 
 # 2. CONFIG (required) - Agent metadata
 config:
-    agent_name: "DescriptiveName"
+    developer_name: "DescriptiveName"
     ...
 
 # 3. VARIABLES (optional) - State management
@@ -145,7 +145,7 @@ topic my_topic:
 
 ## Naming Rules
 
-All names (agent_name, topic names, variable names, action names):
+All names (developer_name, topic names, variable names, action names):
 
 - Can contain only letters, numbers, and underscores
 - Must begin with a letter
@@ -185,10 +185,10 @@ system:
 ```agentscript
 config:
     # Required
-    agent_name: "DescriptiveName"           # Unique identifier (letters, numbers, underscores)
+    developer_name: "DescriptiveName"           # Unique identifier (letters, numbers, underscores)
 
     # Optional with defaults
-    agent_label: "DescriptiveName"          # Display name (defaults to normalized agent_name)
+    agent_label: "DescriptiveName"          # Display name (defaults to normalized developer_name)
     description: "Agent description"        # What the agent does
     agent_type: "AgentforceServiceAgent"    # or "AgentforceEmployeeAgent"
     default_agent_user: "user@example.com"  # Required for AgentforceServiceAgent
@@ -534,7 +534,7 @@ system:
         error: "Sorry, something went wrong. Please try again."
 
 config:
-    agent_name: "Customer_Service_Agent"
+    developer_name: "Customer_Service_Agent"
     agent_type: "AgentforceServiceAgent"
     default_agent_user: "serviceuser@example.com"
     description: "Handles customer inquiries about orders and accounts."
@@ -685,7 +685,7 @@ Grounding behavior can only be validated with **live mode** preview (`--use-live
 Before finalizing an Agent Script, verify:
 
 - [ ] Block ordering is correct (system → config → variables → connections → knowledge → language → start_agent → topics)
-- [ ] `config` block has `agent_name` (and `default_agent_user` for service agents)
+- [ ] `config` block has `developer_name` (and `default_agent_user` for service agents)
 - [ ] `system` block has `messages.welcome`, `messages.error`, and `instructions`
 - [ ] `start_agent` block exists with at least one transition action
 - [ ] Each `topic` has a `description` and `reasoning` block
