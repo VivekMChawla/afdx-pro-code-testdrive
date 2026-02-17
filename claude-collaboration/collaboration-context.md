@@ -752,6 +752,11 @@ Design goals (our own principles, not spec requirements):
   files at different workflow stages.
 - Each reference file must earn its token cost. If a file is loaded,
   most of its content should be relevant to the current task.
+- Small, consistent duplications across reference files (e.g., CLI
+  commands appearing in multiple files) are intentional reinforcement,
+  not waste. This aligns with Design Principle 3 in Section 6:
+  "Deduplication can kill reinforcement." Do not remove these
+  duplications in the name of token savings.
 
 **SKILL.md role — DECIDED (Session 3): Router model.** SKILL.md is
 primarily a router — it identifies the user's task and directs the agent
@@ -1093,12 +1098,17 @@ Content:
 - Test design methodology: using Agent Spec as coverage baseline
 - Interpreting test results: what pass/fail means for each expectation
   and metric type
-- `sf agent generate test-spec` as a starting point for test spec
-  creation
-- Note: CLI operations for creating `AiEvaluationDefinition` metadata
-  and running tests (`sf agent test create`, `sf agent test run`) are
-  covered in `references/metadata-and-lifecycle.md`. This file focuses
-  on what goes into test specs and how to interpret what comes out.
+- Anti-pattern: `sf agent generate test-spec` is an interactive,
+  REPL-style CLI command designed for human use (serial "interview
+  style" test case entry). It is NOT appropriate for agentic use.
+  Agents should start from boilerplate test spec assets instead. Note:
+  future AFDX releases may change this command's output to better
+  support agentic use cases, but current behavior is human-only.
+- CLI commands for reference: `sf agent test create` (creates
+  `AiEvaluationDefinition` metadata from test specs), `sf agent test run`
+  (executes tests). These are also documented in
+  `references/metadata-and-lifecycle.md` — the intentional duplication
+  reinforces knowledge without meaningful token cost.
 - Pointer to test spec template asset (if created)
 Asset: `assets/local-info-agent-testSpec.yaml` — example test spec
 showing format and expectations. Referenced from this file, not embedded.
