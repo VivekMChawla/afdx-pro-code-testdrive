@@ -1016,7 +1016,7 @@ Asset: `assets/local-info-agent-annotated.agent` — complete annotated
 example showing all major constructs in context. Referenced from this
 file, not embedded.
 
-**Reference File 2: `references/design-and-agent-spec.md`** (categories C+D)
+**Reference File 2: `references/agent-design-and-spec-creation.md`** (categories C+D)
 Trigger: "Read this file when you need to design an agent's topic graph,
 reason about flow control, produce or update an Agent Spec, or analyze
 backing logic requirements."
@@ -1032,7 +1032,12 @@ Content:
 - Action loop prevention
 - Backing logic analysis methodology: how to scan for Apex/Flow/Prompt
   Templates, how to map existing implementations, how to stub gaps with
-  protocols/I-O specs/data types
+  protocols/I-O specs/data types. Critical detail: only certain types of
+  backing logic are valid for actions (e.g., only invocable Apex, not
+  arbitrary Apex classes). Similar constraints may exist for Flows and
+  Prompt Templates — needs validation during content writing. This is
+  high-value knowledge worth extra token spend because wiring an action
+  to invalid backing logic is a common and costly mistake.
 - Pointer to Agent Spec template asset (if created)
 
 **Reference File 3: `references/verify-and-debug.md`** (categories E+F)
