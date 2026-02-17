@@ -1001,7 +1001,7 @@ triggers their read.
 - "When to read" triggers for each reference file
 - Note: all substantial domain knowledge lives in reference files, not here
 
-**Reference File 1: `references/core-language.md`** (categories A+B)
+**Reference File 1: `references/agent-script-core-language.md`** (categories A+B)
 Trigger: "Read this file when you need to read, write, or modify Agent
 Script code. This includes creating agents, modifying existing agents,
 diagnosing compilation or behavioral issues, and comprehending agent
@@ -1018,8 +1018,17 @@ Content:
 - Analogies to known languages (YAML, Express.js routes, API contracts)
 - Pointer to annotated example asset
 Asset: `assets/local-info-agent-annotated.agent` — complete annotated
-example showing all major constructs in context. Referenced from this
-file, not embedded.
+example based on the Local Info Agent, showing all major constructs in
+context. Serves two purposes: (1) pedagogical — teaches how concepts
+compose into a working agent, (2) safety valve — a fallback reference
+when the agent can't build successfully from focused inline examples
+alone. Referenced from this file, not embedded.
+Additional assets (generative templates): starting-point agents for
+common patterns, e.g., `assets/single-topic-template.agent`,
+`assets/multi-topic-template.agent`. Minimal, uncommented, designed
+to be copied and modified. Zero token cost until read. The number of
+templates is unconstrained — assets load on demand per the Agent
+Skills spec's progressive disclosure model.
 
 **Reference File 2: `references/agent-design-and-spec-creation.md`** (categories C+D)
 Trigger: "Read this file when you need to design an agent's topic graph,
@@ -1045,7 +1054,7 @@ Content:
   to invalid backing logic is a common and costly mistake.
 - Pointer to Agent Spec template asset (if created)
 
-**Reference File 3: `references/verify-and-debug.md`** (categories E+F)
+**Reference File 3: `references/verify-and-debug-agents.md`** (categories E+F)
 Trigger: "Read this file when you need to validate Agent Script, diagnose
 compilation errors, preview an agent, or debug behavioral issues."
 Content:
@@ -1061,7 +1070,7 @@ Content:
 - Behavioral diagnosis methodology: form hypotheses from execution model
   → reproduce in preview → analyze traces → targeted fixes
 
-**Reference File 4: `references/metadata-and-lifecycle.md`** (category G)
+**Reference File 4: `references/agent-metadata-and-lifecycle.md`** (category G)
 Trigger: "Read this file when you need to locate an agent, deploy, publish,
 activate, deactivate, delete, rename an agent, or run agent tests."
 Content:
@@ -1080,10 +1089,10 @@ Content:
   Note: test specs are unofficial intermediate artifacts used to create
   `AiEvaluationDefinition` metadata — they are not directly deployable.
   Test spec authoring and result interpretation are covered in
-  `references/test-spec-authoring.md`; this file covers the metadata
+  `references/agent-test-authoring.md`; this file covers the metadata
   and CLI operations.
 
-**Reference File 5: `references/test-spec-authoring.md`** (category H)
+**Reference File 5: `references/agent-test-authoring.md`** (category H)
 Trigger: "Read this file when you need to design test scenarios, write
 Agent Test Spec YAML files, or interpret test results."
 Content:
@@ -1107,7 +1116,7 @@ Content:
 - CLI commands for reference: `sf agent test create` (creates
   `AiEvaluationDefinition` metadata from test specs), `sf agent test run`
   (executes tests). These are also documented in
-  `references/metadata-and-lifecycle.md` — the intentional duplication
+  `references/agent-metadata-and-lifecycle.md` — the intentional duplication
   reinforces knowledge without meaningful token cost.
 - Pointer to test spec template asset (if created)
 Asset: `assets/local-info-agent-testSpec.yaml` — example test spec
