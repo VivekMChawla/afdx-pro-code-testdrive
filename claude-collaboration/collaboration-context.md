@@ -910,10 +910,57 @@ Load profile: most STs need 2-3 reference files. ST9 (the most complex task)
 needs 4. ST7 (the simplest) needs 1. This is proportional to actual task
 complexity.
 
+### Pressure Test Results (Session 3)
+
+Each bundle was examined for misassignment, internal cohesion, and edge cases.
+
+**Bundle 1 — Core Language (A+B): PASS.** Potential boundary concern:
+Execution Model (A) explains *how* the runtime selects topics and invokes
+actions, which could bleed into Flow Control (C). Resolution: A covers
+runtime mechanics ("the runtime evaluates topic selector instructions to
+choose a topic"). C covers design intent ("here's how to design those
+instructions so the runtime makes the choices you want"). Mechanics vs.
+design — clean split.
+
+**Bundle 2 — Design & Agent Spec (C+D): PASS with size risk.** Flow
+control patterns (gating, transitions, escalation, guardrails, action
+loop prevention) plus Agent Spec guidance (structure, lifecycle evolution,
+backing logic analysis methodology) is substantial content. If this
+exceeds 300 lines, it needs a TOC or a split. This is a content-sizing
+risk, not a clustering error — the co-occurrence data is unambiguous.
+
+**Bundle 3 — Verify & Debug (E+F): PASS with acceptable waste.** Waste
+cases: ST4 (compilation diagnosis) loads preview/debugging knowledge it
+doesn't use. ST9 (testing) loads validation knowledge it doesn't use.
+Assessment: the waste is harmless — validation and preview are clearly
+different activities, so the agent won't confuse them. The irrelevant
+content is dead weight, not misleading signal.
+
+**Bundle 4 — Metadata & Lifecycle (G): PASS with cohesion note.** This
+bundle serves diverse STs: ST2 needs directory conventions, ST6 needs
+the deploy pipeline, ST7 needs delete mechanics, ST8 needs rename
+mechanics, ST9 needs test deployment. The content is procedurally diverse
+— more of a reference manual than a cohesive narrative. This is the
+bundle most likely to feel like a grab bag. However, these are all
+distinct procedural recipes that the agent follows one at a time, so
+the diversity doesn't create confusion.
+
+**Bundle 5 — Test Spec Authoring (H): PASS.** Unique to ST9,
+self-contained. No issues.
+
+**Cross-bundle concern — ST9 load count:** ST9 loads 4 reference files
+(Core Language, Design & Agent Spec, Metadata & Lifecycle, Test Spec
+Authoring). Each is genuinely needed — comprehend the agent (1), produce
+Agent Spec as test baseline (2), deploy test specs (4), write the YAML
+(5). The 4-file load reflects real task complexity, not an architecture
+problem.
+
+**Overall assessment:** Bundles hold up. Risks are content-sizing
+(Bundle 2) and cohesion (Bundle 4), both manageable during writing.
+No category is misassigned.
+
 ### What still needs to happen
 
-- **Pressure test the bundle assignments** — verify that no category is
-  misassigned and no edge cases break the clustering
 - **Decide SKILL.md's role** — router-only vs. router + foundational knowledge
 - **Sketch the file inventory** — name each file, write its "when to read"
   trigger, list approximate content
