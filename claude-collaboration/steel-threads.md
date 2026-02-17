@@ -406,7 +406,53 @@ from each category:
 
 ---
 
-## Steel Thread 8: Test
+## Steel Thread 8: Rename
+
+> **Note:** This steel thread requires further testing to finalize. The
+> mechanics of renaming a published `AiAuthoringBundle` — particularly the
+> impact on existing published versions, Bot/GenAi* metadata, and org-side
+> references — are not fully understood yet. The build instructions and
+> acceptance criteria below cover the local rename case. Published version
+> handling will be added once the behavior is validated through testing.
+
+### Prompt
+
+> "I need to rename my agent from 'Local Info Agent' to 'Coral Cloud
+> Concierge'."
+
+### Build Instructions
+
+1. **Identify all rename targets** — agent names appear in multiple
+   locations: the `AiAuthoringBundle` directory name, the `.agent` file,
+   metadata references, and potentially `sfdx-project.json` package entries
+
+2. **Assess published version impact** — if the agent has published versions
+   in the org, determine what can be renamed locally vs. what requires
+   additional steps in the org (deactivation, re-publication, or creating
+   a new agent). Inform the developer of the implications before making
+   changes
+
+3. **Execute the rename** — update all local references consistently,
+   ensuring no orphaned references to the old name
+
+4. **Validate** — run `sf agent validate authoring-bundle` to confirm the
+   rename didn't break the agent's structure
+
+5. **Verify** — preview the renamed agent to confirm it behaves identically
+   to before the rename
+
+### Acceptance Criteria
+
+- All local artifacts are renamed consistently (directory, `.agent` file,
+  metadata references) with no orphaned references to the old name
+- If published versions exist, the developer is informed of the
+  implications before changes are made
+- The renamed agent validates cleanly
+- The renamed agent behaves identically to the original in preview
+
+---
+
+## Steel Thread 9: Test
 
 ### Prompt
 
