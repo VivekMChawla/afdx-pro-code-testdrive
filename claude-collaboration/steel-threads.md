@@ -128,7 +128,8 @@ Each steel thread has two sections:
 > "I need to add appointment booking to my resort agent. Guests should be able
 > to book spa treatments, and the agent should check availability before
 > confirming. It should also ask for the guest's room number so we can charge
-> it to their folio."
+> it to their folio. Oh, and we don't need the facility hours feature anymore —
+> please remove it."
 
 ### Build Instructions
 
@@ -142,14 +143,17 @@ Each steel thread has two sections:
 
 3. **Design the modification** — update the Agent Spec to show the new
    topic, its transitions, backing logic requirements, and how it integrates
-   with the existing topic graph
+   with the existing topic graph. Also mark the facility hours topic for
+   removal, tracing its connections (inbound transitions, outbound
+   transitions, variables it sets, actions it defines) to identify what
+   else must change
 
-3. **Analyze available backing logic** — scan the project for Apex classes,
+4. **Analyze available backing logic** — scan the project for Apex classes,
    Flows, and Prompt Templates that could serve the booking and availability
    actions. Map existing implementations or articulate gaps with stubbed
    requirements. Record findings in the Agent Spec
 
-4. **Implement the new topic with these characteristics:**
+5. **Implement the changes:**
    - New topic with correct block structure
    - Multi-condition gating: availability check must complete before booking
      confirmation, room number must be collected before charging
@@ -159,11 +163,14 @@ Each steel thread has two sections:
      (including correct data types), and comments describing what the backing
      implementation must do
    - Proper transitions connecting the new topic to the existing topic graph
-   - No regressions to existing topics (weather, events, facility hours)
+   - Clean removal of the facility hours topic: delete the topic, remove
+     transitions pointing to it, remove variables and actions only it used,
+     preserve any shared variables or actions
+   - No regressions to remaining topics (weather, events)
 
-5. **Validate** via `sf agent validate authoring-bundle` and resolve errors
+6. **Validate** via `sf agent validate authoring-bundle` and resolve errors
 
-6. **Verify behavior** via `sf agent preview` — test both new and existing
+7. **Verify behavior** via `sf agent preview` — test both new and existing
    functionality
 
 ### Acceptance Criteria
@@ -178,9 +185,12 @@ Each steel thread has two sections:
   room number is collected (multi-condition gate)
 - Availability check fires before booking confirmation (order is enforced,
   not coincidental)
+- Facility hours topic is fully removed: no dangling transitions, no
+  orphaned variables or actions that only it used
 - New spa booking topic is reachable from the topic selector
-- All three original topics (weather, events, facility hours) still route
-  correctly from the topic selector in preview — no regressions
+- Remaining original topics (weather, events) still route correctly from
+  the topic selector in preview — no regressions
+- Facility hours topic is not reachable from the topic selector
 
 ---
 
@@ -360,48 +370,39 @@ from each category:
 
 ---
 
-## Steel Thread 7: Delete & Rename
+## Steel Thread 7: Delete
 
 ### Prompt
 
-> "I need to rename my agent from 'Local Info Agent' to 'Coral Cloud Concierge'.
-> Also, the old 'dining_recommendations' topic is no longer needed — can you
-> remove it completely?"
+> "I don't need the Local Info Agent anymore. Remove it completely."
 
 ### Build Instructions
 
-1. **Understand the rename scope** — Agent Script names appear in multiple
-   locations (agent file, metadata references, possibly directory names).
-   The skill must guide identification of all locations that need updating
+1. **Locate all agent artifacts** — identify the full scope of what needs
+   to be removed: the `AiAuthoringBundle` directory, any published versions
+   in the org (Bot/GenAi* metadata), and any related test specs
+   (`AiEvaluationDefinition` files)
 
-2. **Execute the rename** — update all references consistently, ensuring no
-   orphaned references to the old name
+2. **Deactivate if active** — if the agent has an active published version,
+   run `sf agent deactivate` before deletion
 
-3. **Understand deletion scope** — before deleting a topic, trace its
-   connections: inbound transitions, outbound transitions, variables it sets
-   that other topics read, actions it defines that might be shared
+3. **Remove local artifacts** — delete the `AiAuthoringBundle` directory
+   and any related files from the local project
 
-4. **Execute the deletion** — remove the topic and all its associated
-   references (transitions pointing to it, variables only it used, actions
-   only it invoked)
+4. **Remove org artifacts** — deploy destructive changes to remove the
+   agent metadata from the org, including published versions
 
-5. **Validate** — run `sf agent validate authoring-bundle` to confirm the
-   rename and deletion didn't break anything
-
-6. **Verify** — confirm in preview that remaining topics still work and
-   the deleted topic is no longer reachable
+5. **Verify cleanup** — confirm no orphaned metadata remains in the org
+   and no stale references exist in the local project
 
 ### Acceptance Criteria
 
-- Agent name is updated consistently across all locations (no orphaned
-  references to old name)
-- Deleted topic is fully removed: no dangling transitions pointing to it,
-  no orphaned variables or actions that only it used
-- Variables and actions shared with other topics are preserved (only
-  topic-specific elements are removed)
-- The agent validates cleanly after both operations
-- Remaining topics still route correctly in preview
-- The deleted topic is not reachable from the topic selector
+- Active version is deactivated before any deletion is attempted
+- All local artifacts are removed (`AiAuthoringBundle` directory, related
+  test specs)
+- All org artifacts are removed (published versions, Bot/GenAi* metadata)
+- No orphaned metadata remains in the org after deletion
+- No stale references to the deleted agent remain in the local project
 
 ---
 
