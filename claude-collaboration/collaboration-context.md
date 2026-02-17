@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 17, 2026 — Session 3 (architecture decided, document restructured)
+> **Last updated**: February 17, 2026 — Session 4 (antagonistic review applied, document hardened for cold-start sessions)
 
 ---
 
@@ -20,21 +20,51 @@
 
 If you're starting a new session on this project, read in this order:
 
-1. **Section 1 (About Vivek)** — how to collaborate. Read this first.
+1. **Terminology** (below this guide) — canonical names for key concepts.
+2. **Section 1 (About Vivek)** — how to collaborate. Read this first.
    Your first response sets the tone; get this right.
-2. **Section 2 (Project Objectives)** — what we're building and why
+3. **Section 2 (Project Objectives)** — what we're building and why
    (three intertwined objectives, not just one).
-3. **Section 3 (North Stars)** — non-negotiable principles guiding every
+4. **Section 3 (North Stars)** — non-negotiable principles guiding every
    decision.
-4. **Section 10 (Reference File Architecture)** — current architectural
-   decisions and the file inventory. Check the **Implementation Status**
-   subsection for what's next.
-5. **Section 11 (Active Work Items)** — backlog with explicit status
-   tags. This tells you what to work on.
-6. **Sections 4-9** — as needed for deeper context on what we're
-   building, design principles, skill architecture, competitive
-   landscape, key decisions, and resource inventory.
-7. **Section 13 (Session Log)** — update this at the end of your session.
+5. **Section 10 (Reference File Architecture)** — start with the
+   **Architecture Decision** at the top (the decision summary, bundles
+   table, and load profiles). Only read the **Source Research (Deep
+   Dive)** subsection if you need to understand or challenge the
+   reasoning. Then read the **File Inventory** for content scope.
+6. **Section 11 (Active Work Items)** — backlog with status tags and
+   acceptance criteria. This tells you what to work on.
+7. **Sections 4-9 — read selectively based on your task:**
+   - Writing skill content? → Section 4 (What We're Building) for task
+     domains, Section 5 (Design Principles) for content patterns
+   - Making architecture decisions? → Section 6 (Skill Architecture)
+     including 6.1 (Constraints vs. Goals Matrix)
+   - Evaluating other approaches? → Section 8 (Competitive Landscape)
+   - Finding source material? → Section 9 (Resource Inventory)
+   - Checking prior decisions? → Section 7 (Key Decisions)
+8. **Section 13 (Session Log)** — update this at the end of your session.
+
+## Terminology (Canonical Names)
+
+Use these exact forms when writing skill content or updating this document:
+
+- **Agent Script** — the scripting language. Not "AgentScript" or "agent script."
+- **Agent Script execution model** — how Agent Script processes at runtime.
+  Short form "execution model" is acceptable when context is unambiguous.
+- **Agent Spec** — the canonical design/documentation artifact (always title
+  case). Not "agent spec," "Agent Specification," or "agent-spec."
+- **`AiAuthoringBundle`** — the Salesforce metadata type (one word, PascalCase).
+  Not "AiAuthoring Bundle" or "Ai Authoring Bundle."
+- **`AiEvaluationDefinition`** — test metadata type (one word, PascalCase).
+- **Steel thread** — a concrete test scenario (lowercase). Abbreviated ST1-ST9.
+- **Reference file** — a file in the `references/` directory (lowercase).
+- **Bundle** — a grouping of knowledge categories into a reference file.
+  When referencing specific bundles, use both the short name and filename:
+  "Bundle 1 / Core Language (`agent-script-core-language.md`)"
+
+**File path convention:** All paths in this document are relative to the
+git repository root. When running in a session, the full path is:
+`/sessions/[session-id]/mnt/git/[relative-path]`
 
 ---
 
@@ -228,20 +258,20 @@ steel thread scenarios that prove each one works.
 7. **Delete & Rename** — Maintenance tasks complicated by `AiAuthoringBundle` versioning. May have
    significant restrictions, especially rename. Needs discovery.
 
-8. **Test** — Create `AiEvaluationDefinition` tests. Open question: do these run against
-   `AiAuthoringBundle` (Agent Script) agents or only published (Bot/GenAi*) agents? This affects when
-   in the workflow testing is viable.
-   
+8. **Test** — Create `AiEvaluationDefinition` tests. [UNRESOLVED]: Do these
+   run against `AiAuthoringBundle` (Agent Script) agents or only published
+   (Bot/GenAi*) agents? This affects when in the workflow testing is viable.
+   Needs validation during File 5 (Test Authoring) writing.
+
 
 #### Cross-Cutting Concerns (Not Steel Threads)
 
-- **Source discovery** — Approved sources for additional context when the agent gets
-  stuck. Possibly integrate with Context7. Should be a reference file the agent
-  consults, not a standalone task domain.
-- **Flow control reasoning** — The core design activity within Create and Modify.
-  Not a separate domain, but steel threads for Create and Modify must specifically
-  exercise flow control reasoning (topic graph design, transition type selection,
-  gating patterns, escalation paths).
+- **Source discovery** [FUTURE] — Approved sources for additional context when the
+  agent gets stuck. Possibly integrate with Context7. Should be a reference file
+  the agent consults, not a standalone task domain. Not blocking current work.
+- **Flow control reasoning** [ADDRESSED] — The core design activity within Create
+  and Modify. Covered by knowledge category C (Flow Control & Design Patterns)
+  in reference File 2 (`agent-design-and-spec-creation.md`).
 
 #### The Agent Spec (Core Artifact)
 
@@ -359,8 +389,9 @@ Each steel thread has two sections:
 - **Build Instructions** — what the skill must teach the LLM to do (informs skill content)
 - **Acceptance Criteria** — pass/fail checks an evaluator can run on the output
 
-Status: In progress. See `afdx-pro-code-testdrive/claude-collaboration/steel-threads.md`
-for the full steel thread definitions.
+Status: ST1-ST9 defined and refined in Session 2. See
+`afdx-pro-code-testdrive/claude-collaboration/steel-threads.md` for the full
+steel thread definitions (prompts, build instructions, acceptance criteria).
 
 ---
 
@@ -487,6 +518,44 @@ skill we've seen. Key takeaways:
 - No execution model section — jumps straight to syntax constraints
 - No progressive disclosure hierarchy in the main file
 
+### 6.1 Constraints vs. Goals Matrix
+
+This matrix is the authoritative source for what's mandatory vs. preferred.
+When in doubt during writing, consult this — not the prose in other sections.
+
+**Hard Constraints (no exceptions):**
+- Skill must work standalone — no other skills, MCP servers, or custom tooling
+  assumed (North Star 4)
+- YAML frontmatter `description` must be single-line double-quoted string
+  (parser requirement — Section 7)
+- One level deep references from SKILL.md — no nested reference chains
+  (Agent Skills spec)
+- Every reference file has a "when to read" trigger in SKILL.md
+  (Agent Skills spec + skill-creator guidance)
+- Every reference file includes a TOC (~10-15 lines, negligible cost)
+
+**Strong Guidelines (exceeding requires justification to Vivek):**
+- SKILL.md body under 500 lines. The skill-creator itself is 763 lines,
+  so this is not an absolute wall — but our router model should make
+  staying under 500 easy. If you're exceeding, you're probably putting
+  domain knowledge in the body.
+- Reference files under 300 lines each. If a file needs more, justify
+  with a content audit showing every section earns its tokens. Bundle 2
+  (Design & Agent Spec) is the most likely to exceed.
+
+**Design Goals (guide decisions, not hard rules):**
+- Minimize total token consumption per task — token cost is the real
+  metric, not file read count (three focused 250-line reads > one
+  750-line read where half is irrelevant)
+- Each reference file must earn its token cost — if loaded, most content
+  should be relevant to the current task
+- Small, consistent duplications across files are intentional reinforcement,
+  not waste (Design Principle 3)
+- When trading off prose compression vs. anti-pattern examples, keep the
+  examples — implicit reasoning breaks mid-tier models (Design Principle 2)
+- Structural format consistency across all reference files — the repeating
+  format is itself a learning signal (Design Principle 4)
+
 ---
 
 ## 7. Key Decisions Made
@@ -543,17 +612,16 @@ Reviewed in Session 1. Key observations:
 - **Takeaway**: Their approach is instructive as a counter-example. Shows what happens
   when Agent Script tooling is built outside the SFDX mental model.
 
-### Jag's sf-skills (FDE — Forward Deployed Engineer) [NOT YET REVIEWED]
+### Jag's sf-skills (FDE — Forward Deployed Engineer) [REVIEWED — Session 2]
 
-Repo at `/Users/vchawla/git/jaganpro/sf-skills`. Jag is an experienced FDE and emerging
-thought leader on AI-assisted productivity inside Salesforce. His choices are likely
-grounded in hands-on experience.
+Repo at `jaganpro/sf-skills/sf-ai-agentscript/`. Jag is an experienced FDE and
+emerging thought leader on AI-assisted productivity inside Salesforce. His choices
+are grounded in hands-on experience.
 
-**Caution**: His skills may assume the presence of his full skill library. Design choices
+**Caution**: His skills assume the presence of his full skill library. Design choices
 that work in that context may not transfer to our standalone skill.
 
-**Status**: Reviewed in Session 2. Repo accessible at `jaganpro/sf-skills/sf-ai-agentscript/`.
-Detailed findings recorded in Section 6 ("Lessons from Jag's sf-ai-agentscript Skill").
+**Detailed findings**: Section 6 ("Lessons from Jag's sf-ai-agentscript Skill").
 
 ---
 
@@ -666,12 +734,84 @@ docs (above) and Vivek's direct knowledge for CLI command accuracy.
 
 ---
 
-## 10. Reference File Architecture — Research Findings
+## 10. Reference File Architecture
 
-Established in Session 3. Three sources examined to inform how we partition the
-Agent Script skill's knowledge into reference files.
+### Architecture Decision (FINAL — Session 3)
 
-### Source 1: Agent Skills Specification
+**Router model with 5 reference file bundles.** SKILL.md is a pure router —
+it identifies the user's task and directs the agent to the correct reference
+file(s). All substantial domain knowledge lives in reference files.
+
+**Why router model:** (1) No knowledge category appears in every steel thread,
+so nothing strictly requires SKILL.md body placement. (2) The routing function
+IS needed for every task — it's what genuinely belongs in the body. (3) Agents
+that adopt the Agent Skills standard already progressively load context from
+reference files. (4) Clean separation of concerns, SKILL.md stays well under
+500 lines.
+
+**Alternatives considered and rejected:**
+- ❌ **Pattern A (flat):** Everything in SKILL.md — our domain is too complex.
+- ❌ **By steel thread:** One file per task domain — too much duplication of
+  shared knowledge (execution model, syntax).
+- ❌ **By knowledge type:** Syntax, gotchas, CLI, patterns in separate files —
+  a single task would need 3-4 file reads.
+- ❌ **Hybrid (universals in SKILL.md body, phases in references):** No category
+  appears in every ST, so "universals" is empty. Body would contain content
+  that's irrelevant to some tasks.
+- ✅ **Router + co-occurrence clusters:** Categories that always appear together
+  in steel threads share a file. Minimizes reads, maximizes relevance.
+
+**The 5 bundles:**
+
+Bundle 1 / Core Language (`agent-script-core-language.md`) — categories A+B
+(Execution Model, Syntax & Block Structure). Loaded by ST1, ST2, ST3, ST4,
+ST5, ST9.
+
+Bundle 2 / Design & Agent Spec (`agent-design-and-spec-creation.md`) —
+categories C+D (Flow Control & Design Patterns, Agent Spec Production).
+Loaded by ST1, ST2, ST3, ST5, ST9.
+
+Bundle 3 / Validation & Debugging (`agent-validation-and-debugging.md`) —
+categories E+F (Validation & Error Diagnosis, Preview & Behavioral
+Debugging). Loaded by ST1, ST3, ST4, ST5, ST6, ST8.
+
+Bundle 4 / Metadata & Lifecycle (`agent-metadata-and-lifecycle.md`) —
+category G (Metadata & Lifecycle Management). Loaded by ST2, ST6, ST7,
+ST8, ST9.
+
+Bundle 5 / Test Authoring (`agent-test-authoring.md`) — category H
+(Agent Test Spec Authoring). Loaded by ST9 only.
+
+**Load profile per steel thread:** ST1 Create loads Bundles 1, 2, 3
+(3 reads). ST2 Comprehend loads Bundles 1, 2, 4 (3 reads). ST3 Modify
+loads Bundles 1, 2, 3 (3 reads). ST4 Diagnose-Compilation loads Bundles
+1, 3 (2 reads). ST5 Diagnose-Behavioral loads Bundles 1, 2, 3 (3 reads).
+ST6 Deploy loads Bundles 3, 4 (2 reads). ST7 Delete loads Bundle 4
+(1 read). ST8 Rename loads Bundles 3, 4 (2 reads). ST9 Test loads
+Bundles 1, 2, 4, 5 (4 reads). Most STs need 2-3 files. ST9 (most
+complex) needs 4. ST7 (simplest) needs 1. Proportional to actual task
+complexity.
+
+**Pressure test summary (all PASS):**
+- **Bundle 1 (Core Language):** PASS — Execution Model and Syntax are inseparable.
+  Boundary with Flow Control (C) is clean: A = runtime mechanics, C = design intent.
+- **Bundle 2 (Design & Agent Spec):** PASS with size risk — may exceed 300 lines.
+  TOC required. Co-occurrence data is unambiguous; this is a sizing concern, not
+  a clustering error.
+- **Bundle 3 (Validation & Debugging):** PASS with acceptable waste — ST4 loads
+  preview knowledge it doesn't use, ST9 loads validation knowledge it doesn't use.
+  Waste is dead weight, not misleading signal.
+- **Bundle 4 (Metadata & Lifecycle):** PASS — procedurally diverse (deploy, delete,
+  rename, test metadata) but follows recipe-based pattern. No confusion risk.
+- **Bundle 5 (Test Authoring):** PASS — unique to ST9, self-contained.
+
+### Source Research (Deep Dive)
+
+The architecture decision above was derived from three source analyses and a
+systematic clustering methodology. Read this section if you need to understand
+or challenge the reasoning behind the decision.
+
+#### Source 1: Agent Skills Specification
 
 The spec defines three optional directories beyond SKILL.md:
 
@@ -728,73 +868,32 @@ across 8 task domains, each requiring different subsets of Agent Script knowledg
 Pattern A (flat) won't work. The question is which combination of B, C, and D
 best fits our content.
 
-**Candidate partitioning dimensions** (to be decided with Vivek):
+**Candidate partitioning dimensions** (all evaluated and rejected — see
+Architecture Decision at top of Section 10 for the chosen approach):
 
-1. **By steel thread / task domain** — one reference file per major task
-   (e.g., create.md, diagnose-compilation.md, deploy.md, test.md). Matches
-   Pattern B. Risk: some knowledge spans multiple tasks (Agent Spec, execution
-   model basics) and would either duplicate or need a shared foundation file.
+1. ❌ **By steel thread / task domain** — one reference file per major task.
+   Rejected: too much duplication of shared knowledge across files.
 
-2. **By knowledge type** — syntax-rules.md, platform-gotchas.md,
-   cli-reference.md, patterns-library.md. Matches the current draft's structure.
-   Risk: a single task might need to read 3-4 files, defeating the purpose of
-   progressive disclosure.
+2. ❌ **By knowledge type** — syntax, gotchas, CLI, patterns in separate files.
+   Rejected: a single task would need 3-4 file reads.
 
-3. **By workflow phase** — comprehend.md (shared across Create/Modify/Diagnose),
-   build.md (Create/Modify), validate-and-fix.md (Diagnose), deploy.md
-   (Publish/Deploy/Test). Matches Pattern C with phase-based branching.
-   Advantage: aligns with how developers actually work (phase, not topic).
+3. ❌ **By workflow phase** — comprehend, build, validate, deploy phases.
+   Rejected: phase boundaries are fuzzy (Create spans comprehend + build + validate).
 
-4. **Hybrid** — SKILL.md body covers universals (execution model, block
-   structure, canonical example, Agent Spec guidance). Reference files organized
-   by workflow phase with conditional triggers. Shared knowledge in body,
-   phase-specific knowledge in references. This combines Pattern C's conditional
-   loading with Pattern D's staged reading.
+4. ❌ **Hybrid (universals in body, phases in references)** — no category
+   appears in every ST, so "universals" is empty. Rejected in favor of
+   pure router model.
 
-**Constraints to satisfy** (reviewed and corrected in Session 3):
-
-Hard constraints (from the Agent Skills spec and skill-creator guidance):
-- SKILL.md under 500 lines (current draft is 499 — already at limit).
-  Note: the skill-creator itself is 763 lines, so this is a strong
-  guideline, not an absolute wall.
-- Reference files under 300 lines each if possible
-- Every reference file includes a TOC (standard practice, not just for
-  large files — helps the consuming agent map the file's structure
-  before reading. Negligible token cost, ~10-15 lines)
-- One level deep references from SKILL.md (no deeply nested chains)
+**Constraints and goals** — see Section 6.1 (Constraints vs. Goals Matrix)
+for the authoritative list. Key points relevant to this research:
+- SKILL.md body: strong guideline of 500 lines (not absolute wall —
+  skill-creator is 763 — but exceeding requires justification)
+- Reference files: target 300 lines each, TOC required for all
+- One level deep references from SKILL.md (no nested chains)
 - Clear "when to read" triggers for every reference file
-
-Design goals (our own principles, not spec requirements):
-- Minimize total token consumption per task. The agent should load only
-  the reference files it actually needs. Fewer files is better, but
-  "SKILL.md + 1 reference file" is not a hard cap — it was an early
-  inference from simpler skills (pptx, pdf) whose domains naturally
-  split into 1-of-N variants. Our domain is more complex, and the
-  skill-creator (the closest complexity analog) loads multiple reference
-  files at different workflow stages.
-- Each reference file must earn its token cost. If a file is loaded,
-  most of its content should be relevant to the current task.
-- Small, consistent duplications across reference files (e.g., CLI
-  commands appearing in multiple files) are intentional reinforcement,
-  not waste. This aligns with Design Principle 3 in Section 6:
-  "Deduplication can kill reinforcement." Do not remove these
-  duplications in the name of token savings.
-
-**SKILL.md role — DECIDED (Session 3): Router model.** SKILL.md is
-primarily a router — it identifies the user's task and directs the agent
-to the right reference file(s). All substantial domain knowledge lives
-in reference files. Rationale: (1) No knowledge category appears in
-every ST, so nothing strictly requires body placement. (2) The router
-role IS needed for every task — it's what genuinely belongs in the body.
-(3) Agents that adopt the Agent Skills standard are already built to
-progressively load context from reference files, so this aligns with
-how consuming tools work. (4) The router model keeps SKILL.md well
-under 500 lines and provides clean separation of concerns.
-
-SKILL.md body will contain: skill purpose and scope, task domain
-descriptions (so the agent can identify the user's intent), "when to
-read" triggers for each reference file, and a brief orientation to
-Agent Script (enough for routing decisions, not enough to write code).
+- Token cost is the real metric, not file read count
+- Small duplications across files are intentional reinforcement
+  (Design Principle 3: "Deduplication can kill reinforcement")
 
 ### Knowledge Categories (Finalized, Session 3)
 
@@ -830,67 +929,64 @@ workflow progression:
 
 ### Steel Thread × Knowledge Category Matrix (Binary)
 
-Each entry lists the knowledge categories the agent needs to complete that
-steel thread. The agent either reads a reference file or it doesn't — there
-is no partial or "light" consumption. This binary framing was established
-after discovering that the earlier "required vs light" distinction didn't
-map to any real difference in agent behavior.
+The agent either reads a reference file or it doesn't — there is no partial
+or "light" consumption. This binary framing was established after discovering
+that the earlier "required vs light" distinction didn't map to any real
+difference in agent behavior. Format note: this matrix uses explicit prose
+rather than a table because LLMs process prose more reliably than tabular
+formats that require spatial reasoning.
 
-**ST1 Create** (6 categories): Execution Model, Syntax & Block Structure,
+**ST1 Create** needs 6 categories: Execution Model, Syntax & Block Structure,
 Flow Control & Design Patterns, Agent Spec Production, Validation & Error
-Diagnosis, Preview & Behavioral Debugging
+Diagnosis, Preview & Behavioral Debugging.
 
-**ST2 Comprehend** (5 categories): Execution Model, Syntax & Block Structure,
-Flow Control & Design Patterns, Agent Spec Production, Metadata & Lifecycle
-Management
+**ST2 Comprehend** needs 5 categories: Execution Model, Syntax & Block
+Structure, Flow Control & Design Patterns, Agent Spec Production, Metadata
+& Lifecycle Management.
 
-**ST3 Modify** (6 categories): Execution Model, Syntax & Block Structure,
+**ST3 Modify** needs 6 categories: Execution Model, Syntax & Block Structure,
 Flow Control & Design Patterns, Agent Spec Production, Validation & Error
-Diagnosis, Preview & Behavioral Debugging
+Diagnosis, Preview & Behavioral Debugging.
 
-**ST4 Diagnose-Compilation** (3 categories): Execution Model, Syntax & Block
-Structure, Validation & Error Diagnosis
+**ST4 Diagnose-Compilation** needs 3 categories: Execution Model, Syntax &
+Block Structure, Validation & Error Diagnosis.
 
-**ST5 Diagnose-Behavioral** (6 categories): Execution Model, Syntax & Block
-Structure, Flow Control & Design Patterns, Agent Spec Production, Validation
-& Error Diagnosis, Preview & Behavioral Debugging
+**ST5 Diagnose-Behavioral** needs 6 categories: Execution Model, Syntax &
+Block Structure, Flow Control & Design Patterns, Agent Spec Production,
+Validation & Error Diagnosis, Preview & Behavioral Debugging.
 
-**ST6 Deploy** (3 categories): Validation & Error Diagnosis, Preview &
-Behavioral Debugging, Metadata & Lifecycle Management
+**ST6 Deploy** needs 3 categories: Validation & Error Diagnosis, Preview &
+Behavioral Debugging, Metadata & Lifecycle Management.
 
-**ST7 Delete** (1 category): Metadata & Lifecycle Management
+**ST7 Delete** needs 1 category: Metadata & Lifecycle Management.
 
-**ST8 Rename** (3 categories): Validation & Error Diagnosis, Preview &
-Behavioral Debugging, Metadata & Lifecycle Management
+**ST8 Rename** needs 3 categories: Validation & Error Diagnosis, Preview &
+Behavioral Debugging, Metadata & Lifecycle Management.
 
-**ST9 Test** (7 categories): Execution Model, Syntax & Block Structure,
+**ST9 Test** needs 7 categories: Execution Model, Syntax & Block Structure,
 Flow Control & Design Patterns, Agent Spec Production, Preview & Behavioral
-Debugging, Metadata & Lifecycle Management, Agent Test Spec Authoring
+Debugging, Metadata & Lifecycle Management, Agent Test Spec Authoring.
 
-**How many STs need each category:**
+**How many STs need each category:** Execution Model: 6 (ST1, ST2, ST3, ST4,
+ST5, ST9). Syntax & Block Structure: 6 (ST1, ST2, ST3, ST4, ST5, ST9). Flow
+Control & Design Patterns: 5 (ST1, ST2, ST3, ST5, ST9). Agent Spec
+Production: 5 (ST1, ST2, ST3, ST5, ST9). Validation & Error Diagnosis: 6
+(ST1, ST3, ST4, ST5, ST6, ST8). Preview & Behavioral Debugging: 6 (ST1, ST3,
+ST5, ST6, ST8, ST9). Metadata & Lifecycle Management: 5 (ST2, ST6, ST7, ST8,
+ST9). Agent Test Spec Authoring: 1 (ST9).
 
-- Execution Model: 6 (ST1, ST2, ST3, ST4, ST5, ST9)
-- Syntax & Block Structure: 6 (ST1, ST2, ST3, ST4, ST5, ST9)
-- Flow Control & Design Patterns: 5 (ST1, ST2, ST3, ST5, ST9)
-- Agent Spec Production: 5 (ST1, ST2, ST3, ST5, ST9)
-- Validation & Error Diagnosis: 6 (ST1, ST3, ST4, ST5, ST6, ST8)
-- Preview & Behavioral Debugging: 6 (ST1, ST3, ST5, ST6, ST8, ST9)
-- Metadata & Lifecycle Management: 5 (ST2, ST6, ST7, ST8, ST9)
-- Agent Test Spec Authoring: 1 (ST9)
-
-**Co-occurrence patterns (categories that appear in exactly the same STs):**
-
-- Execution Model and Syntax & Block Structure: identical — both appear in
-  ST1, ST2, ST3, ST4, ST5, ST9. They always travel together.
-- Flow Control & Design Patterns and Agent Spec Production: identical — both
-  appear in ST1, ST2, ST3, ST5, ST9. They always travel together.
-- Validation & Error Diagnosis and Preview & Behavioral Debugging: close but
-  NOT identical. Validation appears in ST4 and ST8 where Preview does not.
-  Preview appears in ST9 where Validation does not.
-- Metadata & Lifecycle Management: shares almost no overlap with the first
-  four categories (Execution Model, Syntax, Flow Control, Agent Spec). Its
-  STs are ST2, ST6, ST7, ST8, ST9.
-- Agent Test Spec Authoring: unique to ST9.
+**Co-occurrence patterns driving the bundle architecture:**
+- Execution Model and Syntax & Block Structure appear in identical STs
+  (ST1,2,3,4,5,9) — they always travel together → Bundle 1 (Core Language)
+- Flow Control & Design Patterns and Agent Spec Production appear in
+  identical STs (ST1,2,3,5,9) — they always travel together → Bundle 2
+  (Design & Agent Spec)
+- Validation & Error Diagnosis and Preview & Behavioral Debugging are close
+  but not identical (Validation in ST4/ST8 without Preview; Preview in ST9
+  without Validation) → merged into Bundle 3 (Validation & Debugging)
+  because validation is lightweight and the waste is harmless
+- Metadata & Lifecycle Management stands alone (ST2,6,7,8,9) → Bundle 4
+- Agent Test Spec Authoring is unique to ST9 → Bundle 5
 
 ### Trigger Precision Guide (For Reference File Authoring)
 
@@ -1012,43 +1108,6 @@ problem.
 **Overall assessment:** Bundles hold up. Risks are content-sizing
 (Bundle 2) and cohesion (Bundle 4), both manageable during writing.
 No category is misassigned.
-
-### Architecture Decision (Session 3)
-
-**Confirmed: Router model with 5 reference file bundles.** SKILL.md routes;
-reference files carry all domain knowledge. The 5 bundles are:
-
-1. Core Language (categories A+B)
-2. Design & Agent Spec (categories C+D)
-3. Verify & Debug (categories E+F)
-4. Metadata & Lifecycle (category G)
-5. Test Spec Authoring (category H)
-
-See "Cluster Analysis and Reference File Bundles" above for full rationale,
-load profiles per ST, and pressure test results.
-
-### Implementation Status (as of Session 3)
-
-**DECIDED:** Router model with 5 reference file bundles. SKILL.md routes;
-reference files carry domain knowledge. Architecture confirmed, pressure
-tested (per-file and cross-inventory), and file inventory sketched.
-
-**COMPLETED this session:**
-- Knowledge categories defined and finalized (8 categories, A-H)
-- Binary mapping matrix built (ST × category)
-- Cluster analysis: A+B, C+D always co-occur; E+F merged; G standalone; H standalone
-- Architecture decision: router model
-- File inventory drafted with names, triggers, and content scope
-- Per-file pressure tests (all 5 PASS)
-- Full inventory pressure test (PASS — no gaps, no problematic overlaps,
-  proportional token cost, natural progressive loading)
-
-**NEXT (see Section 11 Active Work Items for details):**
-1. Write SKILL.md (router)
-2. Targeted domain reads for reference file content
-3. Write reference files sequentially with Vivek review
-4. Create/annotate assets
-5. Validate against steel threads
 
 ### File Inventory (Draft, Session 3)
 
@@ -1186,11 +1245,8 @@ Content:
 Asset: `assets/local-info-agent-testSpec.yaml` — example test spec
 showing format and expectations. Referenced from this file, not embedded.
 
-### What still needs to happen
-
-Pressure testing is complete (all PASS). See **Section 11 (Active
-Work Items)** for the prioritized backlog of next steps. The immediate
-next task is writing SKILL.md as a router.
+Architecture is decided and pressure-tested. See **Section 11 (Active
+Work Items)** for the prioritized backlog of next steps.
 
 ---
 
@@ -1199,33 +1255,77 @@ next task is writing SKILL.md as a router.
 These are the tasks that need to happen next, with explicit status.
 Sessions should consult this section to determine what to work on.
 
-1. **[READY]** Write SKILL.md (router) — the routing structure that
-   everything hangs off of. Architecture is decided (Section 10).
-   Prerequisite: none. This is the first writing task.
+1. **[READY]** Write SKILL.md (router).
+   - **Prerequisite:** None. This is the first writing task.
+   - **Scope:** Skill purpose, brief Agent Script orientation (enough
+     for routing, not enough to write code), task domain descriptions,
+     "when to read" triggers for all 5 reference files.
+   - **Acceptance criteria:** (a) Under 500 lines. (b) Contains clear
+     routing triggers for all 5 reference files matching the File
+     Inventory triggers in Section 10. (c) A cold-start agent can read
+     it and correctly identify which reference file(s) to load for any
+     of the 9 steel threads. (d) No substantial domain knowledge in
+     body — routing only. (e) YAML frontmatter with single-line
+     double-quoted description (Section 7).
 
-2. **[READY]** Targeted domain reads — before writing reference file
-   content, read the actual source material: Agent Script syntax
-   reference, Local Info Agent source, select recipes, current draft
-   SKILL.md. On-demand per resource inventory (Section 9), not bulk.
+2. **[READY]** Targeted domain reads — read source material before
+   writing each reference file. NOT bulk — read on demand per file.
+   - **Reading plan per reference file:**
+     - **File 1 (Core Language):** Agent Script syntax reference
+       (`salesforcedocs/.../agent-script-reference.md`), Local Info
+       Agent source (`force-app/.../Local_Info_Agent/`), select
+       language essentials recipes (`agent-script-recipes/.../01_languageEssentials/`),
+       current draft syntax-rules.md, Jag's syntax-reference.md
+     - **File 2 (Design & Agent Spec):** Agent Spec docs
+       (`salesforcedocs/.../agent-dx-create-agent-spec.md`,
+       `agent-dx-generate-agent-spec.md`), architectural pattern
+       recipes (`agent-script-recipes/.../04_architecturalPatterns/`),
+       Jag's fsm-architecture.md, Local Info Agent source (for
+       reverse-engineering exercise)
+     - **File 3 (Validation & Debugging):** AFDX preview docs
+       (`salesforcedocs/.../agent-dx-preview.md`,
+       `agent-dx-nga-preview.md`), existing .a4drules files
+       (`afdx-pro-code-testdrive/.a4drules/`), Jag's debugging-guide.md
+     - **File 4 (Metadata & Lifecycle):** AFDX metadata docs
+       (`salesforcedocs/.../agent-dx-metadata.md`,
+       `agent-dx-nga-authbundle.md`, `agent-dx-manage.md`), deploy/publish
+       docs (`agent-dx-nga-publish.md`)
+     - **File 5 (Test Authoring):** Testing docs
+       (`salesforcedocs/.../agent-dx-test*.md`), testing metadata
+       reference, existing test spec example
+       (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
 3. **[READY]** Write reference files — one at a time, sequentially,
-   with Vivek review between each. Order: Core Language (File 1),
-   Design & Agent Spec (File 2), Validation & Debugging (File 3),
-   Metadata & Lifecycle (File 4), Test Authoring (File 5). See
-   File Inventory in Section 10 for content scope per file.
+   with Vivek review between each.
+   - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
+     → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
+     → File 5 (Test Authoring)
+   - **Per-file acceptance criteria:** (a) Content matches the scope
+     defined in the File Inventory (Section 10). (b) TOC at top.
+     (c) Target 300 lines; if exceeding, justify the overage.
+     (d) Anti-patterns use WRONG/RIGHT pairs (Design Principle 2).
+     (e) Structural format is consistent across all files (Design
+     Principle 4). (f) Small duplications of CLI commands across files
+     are intentional — do not deduplicate.
 
 4. **[READY]** Create/annotate assets — annotated Local Info Agent
    example, test spec template, generative agent templates.
+   - **Acceptance criteria:** (a) `local-info-agent-annotated.agent`
+     shows all major constructs with inline comments explaining why,
+     not just what. (b) `local-info-agent-testSpec.yaml` is a working
+     example of the test spec format. (c) Generative templates are
+     minimal, uncommented, designed to be copied and modified.
 
-5. **[BLOCKED — needs skill content first]** Validate skill against
-   steel threads — test the complete skill against ST1-ST9 acceptance
-   criteria. Requires written skill files.
+5. **[BLOCKED — needs written skill files]** Validate skill against
+   steel threads — run each ST's prompt against the completed skill
+   and evaluate against acceptance criteria in `steel-threads.md`.
+   - **Validation methodology:** TBD (relates to Item 7).
 
-6. **[BLOCKED — needs Vivek]** First draft review — the Session 1
-   draft SKILL.md (499 lines) has not been reviewed section-by-section.
-   Note: the reference file architecture decided in Session 3 may
-   make this draft largely obsolete. Discuss with Vivek whether to
-   review or replace.
+6. **[BLOCKED — raised Session 3, awaiting Vivek decision]** First
+   draft disposition — the Session 1 draft SKILL.md (499 lines) has
+   not been reviewed. The reference file architecture decided in
+   Session 3 may make this draft largely obsolete. **Decision needed:**
+   review the draft to mine useful content, or start fresh.
 
 7. **[FUTURE]** Evaluation approach — systematic testing methodology
    for the skill. Relates to skill-creator's Eval and Benchmark modes.
@@ -1268,6 +1368,30 @@ verified claims to test against. Building it before the skill is stable is prema
 - **Don't produce finished artifacts without collaborative iteration** — the process
   matters as much as the output (Objective 3).
 - **Verify file paths** before sending agents to explore them — check accessibility first.
+- **Prose over tables for LLM-consumed content.** Tables require spatial reasoning
+  that LLMs handle unreliably. This applies to this document and to the skill
+  itself. If a sub-agent or reviewer suggests converting prose to tables, reject it.
+
+### Sub-Agent Review Rules
+
+Sub-agents (spawned for reviews, research, or validation) are useful for finding
+problems but dangerous for prescribing fixes. These rules were established in
+Session 4 after a sub-agent recommended changes that contradicted decisions
+already made and validated in earlier sessions.
+
+1. **Sub-agents don't have session history.** They will recommend changes that
+   contradict recorded decisions. Every sub-agent recommendation must be filtered
+   against Sections 7 (Key Decisions), 10 (Architecture Decision), and the
+   Terminology glossary before applying.
+2. **Separate "what's broken" from "how to fix it."** Sub-agent problem
+   identification is usually accurate. Their proposed fixes may violate
+   constraints they can't see. Treat findings as hypotheses, not directives.
+3. **After applying sub-agent-recommended changes, do a targeted self-review**
+   against the Terminology glossary and key decisions — not another sub-agent
+   pass. The filter needs session context that sub-agents lack.
+4. **Content changes require a line-level accuracy check.** References like
+   "above" vs "below," section numbers, and cross-references break easily
+   during restructuring. Verify these manually after every batch of edits.
 
 ---
 
@@ -1350,7 +1474,7 @@ completed the reference file architecture research (see Session 3).
 - File inventory sketched (5 reference files + assets)
 - Per-file and cross-inventory pressure tests completed (all PASS)
 - Collaboration-context.md restructured per context engineering research
-  (Quick Start guide, Active Work Items, Implementation Status,
+  (Quick Start guide, Active Work Items,
   Trigger Precision Guide, session log template)
 
 **Key decisions**:
@@ -1371,3 +1495,36 @@ completed the reference file architecture research (see Session 3).
 Active Work Items)
 
 **Files modified**: `collaboration-context.md`, `steel-threads.md`
+
+### Session 4 — February 17, 2026
+
+**Outputs**:
+- Antagonistic review of collaboration-context.md (8-dimension rubric,
+  scored 20/40 pre-fixes)
+- Document hardened for cold-start sessions — all 9 review findings addressed
+- Sub-Agent Review Rules established (Section 12) after sub-agent
+  recommended table format that contradicted Session 3 prose decision
+
+**Key changes**:
+- Section 10 restructured: decision summary + bundles table at top,
+  research moved to "Source Research (Deep Dive)" subsection below
+- Removed redundant "Architecture Decision" and "Implementation Status"
+  subsections from Section 10 (decision is now at top; status is in
+  Section 11)
+- Section 11 work items expanded with acceptance criteria, reading plans
+  per reference file, and explicit triggers/blockers
+- Section 6.1 added: Constraints vs. Goals Matrix (authoritative source
+  for what's mandatory vs. preferred)
+- Terminology glossary added after Quick Start (canonical names for
+  Agent Script, Agent Spec, AiAuthoringBundle, etc.)
+- Quick Start updated: Sections 4-9 disambiguated by task type
+- ST × category matrix tightened (kept as prose — tables are unreliable
+  for LLM consumption; sub-agent recommendation to use tables was rejected)
+- Stale status markers fixed: Jag review ([NOT YET] → [REVIEWED]),
+  steel threads status updated, cross-cutting concerns tagged
+- Candidate partitioning dimensions marked as rejected with reasons
+
+**What's unresolved**: Writing the actual skill files (see Section 11
+Active Work Items). Next task is Item 1: Write SKILL.md (router).
+
+**Files modified**: `collaboration-context.md`
