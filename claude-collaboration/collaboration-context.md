@@ -7,12 +7,34 @@
 > - Read it completely before starting work
 > - When your session produces decisions, insights, or changes, MERGE them into the
 >   relevant sections below — do NOT overwrite existing content
-> - Add new entries to the Session Log (Section 10) so future sessions know what happened
+> - Add new entries to the Session Log (Section 13) so future sessions know what happened
 > - If you disagree with a prior decision recorded here, flag it to Vivek — don't silently
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 16, 2026 — Session 3 (reference file architecture research)
+> **Last updated**: February 17, 2026 — Session 3 (architecture decided, document restructured)
+
+---
+
+## Quick Start for Fresh Sessions
+
+If you're starting a new session on this project, read in this order:
+
+1. **Section 1 (About Vivek)** — how to collaborate. Read this first.
+   Your first response sets the tone; get this right.
+2. **Section 2 (Project Objectives)** — what we're building and why
+   (three intertwined objectives, not just one).
+3. **Section 3 (North Stars)** — non-negotiable principles guiding every
+   decision.
+4. **Section 10 (Reference File Architecture)** — current architectural
+   decisions and the file inventory. Check the **Implementation Status**
+   subsection for what's next.
+5. **Section 11 (Active Work Items)** — backlog with explicit status
+   tags. This tells you what to work on.
+6. **Sections 4-9** — as needed for deeper context on what we're
+   building, design principles, skill architecture, competitive
+   landscape, key decisions, and resource inventory.
+7. **Section 13 (Session Log)** — update this at the end of your session.
 
 ---
 
@@ -870,6 +892,25 @@ Debugging, Metadata & Lifecycle Management, Agent Test Spec Authoring
   STs are ST2, ST6, ST7, ST8, ST9.
 - Agent Test Spec Authoring: unique to ST9.
 
+### Trigger Precision Guide (For Reference File Authoring)
+
+When writing reference file content, use this guide to disambiguate
+which file a piece of knowledge belongs in:
+
+- **Execution model mechanics** → File 1 (Core Language) — how the runtime works
+- **Syntax rules and block structure** → File 1 (Core Language) — how to write correct code
+- **Flow control design and topic graph patterns** → File 2 (Design & Agent Spec) — design-time thinking
+- **Agent Spec structure and lifecycle** → File 2 (Design & Agent Spec) — the canonical artifact
+- **Backing logic analysis** → File 2 (Design & Agent Spec) — feeds the Agent Spec
+- **Compilation errors and validation** → File 3 (Validation & Debugging) — diagnosing broken code
+- **Preview and behavioral debugging** → File 3 (Validation & Debugging) — diagnosing broken behavior
+- **CLI commands for deploy/publish/activate** → File 4 (Metadata & Lifecycle) — operational
+- **CLI commands for testing** → File 5 (Test Authoring) AND File 4 (intentional duplication)
+- **Test spec YAML format and design methodology** → File 5 (Test Authoring) — authoring
+
+**Quick disambiguation:** Is this about understanding or designing the agent
+(Files 1-2)? Or about operating or testing it (Files 3-5)?
+
 ### Cluster Analysis and Reference File Bundles (Session 3)
 
 The co-occurrence patterns reveal three natural clusters and two independents.
@@ -985,6 +1026,29 @@ reference files carry all domain knowledge. The 5 bundles are:
 
 See "Cluster Analysis and Reference File Bundles" above for full rationale,
 load profiles per ST, and pressure test results.
+
+### Implementation Status (as of Session 3)
+
+**DECIDED:** Router model with 5 reference file bundles. SKILL.md routes;
+reference files carry domain knowledge. Architecture confirmed, pressure
+tested (per-file and cross-inventory), and file inventory sketched.
+
+**COMPLETED this session:**
+- Knowledge categories defined and finalized (8 categories, A-H)
+- Binary mapping matrix built (ST × category)
+- Cluster analysis: A+B, C+D always co-occur; E+F merged; G standalone; H standalone
+- Architecture decision: router model
+- File inventory drafted with names, triggers, and content scope
+- Per-file pressure tests (all 5 PASS)
+- Full inventory pressure test (PASS — no gaps, no problematic overlaps,
+  proportional token cost, natural progressive loading)
+
+**NEXT (see Section 11 Active Work Items for details):**
+1. Write SKILL.md (router)
+2. Targeted domain reads for reference file content
+3. Write reference files sequentially with Vivek review
+4. Create/annotate assets
+5. Validate against steel threads
 
 ### File Inventory (Draft, Session 3)
 
@@ -1124,23 +1188,50 @@ showing format and expectations. Referenced from this file, not embedded.
 
 ### What still needs to happen
 
-- **Pressure test each file** — verify trigger accuracy, content
-  completeness, and boundary clarity
-- **Pressure test the full inventory** — verify no gaps, no overlaps,
-  and the routing model works end-to-end
-- Then revise SKILL.md and write reference files to that architecture
+Pressure testing is complete (all PASS). See **Section 11 (Active
+Work Items)** for the prioritized backlog of next steps. The immediate
+next task is writing SKILL.md as a router.
 
 ---
 
-## 11. Open Questions
+## 11. Active Work Items
 
-1. ~~**North stars**~~ — **RESOLVED** in Session 2. See Section 3.
-2. ~~**Jag's skills**~~ — **RESOLVED** in Session 2. See Section 6 and Section 8.
-3. **First draft review** — SKILL.md needs section-by-section review with Vivek
-4. **Reference file verification** — The four reference files were written but never read
-   back. Need to verify they're accurate.
-5. **Evaluation approach** — How will we test the skill? The context doc suggests specific
-   prompts + validation, but we haven't set this up yet.
+These are the tasks that need to happen next, with explicit status.
+Sessions should consult this section to determine what to work on.
+
+1. **[READY]** Write SKILL.md (router) — the routing structure that
+   everything hangs off of. Architecture is decided (Section 10).
+   Prerequisite: none. This is the first writing task.
+
+2. **[READY]** Targeted domain reads — before writing reference file
+   content, read the actual source material: Agent Script syntax
+   reference, Local Info Agent source, select recipes, current draft
+   SKILL.md. On-demand per resource inventory (Section 9), not bulk.
+
+3. **[READY]** Write reference files — one at a time, sequentially,
+   with Vivek review between each. Order: Core Language (File 1),
+   Design & Agent Spec (File 2), Validation & Debugging (File 3),
+   Metadata & Lifecycle (File 4), Test Authoring (File 5). See
+   File Inventory in Section 10 for content scope per file.
+
+4. **[READY]** Create/annotate assets — annotated Local Info Agent
+   example, test spec template, generative agent templates.
+
+5. **[BLOCKED — needs skill content first]** Validate skill against
+   steel threads — test the complete skill against ST1-ST9 acceptance
+   criteria. Requires written skill files.
+
+6. **[BLOCKED — needs Vivek]** First draft review — the Session 1
+   draft SKILL.md (499 lines) has not been reviewed section-by-section.
+   Note: the reference file architecture decided in Session 3 may
+   make this draft largely obsolete. Discuss with Vivek whether to
+   review or replace.
+
+7. **[FUTURE]** Evaluation approach — systematic testing methodology
+   for the skill. Relates to skill-creator's Eval and Benchmark modes.
+
+8. **[FUTURE]** Agent Script Skill Validator — separate skill for
+   ongoing platform validation. See Section 11.1.
 
 ## 11.1 Future Workstreams
 
@@ -1182,62 +1273,101 @@ verified claims to test against. Building it before the skill is stable is prema
 
 ## 13. Session Log
 
+### How to Write a Session Log Entry
+
+Use this structure for consistency across sessions:
+
+```
+### Session N — Date
+
+**Outputs**: [Concrete artifacts created or modified]
+
+**Key decisions**: [Decisions made, with rationale if not captured elsewhere]
+
+**What's unresolved**: [Status of work carrying into the next session]
+
+**Files modified**: [Paths of files changed or added]
+```
+
 ### Session 1 — February 13, 2026
 
-**What happened**:
-- Read all source materials (context doc, prompt, Local Info Agent, all four .a4drules
-  files, test spec, skill-creator SKILL.md, docx SKILL.md)
-- Produced first draft of complete skill (SKILL.md + 4 reference files)
-- Fixed frontmatter format issue (YAML folded scalar → single-line quoted string)
-- Reviewed AI Platform team's CLAUDE.md sample — identified as counter-example
-- Established collaboration principles and three-objective framework
-- Created this collaboration-context.md document
+**Outputs**:
+- First draft of Agent Script skill (SKILL.md + 4 reference files)
+- This collaboration-context.md document
+- Revised AGENT_SCRIPT_SKILL_PROMPT.md (session-opener template)
+- Updated file paths across `claude-collaboration/` to include
+  `afdx-pro-code-testdrive/` prefix for multi-repo mount support
 
-**Key mistake**: Moved too fast on the first draft — wrote everything in one pass without
-collaborative iteration. Recognized and acknowledged. Future work should be incremental.
+**Key decisions**:
+- YAML frontmatter `description` must be single-line quoted string
+  (folded scalars break the parser)
+- AI Platform team's approach identified as counter-example
+- Three-objective framework established (build skill, build expertise,
+  create repeatable framework)
 
-**Unresolved at session end**: North stars, Jag's repo review, section-by-section SKILL.md
-review, reference file verification, evaluation approach.
+**Key mistake**: Moved too fast on first draft — produced without
+collaborative iteration. Acknowledged; future work is incremental.
 
-### Session 1 (continued) — February 13, 2026
-
-**What happened**:
-- Rewrote `AGENT_SCRIPT_SKILL_PROMPT.md` from an 86-line build specification to a 35-line
-  collaboration-first session-opener. Points to collaboration-context.md instead of repeating
-  context. Explicitly sets collaborative mode ("not a build task").
-- Updated all file paths in `claude-collaboration/` to include `afdx-pro-code-testdrive/`
-  prefix — Vivek plans to mount `~/git` as the root folder for future sessions so he can
-  access multiple repos (including Jag's sf-skills repo).
-- Files updated: collaboration-context.md, AGENT_SCRIPT_SKILL_CONTEXT.md,
-  AGENT_SCRIPT_SKILL_PROMPT.md, LOCAL_INFO_AGENT_PROMPT.md, LOCAL_INFO_AGENT_REFINEMENT.md,
-  guidelines-for-ai-rules.md
-- Files intentionally NOT updated: SAMPLE-CLAUDE-INSTRUCTIONS-FROM-OTHER-TEAM.md (other
-  team's document, paths are theirs), agent-script-skill/ files (project-relative paths
-  correct for skill context)
-
-**Still unresolved**: Same as Session 1 — north stars, Jag's repo review, section-by-section
+**What's unresolved**: North stars, Jag's repo review, section-by-section
 SKILL.md review, reference file verification, evaluation approach.
 
-### Session 3 (partial) — February 16, 2026
+### Session 2 — February 14-15, 2026
 
-**What happened**:
-- Completed targeted reads for reference file architecture groundwork:
-  1. Skill-creator SKILL.md (763 lines) — read in Session 2, key guidance on
-     reference file sizing, "when to read" triggers, domain-based organization
-  2. Agent Skills specification (`specification.mdx`) — three-tier model confirmed,
-     `references/`, `scripts/`, `assets/` directory conventions, one-level-deep
-     file reference constraint
-  3. Built-in skills audit (docx, xlsx, pptx, pdf, skill-creator) — identified
-     four distinct reference file patterns (Flat, Workflow-Split, Conditional,
-     Hierarchical) with concrete examples of each
-- Synthesized findings into Section 10 (Reference File Architecture — Research
-  Findings) with four candidate partitioning dimensions and constraints to satisfy
-- Identified next steps: map steel thread knowledge requirements → decide
-  partitioning approach → sketch reference file inventory → revise skill
+**Outputs**:
+- North Stars defined (Section 3)
+- Steel threads ST1-ST9 defined and refined (see `steel-threads.md`)
+- Agent Spec established as first-class AFDX artifact (Section 4)
+- Execution contexts and agent lifecycle documented (Section 4)
+- Design Principles and Skill Architecture Principles codified
+  (Sections 5-6)
+- Jag's sf-ai-agentscript skill reviewed (Section 6, Section 8)
+- Resource Inventory created (Section 9)
+- Reference file architecture planning initiated (Section 10, partial)
 
-**Context note**: This session was a context continuation from Session 2 (which
-ran out of context). The continuation summary preserved all decisions and file
-states from Session 2. Session 2's full log entry should be written when time
-permits — it covered steel thread refinement (ST1-ST9), Agent Spec establishment,
-execution contexts/lifecycle, resource inventory, and the start of reference file
-architecture planning.
+**Key decisions**:
+- Agent Spec is official AFDX artifact, required for most operations
+- "Agent Script execution model" is preferred terminology (not "Atlas
+  Reasoning Engine" or bare "execution model")
+- Prompts should be action-oriented; acceptance criteria outcome-focused
+- `AiAuthoringBundle` spelled out (not "AAB") since the dev agent is audience
+- Deploy pipeline is three steps: deploy → publish → activate
+
+**What's unresolved**: Reference file architecture (continued in Session 3).
+
+**Context note**: Session 2 ran out of context. Decisions and findings
+were preserved in Sections 3-10 of this document. A continuation session
+completed the reference file architecture research (see Session 3).
+
+### Session 3 — February 16-17, 2026
+
+**Outputs**:
+- Reference file architecture research completed (Section 10):
+  Built-in skills audit, Agent Skills spec review, skill-creator analysis
+- Knowledge categories defined (8 categories, A-H)
+- Binary ST × category mapping matrix
+- Cluster analysis and 5-bundle architecture decided
+- Router model for SKILL.md confirmed
+- File inventory sketched (5 reference files + assets)
+- Per-file and cross-inventory pressure tests completed (all PASS)
+- Collaboration-context.md restructured per context engineering research
+  (Quick Start guide, Active Work Items, Implementation Status,
+  Trigger Precision Guide, session log template)
+
+**Key decisions**:
+- SKILL.md is a router (no domain knowledge in body)
+- 5 reference file bundles: Core Language (A+B), Design & Agent Spec
+  (C+D), Validation & Debugging (E+F), Metadata & Lifecycle (G),
+  Test Authoring (H)
+- Agent Spec as first-class artifact reinforced (backing logic analysis
+  merged into Agent Spec Production — never a standalone activity)
+- Annotated Local Info Agent as canonical example + generative templates
+  in assets
+- `sf agent generate test-spec` is anti-pattern for agentic use
+- Small duplications across reference files are intentional reinforcement
+- TOC standard for all reference files
+- Token cost is the real metric, not file read count
+
+**What's unresolved**: Writing the actual skill files (see Section 11
+Active Work Items)
+
+**Files modified**: `collaboration-context.md`, `steel-threads.md`
