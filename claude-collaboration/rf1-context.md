@@ -101,19 +101,55 @@
 
 ---
 
-## Proposed Outline (Under Review)
+## Finalized Outline
 
-The ordering below is proposed but NOT finalized. Vivek flagged that the
-order may not be right. Key question: what ordering best serves the
-consuming agent's needs?
+Ordering was debated and resolved through a structured discussion.
+Key ordering decisions and their rationale are captured below.
 
-**Design principle for ordering**: The execution model should come first
-(Design Principle 1: "Teach the execution model first"). After that,
-the question is whether to follow the structure of an .agent file
-(block-by-block, top to bottom) or to follow a conceptual progression
-(simple → complex).
+### Ordering Rationale
 
-### Current proposed sections:
+1. **Execution model first** (Design Principle 1). Everything else
+   depends on the split-brain model.
+
+2. **File skeleton second.** The consuming agent needs to know what
+   blocks exist and their mandatory order before learning any block's
+   internals.
+
+3. **Constraint layers before content.** Naming/formatting rules and
+   expression/operator syntax are foundational constraints that break
+   Agent Script if violated. The consuming agent needs these loaded
+   before writing any block. Grouping them together reinforces that
+   both are "rules of the road."
+
+4. **Top-level blocks in file order.** System/Config then Variables —
+   matches the .agent file structure top-to-bottom.
+
+5. **Context before detail for topics.** Topics section introduces
+   the structural scaffolding (what blocks live inside a topic, how a
+   topic resolves into a prompt). Reasoning Instructions then explains
+   the engine inside. LLMs build representations progressively —
+   detail anchors better when the structural context is already
+   established. The one-section gap between introduction and deep dive
+   is short enough for the attention mechanism to link back easily.
+
+6. **Flow Control after Reasoning Instructions.** You need to
+   understand topics (8) and how instructions build prompts (9) before
+   learning how execution moves — branching, transitions, delegation.
+   `start_agent` lives here (not in Topics) because it's fundamentally
+   a routing/flow decision, not a topic definition.
+
+7. **Actions unified.** Definition syntax, target protocols,
+   deterministic invocation (`run @actions.X`), and LLM exposure
+   (`reasoning.actions`) belong in one section. The split-brain model
+   means actions have two execution paths — that's a single concept
+   with two modes, not two separate concepts. Splitting them would
+   obscure the relationship.
+
+8. **Anti-patterns as capstone.** WRONG/RIGHT pairs reinforce
+   everything above. Placed last so every referenced concept has
+   already been taught.
+
+### Sections (13 total):
 
 1. **TOC**
 
@@ -125,45 +161,47 @@ the question is whether to follow the structure of an .agent file
 3. **File Structure and Block Ordering** — Eight blocks in mandatory order
    per .a4drules. Which are required. Internal ordering within topic blocks.
 
-4. **System and Config Blocks** — Required fields, messages, instructions.
+4. **Naming and Formatting Rules** — Name constraints, 4-space indent,
+   never tabs, comments. Moved up from original position 13 because the
+   agent needs naming constraints before writing any block.
 
-5. **Variables** — Mutable vs linked, types by context, defaults, template
+5. **Expressions and Operators** — Comparison, logical, arithmetic,
+   access, conditional. Template injection. Resource references. Grouped
+   with naming rules as a foundational constraint layer — both break
+   Agent Script if violated.
+
+6. **System and Config Blocks** — Required fields, messages, instructions.
+   `developer_name` (not `agent_name`).
+
+7. **Variables** — Mutable vs linked, types by context, defaults, template
    injection `{!@variables.X}`, boolean capitalization.
 
-6. **Topics and start_agent** — Entry point, topic structure,
-   before/after_reasoning directive blocks, topic-level system overrides.
+8. **Topics** — Topic structure, before/after_reasoning directive blocks,
+   topic-level system overrides. Sets up structural context for reasoning
+   instructions. Does NOT include `start_agent` (that's in Flow Control).
 
-7. **Reasoning Instructions** — Arrow vs pipe modes, if/else (no else if),
+9. **Reasoning Instructions** — Arrow vs pipe modes, if/else (no else if),
    inline `run @actions.X`, how pipe sections become the prompt.
 
-8. **Actions** — Definition in topic.actions, target protocols, inputs/outputs,
-   complex_data_type_name. Two execution paths: deterministic vs LLM-chosen.
+10. **Flow Control** — `start_agent` routing, conditional branching within
+    topics, deterministic transitions (`transition to` in directive blocks),
+    LLM-chosen transitions (`@utils.transition to` in reasoning.actions),
+    delegation with return (`@topic.X` in reasoning.actions). Consolidates
+    all movement-between-topics content. Transitions folded in here — they
+    are a mechanism of flow control, not a peer concept.
 
-9. **Tools (Reasoning Actions)** — Exposing actions in reasoning.actions,
-   available when, with binding, set outputs, post-action directives.
-   Key rule: post-action directives only work with @actions, not @utils.
+11. **Actions** — Unified section covering: definition syntax in
+    topic.actions, target protocols (`apex://`, `prompt://`, `flow://`),
+    inputs/outputs, `complex_data_type_name`, deterministic invocation
+    via `run @actions.X`, LLM exposure via `reasoning.actions`,
+    `available when` conditions, `with` binding, `set` outputs,
+    post-action directives. Two execution paths taught as one concept.
 
-10. **Utility Functions** — @utils.transition to, @utils.escalate,
-    @utils.setVariables, @topic.X delegation.
+12. **Utility Functions** — `@utils.transition to`, `@utils.escalate`,
+    `@utils.setVariables`, `@topic.X` delegation mechanics.
 
-11. **Transitions** — Two syntaxes, two contexts. WRONG/RIGHT pairs.
-    One-way (transition) vs delegation (@topic.X returns).
-
-12. **Expressions and Operators** — Comparison, logical, arithmetic,
-    access, conditional. Template injection. Resource references.
-
-13. **Naming and Formatting Rules** — Name constraints, 4-space indent,
-    comments.
-
-14. **Anti-Patterns** — 7 WRONG/RIGHT pairs from .a4drules.
-
-### Open question on ordering:
-
-Should sections 8-11 (Actions, Tools, Utilities, Transitions) be
-restructured? They're currently split by concept (definition → LLM
-exposure → utilities → transitions) but could alternatively follow the
-.agent file structure (topic.actions block → topic.reasoning.actions
-block → transition rules).
+13. **Anti-Patterns** — WRONG/RIGHT pairs from .a4drules. Capstone
+    section that reinforces all preceding concepts.
 
 ---
 
