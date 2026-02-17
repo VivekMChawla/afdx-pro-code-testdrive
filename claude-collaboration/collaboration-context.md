@@ -1054,7 +1054,7 @@ Content:
   to invalid backing logic is a common and costly mistake.
 - Pointer to Agent Spec template asset (if created)
 
-**Reference File 3: `references/verify-and-debug-agents.md`** (categories E+F)
+**Reference File 3: `references/agent-validation-and-debugging.md`** (categories E+F)
 Trigger: "Read this file when you need to validate Agent Script, diagnose
 compilation errors, preview an agent, or debug behavioral issues."
 Content:
