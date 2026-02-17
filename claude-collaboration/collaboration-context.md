@@ -729,13 +729,37 @@ best fits our content.
    phase-specific knowledge in references. This combines Pattern C's conditional
    loading with Pattern D's staged reading.
 
-**Constraints to satisfy**:
-- SKILL.md under 500 lines (current draft is 499 — already at limit)
+**Constraints to satisfy** (reviewed and corrected in Session 3):
+
+Hard constraints (from the Agent Skills spec and skill-creator guidance):
+- SKILL.md under 500 lines (current draft is 499 — already at limit).
+  Note: the skill-creator itself is 763 lines, so this is a strong
+  guideline, not an absolute wall.
 - Reference files under 300 lines each (or add TOC if larger)
-- One level deep references from SKILL.md
+- One level deep references from SKILL.md (no deeply nested chains)
 - Clear "when to read" triggers for every reference file
-- No reference file should be needed for every task (that content belongs in body)
-- Token discipline: a typical task should load SKILL.md + 1 reference file, not 3-4
+
+Design goals (our own principles, not spec requirements):
+- Minimize total token consumption per task. The agent should load only
+  the reference files it actually needs. Fewer files is better, but
+  "SKILL.md + 1 reference file" is not a hard cap — it was an early
+  inference from simpler skills (pptx, pdf) whose domains naturally
+  split into 1-of-N variants. Our domain is more complex, and the
+  skill-creator (the closest complexity analog) loads multiple reference
+  files at different workflow stages.
+- Each reference file must earn its token cost. If a file is loaded,
+  most of its content should be relevant to the current task.
+
+Open architectural question (Session 3): Should SKILL.md contain
+substantial domain knowledge (e.g., execution model, syntax) alongside
+routing logic? Or should SKILL.md be primarily a router — identifying
+the user's task and directing the agent to the right reference file(s),
+with all domain knowledge in reference files? The router model keeps
+SKILL.md small and focused but means most tasks start with at least one
+reference file read. The knowledge-in-body model reduces reference file
+reads for common tasks but risks exceeding the 500-line guideline. This
+decision depends on whether categories A+B (Execution Model + Syntax)
+can fit in the body alongside routing logic and a canonical example.
 
 ### Knowledge Categories (Finalized, Session 3)
 
