@@ -1335,11 +1335,11 @@ Sessions should consult this section to determine what to work on.
    and evaluate against acceptance criteria in `steel-threads.md`.
    - **Validation methodology:** TBD (relates to Item 7).
 
-6. **[BLOCKED — raised Session 3, awaiting Vivek decision]** First
-   draft disposition — the Session 1 draft SKILL.md (499 lines) has
-   not been reviewed. The reference file architecture decided in
-   Session 3 may make this draft largely obsolete. **Decision needed:**
-   review the draft to mine useful content, or start fresh.
+6. **[RESOLVED — Session 4]** First draft disposition — Vivek decided
+   to start fresh. The Session 1 draft (499 lines) was written before
+   the router model decision and has domain knowledge in the body.
+   It may be useful as a source when writing reference files, but is
+   not being reviewed or iterated on.
 
 7. **[FUTURE]** Evaluation approach — systematic testing methodology
    for the skill. Relates to skill-creator's Eval and Benchmark modes.
