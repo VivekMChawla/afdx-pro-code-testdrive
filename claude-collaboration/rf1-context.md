@@ -109,7 +109,7 @@ Key ordering decisions and their rationale are captured below.
 ### Ordering Rationale
 
 1. **Execution model first** (Design Principle 1). Everything else
-   depends on the split-brain model.
+   depends on the two-phase execution model.
 
 2. **File skeleton second.** The consuming agent needs to know what
    blocks exist and their mandatory order before learning any block's
@@ -140,7 +140,7 @@ Key ordering decisions and their rationale are captured below.
 
 7. **Actions unified.** Definition syntax, target protocols,
    deterministic invocation (`run @actions.X`), and LLM exposure
-   (`reasoning.actions`) belong in one section. The split-brain model
+   (`reasoning.actions`) belong in one section. The two-phase execution model
    means actions have two execution paths — that's a single concept
    with two modes, not two separate concepts. Splitting them would
    obscure the relationship.

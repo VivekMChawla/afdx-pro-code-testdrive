@@ -47,7 +47,7 @@ resolutions documented in `rf1-context.md`.
 **OFFICIAL DOCUMENTATION** (14 files — read the 6 most critical):
 
 2. `salesforcedocs/.../guides/agentforce/agent-script/ascript-lang.md`
-   — Language characteristics, split-brain execution model
+   — Language characteristics, two-phase execution model
 3. `salesforcedocs/.../guides/agentforce/agent-script/ascript-blocks.md`
    — Block structure definitions
 4. `salesforcedocs/.../guides/agentforce/agent-script/ascript-flow.md`
@@ -97,7 +97,7 @@ the skill author. See `rf1-context.md` for the rationale behind each
 positioning decision.
 
 1. **TOC**
-2. **How Agent Script Executes** — Split-brain model. Runtime resolves
+2. **How Agent Script Executes** — Two-phase execution model. Runtime resolves
    reasoning instructions deterministically (if/else, run, set) to build
    a prompt string. LLM only reasons after the resolved prompt is complete.
    Include a worked example showing topic source to resolved prompt.
@@ -207,7 +207,7 @@ moderate overage is expected, but avoid bloat.
 After writing, verify the file against these criteria:
 
 1. Does every section in the outline appear in the correct order?
-2. Does the execution model (split-brain) appear in Section 2 and get
+2. Does the execution model (two-phase) appear in Section 2 and get
    reinforced in Actions (Section 11) and Anti-Patterns (Section 13)?
 3. Are all 5 conflict resolutions correctly applied throughout?
 4. Does every rule have an inline code example?
