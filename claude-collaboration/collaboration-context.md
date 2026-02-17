@@ -28,8 +28,8 @@ If you're starting a new session on this project, read in this order:
 4. **Section 3 (North Stars)** — non-negotiable principles guiding every
    decision.
 5. **Section 10 (Reference File Architecture)** — start with the
-   **Architecture Decision** at the top (the decision summary, bundles
-   table, and load profiles). Only read the **Source Research (Deep
+   **Architecture Decision** at the top (the decision summary, reference
+   files, and load profiles). Only read the **Source Research (Deep
    Dive)** subsection if you need to understand or challenge the
    reasoning. Then read the **File Inventory** for content scope.
 6. **Section 11 (Active Work Items)** — backlog with status tags and
@@ -53,14 +53,17 @@ Use these exact forms when writing skill content or updating this document:
   Short form "execution model" is acceptable when context is unambiguous.
 - **Agent Spec** — the canonical design/documentation artifact (always title
   case). Not "agent spec," "Agent Specification," or "agent-spec."
-- **`AiAuthoringBundle`** — the Salesforce metadata type (one word, PascalCase).
+- **`AiAuthoringBundle`** — the Salesforce metadata type that serves as the
+  container for an Agent Script agent definition (one word, PascalCase).
   Not "AiAuthoring Bundle" or "Ai Authoring Bundle."
-- **`AiEvaluationDefinition`** — test metadata type (one word, PascalCase).
+- **`AiEvaluationDefinition`** — the Salesforce metadata type that represents
+  an agent test definition (one word, PascalCase).
 - **Steel thread** — a concrete test scenario (lowercase). Abbreviated ST1-ST9.
 - **Reference file** — a file in the `references/` directory (lowercase).
-- **Bundle** — a grouping of knowledge categories into a reference file.
-  When referencing specific bundles, use both the short name and filename:
-  "Bundle 1 / Core Language (`agent-script-core-language.md`)"
+  When referencing specific reference files, use the short name and filename:
+  "Core Language (`agent-script-core-language.md`)". Note: earlier sessions
+  used the term "bundle" to mean "a grouping of knowledge categories into
+  a reference file." That term is retired — just say "reference file."
 
 **File path convention:** All paths in this document are relative to the
 git repository root. When running in a session, the full path is:
@@ -540,8 +543,8 @@ When in doubt during writing, consult this — not the prose in other sections.
   staying under 500 easy. If you're exceeding, you're probably putting
   domain knowledge in the body.
 - Reference files under 300 lines each. If a file needs more, justify
-  with a content audit showing every section earns its tokens. Bundle 2
-  (Design & Agent Spec) is the most likely to exceed.
+  with a content audit showing every section earns its tokens. The
+  Design & Agent Spec reference file is the most likely to exceed.
 
 **Design Goals (guide decisions, not hard rules):**
 - Minimize total token consumption per task — token cost is the real
@@ -738,7 +741,7 @@ docs (above) and Vivek's direct knowledge for CLI command accuracy.
 
 ### Architecture Decision (FINAL — Session 3)
 
-**Router model with 5 reference file bundles.** SKILL.md is a pure router —
+**Router model with 5 reference files.** SKILL.md is a pure router —
 it identifies the user's task and directs the agent to the correct reference
 file(s). All substantial domain knowledge lives in reference files.
 
@@ -749,6 +752,10 @@ that adopt the Agent Skills standard already progressively load context from
 reference files. (4) Clean separation of concerns, SKILL.md stays well under
 500 lines.
 
+**Chosen approach:** Router + co-occurrence clusters. Categories that always
+appear together in steel threads share a reference file. Minimizes reads,
+maximizes relevance per read.
+
 **Alternatives considered and rejected:**
 - ❌ **Pattern A (flat):** Everything in SKILL.md — our domain is too complex.
 - ❌ **By steel thread:** One file per task domain — too much duplication of
@@ -758,52 +765,54 @@ reference files. (4) Clean separation of concerns, SKILL.md stays well under
 - ❌ **Hybrid (universals in SKILL.md body, phases in references):** No category
   appears in every ST, so "universals" is empty. Body would contain content
   that's irrelevant to some tasks.
-- ✅ **Router + co-occurrence clusters:** Categories that always appear together
-  in steel threads share a file. Minimizes reads, maximizes relevance.
 
-**The 5 bundles:**
+**The 5 reference files:**
 
-Bundle 1 / Core Language (`agent-script-core-language.md`) — categories A+B
-(Execution Model, Syntax & Block Structure). Loaded by ST1, ST2, ST3, ST4,
-ST5, ST9.
+Core Language (`agent-script-core-language.md`) — categories A+B
+(Execution Model, Syntax & Block Structure). Loaded by ST1, ST2, ST3,
+ST4, ST5, ST9.
 
-Bundle 2 / Design & Agent Spec (`agent-design-and-spec-creation.md`) —
-categories C+D (Flow Control & Design Patterns, Agent Spec Production).
-Loaded by ST1, ST2, ST3, ST5, ST9.
+Design & Agent Spec (`agent-design-and-spec-creation.md`) — categories
+C+D (Flow Control & Design Patterns, Agent Spec Production). Loaded by
+ST1, ST2, ST3, ST5, ST9.
 
-Bundle 3 / Validation & Debugging (`agent-validation-and-debugging.md`) —
-categories E+F (Validation & Error Diagnosis, Preview & Behavioral
-Debugging). Loaded by ST1, ST3, ST4, ST5, ST6, ST8.
+Validation & Debugging (`agent-validation-and-debugging.md`) — categories
+E+F (Validation & Error Diagnosis, Preview & Behavioral Debugging).
+Loaded by ST1, ST3, ST4, ST5, ST6, ST8.
 
-Bundle 4 / Metadata & Lifecycle (`agent-metadata-and-lifecycle.md`) —
-category G (Metadata & Lifecycle Management). Loaded by ST2, ST6, ST7,
-ST8, ST9.
+Metadata & Lifecycle (`agent-metadata-and-lifecycle.md`) — category G
+(Metadata & Lifecycle Management). Loaded by ST2, ST6, ST7, ST8, ST9.
 
-Bundle 5 / Test Authoring (`agent-test-authoring.md`) — category H
-(Agent Test Spec Authoring). Loaded by ST9 only.
+Test Authoring (`agent-test-authoring.md`) — category H (Agent Test Spec
+Authoring). Loaded by ST9 only.
 
-**Load profile per steel thread:** ST1 Create loads Bundles 1, 2, 3
-(3 reads). ST2 Comprehend loads Bundles 1, 2, 4 (3 reads). ST3 Modify
-loads Bundles 1, 2, 3 (3 reads). ST4 Diagnose-Compilation loads Bundles
-1, 3 (2 reads). ST5 Diagnose-Behavioral loads Bundles 1, 2, 3 (3 reads).
-ST6 Deploy loads Bundles 3, 4 (2 reads). ST7 Delete loads Bundle 4
-(1 read). ST8 Rename loads Bundles 3, 4 (2 reads). ST9 Test loads
-Bundles 1, 2, 4, 5 (4 reads). Most STs need 2-3 files. ST9 (most
-complex) needs 4. ST7 (simplest) needs 1. Proportional to actual task
-complexity.
+**Load profile per steel thread:** ST1 Create loads Core Language,
+Design & Agent Spec, Validation & Debugging (3 reads). ST2 Comprehend
+loads Core Language, Design & Agent Spec, Metadata & Lifecycle (3 reads).
+ST3 Modify loads Core Language, Design & Agent Spec, Validation &
+Debugging (3 reads). ST4 Diagnose-Compilation loads Core Language,
+Validation & Debugging (2 reads). ST5 Diagnose-Behavioral loads Core
+Language, Design & Agent Spec, Validation & Debugging (3 reads). ST6
+Deploy loads Validation & Debugging, Metadata & Lifecycle (2 reads).
+ST7 Delete loads Metadata & Lifecycle (1 read). ST8 Rename loads
+Validation & Debugging, Metadata & Lifecycle (2 reads). ST9 Test loads
+Core Language, Design & Agent Spec, Metadata & Lifecycle, Test Authoring
+(4 reads). Most STs need 2-3 files. ST9 (most complex) needs 4. ST7
+(simplest) needs 1. Proportional to actual task complexity.
 
 **Pressure test summary (all PASS):**
-- **Bundle 1 (Core Language):** PASS — Execution Model and Syntax are inseparable.
-  Boundary with Flow Control (C) is clean: A = runtime mechanics, C = design intent.
-- **Bundle 2 (Design & Agent Spec):** PASS with size risk — may exceed 300 lines.
-  TOC required. Co-occurrence data is unambiguous; this is a sizing concern, not
-  a clustering error.
-- **Bundle 3 (Validation & Debugging):** PASS with acceptable waste — ST4 loads
-  preview knowledge it doesn't use, ST9 loads validation knowledge it doesn't use.
-  Waste is dead weight, not misleading signal.
-- **Bundle 4 (Metadata & Lifecycle):** PASS — procedurally diverse (deploy, delete,
+- **Core Language:** PASS — Execution Model and Syntax are inseparable.
+  Boundary with Flow Control (C) is clean: A = runtime mechanics,
+  C = design intent.
+- **Design & Agent Spec:** PASS with size risk — may exceed 300 lines.
+  TOC required. Co-occurrence data is unambiguous; this is a sizing
+  concern, not a clustering error.
+- **Validation & Debugging:** PASS with acceptable waste — ST4 loads
+  preview knowledge it doesn't use, ST9 loads validation knowledge it
+  doesn't use. Waste is dead weight, not misleading signal.
+- **Metadata & Lifecycle:** PASS — procedurally diverse (deploy, delete,
   rename, test metadata) but follows recipe-based pattern. No confusion risk.
-- **Bundle 5 (Test Authoring):** PASS — unique to ST9, self-contained.
+- **Test Authoring:** PASS — unique to ST9, self-contained.
 
 ### Source Research (Deep Dive)
 
@@ -975,18 +984,19 @@ Production: 5 (ST1, ST2, ST3, ST5, ST9). Validation & Error Diagnosis: 6
 ST5, ST6, ST8, ST9). Metadata & Lifecycle Management: 5 (ST2, ST6, ST7, ST8,
 ST9). Agent Test Spec Authoring: 1 (ST9).
 
-**Co-occurrence patterns driving the bundle architecture:**
+**Co-occurrence patterns driving the reference file architecture:**
 - Execution Model and Syntax & Block Structure appear in identical STs
-  (ST1,2,3,4,5,9) — they always travel together → Bundle 1 (Core Language)
+  (ST1,2,3,4,5,9) — they always travel together → Core Language file
 - Flow Control & Design Patterns and Agent Spec Production appear in
-  identical STs (ST1,2,3,5,9) — they always travel together → Bundle 2
-  (Design & Agent Spec)
+  identical STs (ST1,2,3,5,9) — they always travel together → Design
+  & Agent Spec file
 - Validation & Error Diagnosis and Preview & Behavioral Debugging are close
   but not identical (Validation in ST4/ST8 without Preview; Preview in ST9
-  without Validation) → merged into Bundle 3 (Validation & Debugging)
-  because validation is lightweight and the waste is harmless
-- Metadata & Lifecycle Management stands alone (ST2,6,7,8,9) → Bundle 4
-- Agent Test Spec Authoring is unique to ST9 → Bundle 5
+  without Validation) → merged into Validation & Debugging file because
+  validation is lightweight and the waste is harmless
+- Metadata & Lifecycle Management stands alone (ST2,6,7,8,9) → Metadata
+  & Lifecycle file
+- Agent Test Spec Authoring is unique to ST9 → Test Authoring file
 
 ### Trigger Precision Guide (For Reference File Authoring)
 
@@ -1007,7 +1017,7 @@ which file a piece of knowledge belongs in:
 **Quick disambiguation:** Is this about understanding or designing the agent
 (Files 1-2)? Or about operating or testing it (Files 3-5)?
 
-### Cluster Analysis and Reference File Bundles (Session 3)
+### Cluster Analysis and Reference File Groupings (Session 3)
 
 The co-occurrence patterns reveal three natural clusters and two independents.
 Categories that appear in exactly the same set of steel threads should be
@@ -1027,24 +1037,24 @@ without reasoning about flow control, and you never reason about flow control
 without recording it in the Agent Spec. (This reinforces the Session 2
 decision to make the Agent Spec a first-class artifact.)
 
-**Merged bundle — "Verify & Debug" (categories E+F):** Validation & Error
+**Merged — "Verify & Debug" (categories E+F):** Validation & Error
 Diagnosis and Preview & Behavioral Debugging are close but not identical (E
 appears in ST4/ST8 without F; F appears in ST9 without E). Decision: merge
-them into a single bundle. Rationale: validation is lightweight (CLI commands,
+them into a single reference file. Rationale: validation is lightweight (CLI commands,
 interpreting return values), so loading it alongside preview/debugging
 knowledge is an acceptable token cost. Keeping them separate would force
 5 STs (ST1, ST3, ST5, ST6, ST8) to load two files where one suffices.
 
 **Standalone — "Metadata & Lifecycle Management" (category G):** Appears in
 ST2, ST6, ST7, ST8, ST9. Shares almost no overlap with Clusters 1 and 2
-(co-occurs with them only in ST2 and ST9). Clearly its own bundle.
+(co-occurs with them only in ST2 and ST9). Clearly its own reference file.
 
 **Standalone — "Agent Test Spec Authoring" (category H):** Unique to ST9.
-Clearly its own bundle.
+Clearly its own reference file.
 
-This produces **5 reference file bundles**. Under the router model (SKILL.md
+This produces **5 reference files**. Under the router model (SKILL.md
 routes, reference files carry domain knowledge), each ST loads SKILL.md plus
-the following bundles:
+the following reference files:
 
 - ST1 Create: Core Language, Design & Agent Spec, Verify & Debug (3 files)
 - ST2 Comprehend: Core Language, Design & Agent Spec, Metadata & Lifecycle (3 files)
@@ -1062,9 +1072,10 @@ complexity.
 
 ### Pressure Test Results (Session 3)
 
-Each bundle was examined for misassignment, internal cohesion, and edge cases.
+Each reference file was examined for misassignment, internal cohesion,
+and edge cases.
 
-**Bundle 1 — Core Language (A+B): PASS.** Potential boundary concern:
+**Core Language (A+B): PASS.** Potential boundary concern:
 Execution Model (A) explains *how* the runtime selects topics and invokes
 actions, which could bleed into Flow Control (C). Resolution: A covers
 runtime mechanics ("the runtime evaluates topic selector instructions to
@@ -1072,41 +1083,42 @@ choose a topic"). C covers design intent ("here's how to design those
 instructions so the runtime makes the choices you want"). Mechanics vs.
 design — clean split.
 
-**Bundle 2 — Design & Agent Spec (C+D): PASS with size risk.** Flow
+**Design & Agent Spec (C+D): PASS with size risk.** Flow
 control patterns (gating, transitions, escalation, guardrails, action
 loop prevention) plus Agent Spec guidance (structure, lifecycle evolution,
 backing logic analysis methodology) is substantial content. If this
 exceeds 300 lines, it needs a TOC or a split. This is a content-sizing
 risk, not a clustering error — the co-occurrence data is unambiguous.
 
-**Bundle 3 — Verify & Debug (E+F): PASS with acceptable waste.** Waste
+**Validation & Debugging (E+F): PASS with acceptable waste.** Waste
 cases: ST4 (compilation diagnosis) loads preview/debugging knowledge it
 doesn't use. ST9 (testing) loads validation knowledge it doesn't use.
 Assessment: the waste is harmless — validation and preview are clearly
 different activities, so the agent won't confuse them. The irrelevant
 content is dead weight, not misleading signal.
 
-**Bundle 4 — Metadata & Lifecycle (G): PASS with cohesion note.** This
-bundle serves diverse STs: ST2 needs directory conventions, ST6 needs
+**Metadata & Lifecycle (G): PASS with cohesion note.** This reference
+file serves diverse STs: ST2 needs directory conventions, ST6 needs
 the deploy pipeline, ST7 needs delete mechanics, ST8 needs rename
 mechanics, ST9 needs test deployment. The content is procedurally diverse
 — more of a reference manual than a cohesive narrative. This is the
-bundle most likely to feel like a grab bag. However, these are all
+reference file most likely to feel like a grab bag. However, these are all
 distinct procedural recipes that the agent follows one at a time, so
 the diversity doesn't create confusion.
 
-**Bundle 5 — Test Spec Authoring (H): PASS.** Unique to ST9,
+**Test Authoring (H): PASS.** Unique to ST9,
 self-contained. No issues.
 
-**Cross-bundle concern — ST9 load count:** ST9 loads 4 reference files
+**ST9 load count concern:** ST9 loads 4 reference files
 (Core Language, Design & Agent Spec, Metadata & Lifecycle, Test Spec
 Authoring). Each is genuinely needed — comprehend the agent (1), produce
 Agent Spec as test baseline (2), deploy test specs (4), write the YAML
 (5). The 4-file load reflects real task complexity, not an architecture
 problem.
 
-**Overall assessment:** Bundles hold up. Risks are content-sizing
-(Bundle 2) and cohesion (Bundle 4), both manageable during writing.
+**Overall assessment:** Reference file groupings hold up. Risks are
+content-sizing (Design & Agent Spec) and cohesion (Metadata & Lifecycle),
+both manageable during writing.
 No category is misassigned.
 
 ### File Inventory (Draft, Session 3)
@@ -1469,7 +1481,7 @@ completed the reference file architecture research (see Session 3).
   Built-in skills audit, Agent Skills spec review, skill-creator analysis
 - Knowledge categories defined (8 categories, A-H)
 - Binary ST × category mapping matrix
-- Cluster analysis and 5-bundle architecture decided
+- Cluster analysis and 5-reference-file architecture decided
 - Router model for SKILL.md confirmed
 - File inventory sketched (5 reference files + assets)
 - Per-file and cross-inventory pressure tests completed (all PASS)
@@ -1479,7 +1491,7 @@ completed the reference file architecture research (see Session 3).
 
 **Key decisions**:
 - SKILL.md is a router (no domain knowledge in body)
-- 5 reference file bundles: Core Language (A+B), Design & Agent Spec
+- 5 reference files: Core Language (A+B), Design & Agent Spec
   (C+D), Validation & Debugging (E+F), Metadata & Lifecycle (G),
   Test Authoring (H)
 - Agent Spec as first-class artifact reinforced (backing logic analysis
@@ -1506,7 +1518,7 @@ Active Work Items)
   recommended table format that contradicted Session 3 prose decision
 
 **Key changes**:
-- Section 10 restructured: decision summary + bundles table at top,
+- Section 10 restructured: decision summary at top,
   research moved to "Source Research (Deep Dive)" subsection below
 - Removed redundant "Architecture Decision" and "Implementation Status"
   subsections from Section 10 (decision is now at top; status is in
