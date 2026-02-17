@@ -735,7 +735,10 @@ Hard constraints (from the Agent Skills spec and skill-creator guidance):
 - SKILL.md under 500 lines (current draft is 499 — already at limit).
   Note: the skill-creator itself is 763 lines, so this is a strong
   guideline, not an absolute wall.
-- Reference files under 300 lines each (or add TOC if larger)
+- Reference files under 300 lines each if possible
+- Every reference file includes a TOC (standard practice, not just for
+  large files — helps the consuming agent map the file's structure
+  before reading. Negligible token cost, ~10-15 lines)
 - One level deep references from SKILL.md (no deeply nested chains)
 - Clear "when to read" triggers for every reference file
 
@@ -750,16 +753,21 @@ Design goals (our own principles, not spec requirements):
 - Each reference file must earn its token cost. If a file is loaded,
   most of its content should be relevant to the current task.
 
-Open architectural question (Session 3): Should SKILL.md contain
-substantial domain knowledge (e.g., execution model, syntax) alongside
-routing logic? Or should SKILL.md be primarily a router — identifying
-the user's task and directing the agent to the right reference file(s),
-with all domain knowledge in reference files? The router model keeps
-SKILL.md small and focused but means most tasks start with at least one
-reference file read. The knowledge-in-body model reduces reference file
-reads for common tasks but risks exceeding the 500-line guideline. This
-decision depends on whether categories A+B (Execution Model + Syntax)
-can fit in the body alongside routing logic and a canonical example.
+**SKILL.md role — DECIDED (Session 3): Router model.** SKILL.md is
+primarily a router — it identifies the user's task and directs the agent
+to the right reference file(s). All substantial domain knowledge lives
+in reference files. Rationale: (1) No knowledge category appears in
+every ST, so nothing strictly requires body placement. (2) The router
+role IS needed for every task — it's what genuinely belongs in the body.
+(3) Agents that adopt the Agent Skills standard are already built to
+progressively load context from reference files, so this aligns with
+how consuming tools work. (4) The router model keeps SKILL.md well
+under 500 lines and provides clean separation of concerns.
+
+SKILL.md body will contain: skill purpose and scope, task domain
+descriptions (so the agent can identify the user's intent), "when to
+read" triggers for each reference file, and a brief orientation to
+Agent Script (enough for routing decisions, not enough to write code).
 
 ### Knowledge Categories (Finalized, Session 3)
 
@@ -959,11 +967,131 @@ problem.
 (Bundle 2) and cohesion (Bundle 4), both manageable during writing.
 No category is misassigned.
 
+### Architecture Decision (Session 3)
+
+**Confirmed: Router model with 5 reference file bundles.** SKILL.md routes;
+reference files carry all domain knowledge. The 5 bundles are:
+
+1. Core Language (categories A+B)
+2. Design & Agent Spec (categories C+D)
+3. Verify & Debug (categories E+F)
+4. Metadata & Lifecycle (category G)
+5. Test Spec Authoring (category H)
+
+See "Cluster Analysis and Reference File Bundles" above for full rationale,
+load profiles per ST, and pressure test results.
+
+### File Inventory (Draft, Session 3)
+
+Each entry specifies the filename, the "when to read" trigger that SKILL.md
+will use to direct the consuming agent, and the approximate content scope.
+Asset files (examples, templates) are listed under the reference file that
+triggers their read.
+
+**SKILL.md** (router)
+- Skill purpose and scope
+- Brief Agent Script orientation (enough for the agent to understand routing
+  decisions, not enough to write code)
+- Task domain descriptions (so the agent can identify the user's intent)
+- "When to read" triggers for each reference file
+- Note: all substantial domain knowledge lives in reference files, not here
+
+**Reference File 1: `references/core-language.md`** (categories A+B)
+Trigger: "Read this file when you need to read, write, or modify Agent
+Script code. This includes creating agents, modifying existing agents,
+diagnosing compilation or behavioral issues, and comprehending agent
+structure."
+Content:
+- How the Agent Script runtime processes topics, actions, and gating
+  (execution model)
+- Block structure and ordering rules (system → config → variables →
+  language → start_agent → topics)
+- Syntax: variable declarations, action definitions, transition syntax
+  variants (`@utils.transition to` vs bare `transition to`), indentation
+  rules
+- Key anti-patterns with WRONG/RIGHT pairs
+- Analogies to known languages (YAML, Express.js routes, API contracts)
+- Pointer to annotated example asset
+Asset: `assets/local-info-agent-annotated.agent` — complete annotated
+example showing all major constructs in context. Referenced from this
+file, not embedded.
+
+**Reference File 2: `references/design-and-agent-spec.md`** (categories C+D)
+Trigger: "Read this file when you need to design an agent's topic graph,
+reason about flow control, produce or update an Agent Spec, or analyze
+backing logic requirements."
+Content:
+- Agent Spec structure (purpose, topic graph, actions/backing logic,
+  variables, gating, behavioral intent)
+- Agent Spec lifecycle (sparse at creation → filled during build →
+  reverse-engineered during comprehension)
+- Topic graph design patterns (Mermaid flowchart conventions)
+- Gating patterns: single-condition, multi-condition, with examples
+- Transition types: handoff vs delegation, when to use each
+- Escalation and guardrail topic patterns
+- Action loop prevention
+- Backing logic analysis methodology: how to scan for Apex/Flow/Prompt
+  Templates, how to map existing implementations, how to stub gaps with
+  protocols/I-O specs/data types
+- Pointer to Agent Spec template asset (if created)
+
+**Reference File 3: `references/verify-and-debug.md`** (categories E+F)
+Trigger: "Read this file when you need to validate Agent Script, diagnose
+compilation errors, preview an agent, or debug behavioral issues."
+Content:
+- Validation: `sf agent validate authoring-bundle` usage, interpreting
+  output
+- Error taxonomy: block ordering, indentation, syntax, missing
+  declarations, type mismatches, structural
+- Error-to-root-cause mapping patterns
+- Preview: `sf agent preview` usage, `--authoring-bundle` vs `--api-name`
+  flags
+- Session trace analysis: what to look for, how to interpret
+- Grounding service behavior (masking issues)
+- Behavioral diagnosis methodology: form hypotheses from execution model
+  → reproduce in preview → analyze traces → targeted fixes
+
+**Reference File 4: `references/metadata-and-lifecycle.md`** (category G)
+Trigger: "Read this file when you need to locate an agent, deploy, publish,
+activate, deactivate, delete, or rename an agent."
+Content:
+- `AiAuthoringBundle` directory conventions and file structure
+- Locating agents: local project structure, `sfdx-project.json`,
+  retrieving from org
+- Deploy pipeline: `sf project deploy start` (dependencies first),
+  `sf agent publish authoring-bundle`, `sf agent activate` /
+  `sf agent deactivate`
+- Delete mechanics: deactivate → remove local → destructive deploy →
+  verify cleanup
+- Rename mechanics: identify all references, assess published version
+  impact, execute consistently, validate
+- Deploying test specs: `sf agent test create`
+
+**Reference File 5: `references/test-spec-authoring.md`** (category H)
+Trigger: "Read this file when you need to create, deploy, or run Agent
+Test Specs."
+Content:
+- Agent Test Spec YAML format
+- Expectations: `topic_sequence_match`, `action_sequence_match`,
+  `bot_response_rating`
+- Quality metrics: coherence, completeness, conciseness, instruction
+  following, factuality
+- Performance metrics: output latency
+- Conversation history for multi-turn scenarios
+- Custom evaluations (string/numeric comparisons)
+- Test design methodology: using Agent Spec as coverage baseline
+- CLI workflow: `sf agent generate test-spec`, `sf agent test create`,
+  `sf agent test run`
+- Pointer to test spec template asset (if created)
+Asset: `assets/local-info-agent-testSpec.yaml` — example test spec
+showing format and expectations. Referenced from this file, not embedded.
+
 ### What still needs to happen
 
-- **Decide SKILL.md's role** — router-only vs. router + foundational knowledge
-- **Sketch the file inventory** — name each file, write its "when to read"
-  trigger, list approximate content
+- **Pressure test each file** — verify trigger accuracy, content
+  completeness, and boundary clarity
+- **Pressure test the full inventory** — verify no gaps, no overlaps,
+  and the routing model works end-to-end
 - Then revise SKILL.md and write reference files to that architecture
 
 ---
