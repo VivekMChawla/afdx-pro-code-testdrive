@@ -1152,7 +1152,6 @@ Content:
   variants (`@utils.transition to` vs bare `transition to`), indentation
   rules
 - Key anti-patterns with WRONG/RIGHT pairs
-- Analogies to known languages (YAML, Express.js routes, API contracts)
 - Pointer to annotated example asset
 Asset: `assets/local-info-agent-annotated.agent` — complete annotated
 example based on the Local Info Agent, showing all major constructs in
@@ -1269,27 +1268,20 @@ Work Items)** for the prioritized backlog of next steps.
 These are the tasks that need to happen next, with explicit status.
 Sessions should consult this section to determine what to work on.
 
-1. **[READY]** Write SKILL.md (router).
-   - **Prerequisite:** None. This is the first writing task.
-   - **Scope:** Skill purpose, brief Agent Script orientation (enough
-     for routing, not enough to write code), task domain descriptions,
-     "when to read" triggers for all 5 reference files.
-   - **Acceptance criteria:** (a) Under 500 lines. (b) Contains clear
-     routing triggers for all 5 reference files matching the File
-     Inventory triggers in Section 10. (c) A cold-start agent can read
-     it and correctly identify which reference file(s) to load for any
-     of the 9 steel threads. (d) No substantial domain knowledge in
-     body — routing only. (e) YAML frontmatter with single-line
-     double-quoted description (Section 7).
+1. **[DONE — Session 5]** Write SKILL.md (router).
+   - Completed and reviewed. Sub-agent routing eval passed all 9 steel
+     threads. File is at `agent-script-skill/SKILL.md`.
 
-2. **[READY]** Targeted domain reads — read source material before
-   writing each reference file. NOT bulk — read on demand per file.
-   - **Reading plan per reference file:**
-     - **File 1 (Core Language):** Agent Script syntax reference
-       (`salesforcedocs/.../agent-script-reference.md`), Local Info
-       Agent source (`force-app/.../Local_Info_Agent/`), select
-       language essentials recipes (`agent-script-recipes/.../01_languageEssentials/`),
-       current draft syntax-rules.md, Jag's syntax-reference.md
+2. **[DONE — Session 5, File 1]** Targeted domain reads — read source
+   material before writing each reference file. NOT bulk — read on
+   demand per file.
+   - **File 1 (Core Language):** COMPLETED. Six sources read including
+     `.a4drules` (authoritative), 14 official docs, Local Info Agent,
+     language essentials recipes, Session 1 draft, and Jag's reference.
+     Five source conflicts identified and resolved. Findings captured
+     in `claude-collaboration/rf1-context.md`. Writing prompt created
+     at `claude-collaboration/reference-file-1-prompt.md`.
+   - **Reading plan for remaining files:**
      - **File 2 (Design & Agent Spec):** Agent Spec docs
        (`salesforcedocs/.../agent-dx-create-agent-spec.md`,
        `agent-dx-generate-agent-spec.md`), architectural pattern
@@ -1309,8 +1301,8 @@ Sessions should consult this section to determine what to work on.
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[READY]** Write reference files — one at a time, sequentially,
-   with Vivek review between each.
+3. **[IN PROGRESS — File 1 ready to write]** Write reference files —
+   one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
      → File 5 (Test Authoring)
@@ -1406,6 +1398,29 @@ already made and validated in earlier sessions.
 4. **Content changes require a line-level accuracy check.** References like
    "above" vs "below," section numbers, and cross-references break easily
    during restructuring. Verify these manually after every batch of edits.
+
+---
+
+## 12.1 Working Files for Reference File Authoring
+
+These files support the writing of individual reference files. They
+capture domain read findings, conflict resolutions, finalized outlines,
+and self-contained writing prompts. Read the relevant files before
+writing or revising a reference file.
+
+**Reference File 1 (Core Language):**
+- `claude-collaboration/rf1-context.md` — Working context: all sources
+  read, conflict resolutions (decided), content scope, finalized
+  13-section outline with ordering rationale, and writing insights.
+  Read this before writing or revising the file.
+- `claude-collaboration/reference-file-1-prompt.md` — Self-contained
+  writing prompt with source priority hierarchy, finalized outline,
+  conflict resolutions, writing rules, scope boundaries, and a
+  10-point quality checklist. Can be used by the primary agent or a
+  sub-agent to write the file independently.
+
+**Reference Files 2-5:** Working context and prompts to be created
+following the same pattern as File 1.
 
 ---
 
