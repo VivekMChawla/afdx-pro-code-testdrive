@@ -348,11 +348,30 @@ patterns:
 Remove the repeated code block from lines 530-533. The anti-patterns
 in Section 12 already handle the "what goes wrong" angle.
 
-**B. Source citations: TBD** — decide whether to keep or strip
-`[Source: ...]` annotations from the final file.
+**B1. Section 1 prose tightening: YES.** Tighten Phase 1 and Phase 2
+descriptions for conciseness without losing information.
 
-**C. Prose tightening and anti-pattern conciseness: TBD** — evaluate
-during the editing pass.
+**B2. Source citations: KEEP FOR NOW.** Citations help validate
+accuracy during review. Remove all during the final cleanup pass
+before the file is considered complete.
+
+**B3. Anti-patterns: REVIEWED INDIVIDUALLY.** Results:
+- AP1  (transition to in reasoning.actions): KEEP as-is
+- AP2  (@utils.transition in directive blocks): KEEP as-is
+- AP3  (lowercase booleans): KEEP, apply Lens 3 fix (remove "Python-style")
+- AP4  (mutable without default): KEEP as-is
+- AP5  (linked with default): KEEP as-is
+- AP6  (linked without source): KEEP as-is
+- AP7  (<> operator): CUT — already taught in Sec 4 with WRONG/RIGHT
+- AP8  (post-action directive on utility): KEEP, trim second CORRECT example
+- AP9  (tabs instead of spaces): CUT — already taught in Sec 3
+- AP10 (action loop): KEEP, rewrite during editing pass using .a4drules
+  lines 646-662 to fix mismatched "Why it fails" explanation
+- AP11 (LLM without Phase 1 context): KEEP as-is
+Net result: 9 anti-patterns (2 cut, 2 modified, 7 unchanged).
+
+**C1. Inline comments in code examples: KEEP.** Do not tighten. The
+potential value to the consuming agent is worth the tokens.
 
 ---
 
