@@ -117,6 +117,8 @@ Example: `check_order_status` is valid. `check_order__status` is invalid (consec
 
 **Indentation:** Use 4 spaces per indent level. NEVER use tabs [Source: .a4drules]. Mixing spaces and tabs breaks the parser. All lines at the same nesting level must use the same indentation [Source: ascript-lang.md].
 
+Each nesting level adds 4 spaces. The hierarchy follows the block structure — topic → reasoning → instructions → logic/prompt:
+
 ```agentscript
 topic process_order:
     description: "Handle order processing"
@@ -127,8 +129,10 @@ topic process_order:
 
 **Comments:** Use `#` for single-line comments. The parser ignores everything after `#` on that line [Source: ascript-lang.md].
 
+Comments can appear on their own line or inline after code. Both forms are valid:
+
 ```agentscript
-# This is a single-line comment
+# This is a standalone comment
 variables:
     order_id: mutable string = ""  # This is an inline comment
 ```
@@ -612,7 +616,19 @@ actions:
 - `include_in_progress_indicator` (optional boolean) — when `True`, shows a progress indicator during execution
 - `progress_indicator_message` (optional string) — text shown during execution (e.g., `"Looking up customer..."`)
 
-**Input properties:** `description`, `label`, `is_required` (boolean). **Output properties:** `description`, `label`, `filter_from_agent` (boolean — `True` hides the output from the LLM's context), `is_displayable` (boolean), `complex_data_type_name` (required when the output type is `object` — specifies the Apex/Flow type name) [Source: ascript-ref-actions.md].
+**Input properties** [Source: ascript-ref-actions.md]:
+
+- `description` — metadata about the input parameter
+- `label` — display name shown in UI; auto-generated from parameter name if omitted
+- `is_required` (boolean) — when `True`, the input must be provided
+
+**Output properties** [Source: ascript-ref-actions.md]:
+
+- `description` — metadata about the output parameter
+- `label` — display name shown in UI; auto-generated from parameter name if omitted
+- `filter_from_agent` (boolean) — when `True`, hides the output from the LLM's context
+- `is_displayable` (boolean) — controls whether output is shown to the customer
+- `complex_data_type_name` — required when output type is `object`; specifies the Apex/Flow type name
 
 **Target types** — use the format `"type://DeveloperName"` [Source: .a4drules, ascript-ref-actions.md]:
 
