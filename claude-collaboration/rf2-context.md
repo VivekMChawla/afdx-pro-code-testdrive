@@ -197,8 +197,11 @@ Ordering was debated and resolved through structured discussion with Vivek.
 1. **Agent Spec: Structure and Lifecycle** — What an Agent Spec contains
    (purpose, topic architecture, actions/backing logic, variables, gating,
    behavioral intent). How it evolves: sparse at creation → filled during
-   build → reverse-engineered during comprehension. The skill provides a
-   starter spec template as an asset. Directional vs. observational entries.
+   build → reverse-engineered during comprehension. Entries can be
+   directional ("this action needs an Apex class that accepts X, returns
+   Y") or observational ("this action is backed by existing Flow Z") —
+   both are valid because the Agent Spec serves creation and
+   comprehension. The skill provides a starter spec template as an asset.
 
 2. **Discovery Questions** — The 5 categories of structured questions
    from `.a4drules`: Agent Identity & Purpose, Topics & Conversation
