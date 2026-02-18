@@ -596,13 +596,11 @@ actions:
         outputs:
             name: string
                 description: "Customer's name"
-            email: string
-                description: "Customer's email"
-                filter_from_agent: False
                 is_displayable: True
             customer_info: object
                 complex_data_type_name: "lightning__recordInfoType"
                 description: "Full customer record"
+                filter_from_agent: True
 ```
 
 **Action properties** [Source: ascript-ref-actions.md]:
