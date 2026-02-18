@@ -103,11 +103,24 @@
    is "temporary delegation" where "original topic resumes." The
    BidirectionalNavigation recipe shows specialists using
    `@utils.transition to @topic.general_support` to "return" — which is
-   a permanent transition back, not a true subroutine return.
-   **Decision**: [UNRESOLVED] — need to verify whether `@topic.X`
-   implements actual call-return semantics or if "returning" always
-   requires explicit transition. This affects transition pattern guidance.
-   Flag for validation during writing.
+   a coded transition back, not an implicit stack pop.
+   **Decision**: RESOLVED — `@topic.X` does NOT implement automatic
+   call-return semantics. The official docs state: "When the specified
+   topic has completed, the flow of control doesn't return to the original
+   topic, so you must explicitly create a transition back to the original
+   topic if that's what you want" (ascript-ref-utils.md). Without an
+   explicit transition back, control falls through to `start_agent` on
+   the next user utterance.
+   **Writing directive**: The Transition Patterns section must teach this
+   as authoritative fact, not as a nuanced design consideration. State it
+   plainly: `@topic.X` delegates control to another topic. It does not
+   automatically return. If you want the user to return to the calling
+   topic, the delegated topic must contain an explicit
+   `transition to @topic.<caller>`. Then show the correct two-topic
+   pattern (caller delegates via `@topic.specialist`, specialist
+   transitions back via `@utils.transition to @topic.caller`). Include a
+   WRONG/RIGHT pair: WRONG = assuming delegation returns automatically;
+   RIGHT = coding the explicit return transition in the specialist topic.
 
 4. **Agent Spec is our design artifact**: The `salesforcedocs` folder
    contains references to "agent specs" in the `agent-dx/` directory.
