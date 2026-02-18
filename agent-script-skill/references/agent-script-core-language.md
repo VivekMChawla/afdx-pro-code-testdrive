@@ -628,7 +628,7 @@ actions:
 - `label` — display name shown in UI; auto-generated from parameter name if omitted
 - `filter_from_agent` (boolean) — when `True`, hides the output from the LLM's context
 - `is_displayable` (boolean) — controls whether output is shown to the customer
-- `complex_data_type_name` — required when output type is `object`; specifies the Apex/Flow type name
+- `complex_data_type_name` — required when the parameter is a complex data type; indicates the type returned by the target (e.g., `"lightning__recordInfoType"`)
 
 **Target types** — use the format `"type://DeveloperName"` [Source: .a4drules, ascript-ref-actions.md]:
 
