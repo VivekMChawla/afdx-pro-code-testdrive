@@ -128,9 +128,9 @@ topic process_order:
 **Comments:** Use `#` for single-line comments. The parser ignores everything after `#` on that line [Source: ascript-lang.md].
 
 ```agentscript
-# This is a comment
+# This is a single-line comment
 variables:
-    order_id: mutable string = ""  # Slot-filled by LLM
+    order_id: mutable string = ""  # This is an inline comment
 ```
 
 ---
@@ -145,6 +145,8 @@ variables:
 - `<=` (less than or equal): `@variables.age <= 18`
 - `>` (greater than): `@variables.amount > 50`
 - `>=` (greater than or equal): `@variables.balance >= 0`
+- `is` (identity check — use for None): `@variables.value is None`
+- `is not` (negated identity check): `@variables.data is not None`
 
 **Logical operators** [Source: .a4drules]:
 
@@ -249,17 +251,21 @@ config:
 ```agentscript
 variables:
     customer_name: mutable string = ""
+        description: "The customer's full name"
     order_count: mutable number = 0
     is_premium: mutable boolean = False
     preferences: mutable object = {}
     items: mutable list[string] = []
 ```
 
+The `description` field is optional. Include it when the LLM needs context for slot-filling via `@utils.setVariables` [Source: ascript-ref-variables.md].
+
 **Linked variables** — read-only from external context. MUST have a `source`, MUST NOT have a default value [Source: .a4drules]:
 
 ```agentscript
 variables:
     session_id: linked string
+        description: "The current session ID"
         source: @session.sessionID
     user_id: linked string
         source: @MessagingSession.MessagingEndUserId
@@ -390,9 +396,18 @@ reasoning:
 
 The `->` prefix indicates "start with logic, then switch to prompt". The runtime evaluates the `if` condition and `run` command, then appends the pipe-delimited text to the prompt.
 
-**Pipe syntax (`|`) for multiline prompt text** [Source: ascript-lang.md, ascript-ref-instructions.md]:
+**Multiline strings with `|`** — two forms [Source: ascript-lang.md, .a4drules]:
 
-Within a logic block, use `|` to switch from deterministic instructions to prompt text:
+For static text with no logic, use `|` directly after the property:
+
+```agentscript
+instructions: |
+    Welcome to our service!
+    Please provide details about your request.
+    I'll help you with whatever you need.
+```
+
+For text mixed with logic, use `->` to enter a logic block, then `|` to switch to prompt text:
 
 ```agentscript
 instructions: ->
@@ -400,6 +415,15 @@ instructions: ->
         | Ask the user what they need help with.
     else:
         | Suggest self-service options.
+```
+
+Within `->` blocks, a line without `|` continues the previous line. A new `|` starts a new line [Source: .a4drules]:
+
+```agentscript
+instructions: ->
+    | This is a long instruction that
+      continues on the next physical line.
+    | This starts a new logical line.
 ```
 
 **If/Else (no "else if")** [Source: .a4drules, ascript-lang.md]:
@@ -568,6 +592,33 @@ actions:
             quantity: number
                 description: "Units available"
 ```
+
+**Full action syntax** — production agents use additional optional fields for UI and validation [Source: .a4drules]:
+
+```agentscript
+actions:
+    get_customer:
+        target: "flow://GetCustomerInfo"
+        description: "Fetches customer information"
+        label: "Get Customer"
+        require_user_confirmation: False
+        include_in_progress_indicator: True
+        progress_indicator_message: "Looking up customer..."
+        inputs:
+            customer_id: string
+                description: "The customer's unique ID"
+                label: "Customer ID"
+                is_required: True
+        outputs:
+            name: string
+                description: "Customer's name"
+            email: string
+                description: "Customer's email"
+                filter_from_agent: False
+                is_displayable: True
+```
+
+`label`, `require_user_confirmation`, `include_in_progress_indicator`, and `progress_indicator_message` are optional. Input metadata (`is_required`, `label`, `description`) and output metadata (`is_displayable`, `filter_from_agent`, `description`, `label`) control how the platform handles data binding and display.
 
 **Target protocols** [Source: ascript-ref-actions.md, .a4drules]:
 
