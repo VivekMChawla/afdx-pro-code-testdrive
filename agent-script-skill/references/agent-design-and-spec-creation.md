@@ -15,30 +15,16 @@
 
 ## 1. Agent Spec: Structure and Lifecycle
 
-An **Agent Spec** is a structured design document describing an agent's purpose, topics, actions, state, control flow, and behavioral intent. It is the first artifact you produce for any agent task — before writing Agent Script code. The Agent Spec serves two purposes: (1) as a design document for human review before implementation, and (2) as a comprehension artifact when reverse-engineering existing agents.
+An **Agent Spec** is a structured design document describing an agent's purpose, topics, actions, state, control flow, and behavioral intent. When creating a new agent, produce the Agent Spec before writing Agent Script code. When comprehending or diagnosing an existing agent, reverse-engineer an Agent Spec from the `.agent` file to make the agent's design explicit.
 
 ### What an Agent Spec Contains
 
 - **Purpose & Scope** — what the agent does, in plain language
-- **Topic Graph** — a Mermaid flowchart showing all topics, transitions (with type labels: handoff or delegation), and when transitions occur
+- **Behavioral Intent** — what the agent is supposed to achieve (requirements and constraints), not just what the code does
+- **Topic Map** — a Mermaid flowchart showing all topics, transitions (with type labels: handoff or delegation), and when transitions occur
 - **Actions & Backing Logic** — each action's name, its backing implementation (Apex class, Flow, Prompt Template), inputs/outputs, and whether the backing logic exists or needs creation
 - **Variables** — declarations, types, default values, which topics set/read them, and what gates they control
-- **Gating Logic** — conditions that govern action visibility or instruction evaluation, with rationale for each
-- **Behavioral Intent** — what the agent is supposed to do (requirements), not just what the code does
-
-### Lifecycle Stages
-
-The Agent Spec evolves through the agent's lifecycle:
-
-**Creation (sparse).** Purpose, topic names, rough descriptions, directional notes about backing logic ("this action needs an Apex class that accepts X, returns Y"). No flowchart yet. Entries are mostly placeholders.
-
-**Build (filled).** Flowchart added with transition types labeled. Backing logic mapped (existing implementations identified with filenames, missing implementations stubbed with protocols and I/O specs). Variables documented with their usage and gating impact. Gating rationale explained.
-
-**Comprehension (reverse-engineered).** Starting from an existing `.agent` file, produce a complete Agent Spec by parsing topics, tracing transitions, analyzing actions, and documenting state. This is the "what does this agent do?" output.
-
-**Diagnosis (reference).** Compare actual runtime behavior against the Agent Spec to find where intent and implementation diverge.
-
-**Testing (coverage baseline).** Each topic, action, and control flow path should have corresponding test scenarios.
+- **Gating Logic** — conditions that govern action visibility or instruction evaluation, with rationale for each. Always include this section; if no gating applies, state "No gating required" so reviewers know it was considered, not overlooked.
 
 ### Directional vs. Observational Entries
 
@@ -49,6 +35,18 @@ Agent Spec entries can be directional or observational — both are valid:
 - **Observational:** "The `fetch_weather` action is backed by Apex class `WeatherService`, invoked via `apex://WeatherService`. Accepts dateToCheck (date), returns maxTemp/minTemp (number)." This documents existing backing logic.
 
 Both go in the same Agent Spec section. The distinction tells you whether the backing logic is missing (directional) or implemented (observational).
+
+### Lifecycle Stages
+
+The Agent Spec evolves across the agent's lifecycle:
+
+**Creation (sparse).** Purpose, topic names, rough descriptions, directional notes about backing logic ("this action needs an Apex class that accepts X, returns Y"). No flowchart yet. Entries are mostly placeholders.
+
+**Build (filled).** Flowchart added with transition types labeled. Backing logic mapped (existing implementations identified with filenames, missing implementations stubbed with protocols and I/O specs). Variables documented with their usage and gating impact. Gating rationale explained.
+
+**Comprehension (reverse-engineered).** Starting from an existing `.agent` file, produce a complete Agent Spec by parsing topics, tracing transitions, analyzing actions, and documenting state. This is the "what does this agent do?" output.
+
+**Diagnosis (reference).** Compare actual runtime behavior against the Agent Spec to find where intent and implementation diverge.
 
 ### Agent Spec Template
 
