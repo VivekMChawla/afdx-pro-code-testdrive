@@ -718,10 +718,3 @@ topic lookup:
 
 Strong mitigations prevent loops even if one fails.
 
----
-
-## Writing for the Consuming Agent
-
-This reference file teaches design thinking: **when** to use each pattern, **why** it matters for execution, and **how** to avoid common mistakes. The reader already knows syntax from Reference File 1 (Core Language). Every section assumes the reader will implement these patterns in actual Agent Script code and needs to understand the reasoning behind design choices.
-
-Code examples illustrate design intent, not complete syntax. Anti-patterns appear inline as WRONG/RIGHT pairs so you see the mistake and correction in context, tied to runtime behavior.
