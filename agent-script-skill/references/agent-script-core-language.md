@@ -476,6 +476,8 @@ Flow control determines how execution moves between topics and responds to condi
 
 **Start agent topic** — the mandatory entry point [Source: ascript-blocks.md]:
 
+Every conversation begins at `start_agent`. The LLM classifies the user's intent and routes to the appropriate topic:
+
 ```agentscript
 start_agent topic_selector:
     description: "Route to appropriate topic"
@@ -489,11 +491,9 @@ start_agent topic_selector:
                 description: "For account questions"
 ```
 
-Every conversation starts at `start_agent`. Use it to classify the user's intent and route to the appropriate topic [Source: ascript-blocks.md].
-
 **LLM-chosen transitions in reasoning actions** [Source: .a4drules, ascript-ref-tools.md]:
 
-In `reasoning.actions`, use `@utils.transition to`:
+When the decision to leave a topic depends on conversation context or user intent — and the LLM should judge the right moment — expose the transition as a reasoning action using `@utils.transition to`:
 
 ```agentscript
 reasoning:
@@ -503,24 +503,25 @@ reasoning:
             available when @variables.ready == True
 ```
 
-The LLM sees this action and decides whether to call it based on context [Source: ascript-ref-tools.md].
-
 **Deterministic transitions in directive blocks** [Source: .a4drules, ascript-flow.md]:
 
-In `before_reasoning` and `after_reasoning`, use bare `transition to` (no `@utils`):
+When the decision to leave a topic is based on known state — not a judgment call — use bare `transition to` in `before_reasoning` and `after_reasoning`:
 
 ```agentscript
+before_reasoning:
+    if @variables.not_authenticated:
+        transition to @topic.login
+
 after_reasoning:
     if @variables.session_complete:
         transition to @topic.summary
-
-    if @variables.needs_escalation:
-        transition to @topic.escalation
 ```
 
-This is deterministic — the runtime evaluates the condition and transitions immediately. Mixing the two syntaxes causes compilation errors [Source: .a4drules].
+The runtime evaluates the condition and transitions immediately. Do NOT use `@utils.transition to` in directive blocks — it causes compilation errors [Source: .a4drules].
 
-**Delegation with return** — call a topic as a tool and return [Source: ascript-ref-tools.md]:
+**Delegation with return** [Source: ascript-ref-tools.md]:
+
+When a topic needs another topic's expertise but still has work to do afterward, use `@topic.X` to delegate. The target topic runs its reasoning, then returns control to the caller:
 
 ```agentscript
 reasoning:
@@ -529,9 +530,11 @@ reasoning:
             description: "Consult the expert topic"
 ```
 
-Direct `@topic.X` reference (without `@utils.transition to`) delegates to the topic and returns control afterward. This is different from a one-way transition [Source: ascript-ref-tools.md].
+This is different from `@utils.transition to`, which is one-way — the calling topic does not resume [Source: ascript-ref-tools.md].
 
 **Conditional branching within topics** [Source: .a4drules]:
+
+Flow control also operates within a single topic. Conditions in reasoning instructions determine which prompt text the LLM receives — the runtime resolves them in Phase 1:
 
 ```agentscript
 reasoning:
@@ -541,8 +544,6 @@ reasoning:
         else:
             | I need an order ID to help you.
 ```
-
-Conditions determine what prompt text is included. The LLM receives different instructions based on state [Source: .a4drules].
 
 ---
 
@@ -899,8 +900,6 @@ before_reasoning:
     set @variables.last_topic = "current_topic"
     transition to @topic.next
 ```
-
-Utilities don't produce outputs to capture [Source: .a4drules].
 
 ---
 
