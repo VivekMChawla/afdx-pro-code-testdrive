@@ -160,16 +160,19 @@ These patterns compose the topic strategies above into agent-level designs.
 
 **Hub-and-Spoke.** One central topic (the router) transitions to specialized domain topics. The router is typically the `start_agent` topic. Each spoke handles a specific domain and may transition back to the router or to other spokes. Use when the agent handles multiple distinct domains that don't naturally flow together.
 
-Example: The Local Info Agent. The `topic_selector` (hub) routes to three domain topics (`local_weather`, `local_events`, `resort_hours`) plus guardrail and escalation spokes.
+Example: The Local Info Agent. The `topic_selector` topic (hub) routes to domain and guardrail topics (spokes).
 
 ```agentscript
 start_agent topic_selector:
     reasoning:
         actions:
-            go_weather: @utils.transition to @topic.local_weather
-            go_events: @utils.transition to @topic.local_events
-            go_hours: @utils.transition to @topic.resort_hours
+            go_to_weather: @utils.transition to @topic.local_weather
+            go_to_events: @utils.transition to @topic.local_events
+            go_to_hours: @utils.transition to @topic.resort_hours
+            go_to_off_topic: @utils.transition to @topic.off_topic
+            go_to_ambiguous_question: @utils.transition to @topic.ambiguous_question
 
+# Domain topics — each has its own instructions and actions
 topic local_weather:
     reasoning:
         instructions: | Handle weather questions.
@@ -177,6 +180,8 @@ topic local_weather:
 topic local_events:
     reasoning:
         instructions: | Handle event questions.
+
+# resort_hours, off_topic, ambiguous_question defined further down the file
 ```
 
 **Linear Flow.** Topics form a pipeline: start → step 1 → step 2 → step 3 → end. Users progress through stages without backtracking. Use for multi-step workflows with mandatory ordering (application forms, onboarding, troubleshooting trees).
