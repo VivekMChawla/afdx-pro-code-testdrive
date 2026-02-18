@@ -102,13 +102,65 @@ These five question categories drive the content of your Agent Spec. When creati
 
 ## 3. Topic Architecture
 
-Topics are states in a finite state machine. Design them before writing code.
+Topics are states in a finite state machine. When designing a new agent, plan your topic structure before writing code. When comprehending an existing agent, identify which topic strategies and architecture pattern it uses.
+
+### Topic Strategies
+
+Every topic in an agent serves one of three roles: domain, guardrail, or escalation. Understand these before choosing an architecture pattern.
+
+**Domain Topics.** The core conversation areas where the agent does its work. Each domain topic handles a specific area (orders, billing, weather, events) with its own instructions, actions, and state. Most agents have 1-5 domain topics.
+
+**Guardrail Topics.** Specialized topics that enforce agent boundaries. The standard Agentforce template includes two guardrail topics by default: `off_topic` (redirects users back to the agent's scope) and `ambiguous_question` (asks for clarification instead of guessing). Preserve these when modifying existing agents.
+
+```agentscript
+topic off_topic:
+    description: "Handle off-topic requests"
+    reasoning:
+        instructions: ->
+            | You asked about something outside my scope.
+              I can only help with [list your capabilities].
+              What can I help you with today?
+
+topic ambiguous_question:
+    description: "Ask for clarification"
+    reasoning:
+        instructions: ->
+            | I didn't quite understand your request.
+              Can you provide more details about what you need?
+```
+
+**Escalation Topics.** Hand off to a human via `@utils.escalate`. This is a permanent exit — the user leaves the agent for a support channel (phone, email, chat with a human). Once triggered, the agent session ends. The escalation action does NOT return.
+
+```agentscript
+topic escalation:
+    reasoning:
+        actions:
+            escalate: @utils.escalate
+                description: "Connect with a human agent"
+```
+
+### Single-Topic vs. Multi-Topic
+
+Decide this before choosing an architecture pattern.
+
+Use **single-topic** if:
+- The agent handles one domain only (FAQ, weather checker, status lookup)
+- All interactions naturally stay in the same context
+- No complex state transitions needed
+
+Use **multi-topic** if:
+- The agent handles multiple distinct domains (customer service: orders + billing + account)
+- Different topics have different instructions or action sets
+- Users may need to switch contexts mid-conversation
+- You need different entry points or security gates
 
 ### Architecture Patterns
 
-**Hub-and-Spoke.** One central topic (the router) transitions to specialized domain topics. The router is the `start_agent` topic. Each domain topic handles a specific area (orders, billing, support) and may transition back to the router or to other topics. Use when the agent handles multiple distinct domains that don't naturally flow together.
+These patterns compose the topic strategies above into agent-level designs.
 
-Example: The Local Info Agent. The `topic_selector` (hub) routes to `local_weather`, `local_events`, `resort_hours`, `escalation`, `off_topic`, and `ambiguous_question` (spokes).
+**Hub-and-Spoke.** One central topic (the router) transitions to specialized domain topics. The router is typically the `start_agent` topic. Each spoke handles a specific domain and may transition back to the router or to other spokes. Use when the agent handles multiple distinct domains that don't naturally flow together.
+
+Example: The Local Info Agent. The `topic_selector` (hub) routes to three domain topics (`local_weather`, `local_events`, `resort_hours`) plus guardrail and escalation spokes.
 
 ```agentscript
 start_agent topic_selector:
@@ -127,7 +179,7 @@ topic local_events:
         instructions: | Handle event questions.
 ```
 
-**Linear Flow.** Topics form a pipeline: start → step 1 → step 2 → step 3 → end. Users progress through stages without backtracking. Use for multi-step workflows with mandatory ordering (application forms, troubleshooting trees).
+**Linear Flow.** Topics form a pipeline: start → step 1 → step 2 → step 3 → end. Users progress through stages without backtracking. Use for multi-step workflows with mandatory ordering (application forms, onboarding, troubleshooting trees).
 
 ```agentscript
 start_agent intake:
@@ -146,21 +198,26 @@ topic details_gathering:
             go_next: @utils.transition to @topic.confirmation
 ```
 
-**Escalation Chain.** Tiered support: first-level topic tries to resolve, second-level topic handles harder issues, third-level escalates to humans. Use when support difficulty varies and each tier has different capabilities.
+**Escalation Chain.** Tiered support where each level has increasing capabilities. First-level resolves common issues with basic actions; second-level has access to more powerful actions or broader authority; final level escalates to a human. Use when support difficulty varies and you want to resolve simple issues quickly without involving higher tiers.
 
 ```agentscript
 topic level_1_support:
     reasoning:
+        instructions: | Try to resolve the issue using the FAQ and basic troubleshooting.
         actions:
+            check_faq: @actions.search_faq
             escalate: @utils.transition to @topic.level_2_support
 
 topic level_2_support:
     reasoning:
+        instructions: | You have access to account tools. Try to resolve before escalating.
         actions:
+            lookup_account: @actions.get_account_details
+            modify_account: @actions.update_account
             escalate_to_human: @utils.escalate
 ```
 
-**Verification Gate.** A security/permission check before allowing access to protected topics. The gate topic validates the user, then transitions to the protected topic or an error topic.
+**Verification Gate.** A security or permission check before allowing access to protected topics. The gate validates the user, then transitions to the protected topic or denies access.
 
 ```agentscript
 start_agent security_gate:
@@ -187,59 +244,9 @@ start_agent faq:
             lookup_plan: @actions.get_plan_details
 ```
 
-### Escalation Topics
+### Composing Patterns
 
-Use `@utils.escalate` to hand off to a human. This is a permanent handoff — the user leaves the agent for a support channel (phone, email, chat with a human).
-
-```agentscript
-topic support:
-    reasoning:
-        actions:
-            escalate: @utils.escalate
-                description: "Connect with a human agent"
-```
-
-The escalation action does NOT return. Once triggered, the agent exits.
-
-### Guardrail Topics
-
-Guardrails are specialized topics that enforce agent boundaries. Always include:
-
-**Off-Topic Redirection.** Route users back to the agent's scope when they ask about unrelated things.
-
-```agentscript
-topic off_topic:
-    description: "Handle off-topic requests"
-    reasoning:
-        instructions: ->
-            | You asked about something outside my scope.
-              I can only help with [list your capabilities].
-              What can I help you with today?
-```
-
-**Ambiguous Question Handling.** Guide users to clarify vague requests instead of guessing.
-
-```agentscript
-topic clarify:
-    description: "Ask for clarification"
-    reasoning:
-        instructions: ->
-            | I didn't quite understand your request.
-              Can you provide more details about what you need?
-```
-
-### Single-Topic vs. Multi-Topic Decision
-
-Use **single-topic** if:
-- The agent handles one domain only (FAQ, weather checker, status lookup)
-- All interactions naturally stay in the same context
-- No complex state transitions needed
-
-Use **multi-topic** if:
-- The agent handles multiple distinct domains (customer service: orders + billing + account)
-- Different topics have different instructions or action sets
-- Users may need to switch contexts mid-conversation
-- You need different entry points or security gates
+Real agents often combine patterns. A hub-and-spoke agent may use a verification gate before protected spokes. A linear flow may include escalation exits at each stage. When composing, each topic still serves exactly one role (domain, guardrail, or escalation) — the architecture pattern determines how they connect.
 
 ---
 
