@@ -56,9 +56,11 @@ The skill provides a starter spec template at `assets/agent-spec-template.md`. U
 
 ## 2. Discovery Questions
 
-Answer these five question categories before designing your agent. The answers populate your Agent Spec.
+These five question categories drive the content of your Agent Spec. When creating a new agent, use them to elicit requirements from the human. When comprehending or diagnosing an existing agent, extract the answers from the `.agent` file and project files.
 
-### Agent Identity & Purpose
+**Resolve as many questions as possible from available context before asking the human.** Scan existing code, project metadata, prior conversation, and any provided requirements. Only surface questions the human must answer — never forward this list verbatim.
+
+### Agent Identity & Purpose *(feeds Purpose & Scope)*
 
 - What is the agent's name? (no spaces, letters/numbers/underscores only)
 - What is the agent's primary purpose in one sentence?
@@ -66,7 +68,7 @@ Answer these five question categories before designing your agent. The answers p
 - What personality should the agent have? (professional, friendly, formal, casual)
 - What error message should the agent show if something breaks?
 
-### Topics & Conversation Flow
+### Topics & Conversation Flow *(feeds Topic Map)*
 
 - What distinct conversation areas (topics) does the agent need?
 - Which topic is the entry point? (where conversations start)
@@ -74,13 +76,13 @@ Answer these five question categories before designing your agent. The answers p
 - Are there topics that delegate to others and need to return?
 - Are there guardrail topics (off-topic redirection, ambiguity handling, security gates)?
 
-### State Management
+### State Management *(feeds Variables, Gating Logic)*
 
 - What information must persist across the conversation? (customer name, preferences, process state)
 - What external context is needed? (session ID, user record, linked fields)
 - What conditions should trigger different behavior in the same topic? (is_premium, role, completed_steps)
 
-### Actions & External Systems
+### Actions & External Systems *(feeds Actions & Backing Logic)*
 
 - What external systems does the agent call?
   - Salesforce Flows (autolaunched only)
@@ -89,7 +91,7 @@ Answer these five question categories before designing your agent. The answers p
   - External APIs (not directly; must be wrapped in Apex or Flow)
 - For each action: What inputs? What outputs? When should it be available?
 
-### Reasoning & Instructions
+### Reasoning & Instructions *(feeds Behavioral Intent)*
 
 - What should the agent do in each topic?
 - What conditions change the instructions? (if guest is premium, if step 1 is complete)
