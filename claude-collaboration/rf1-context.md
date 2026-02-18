@@ -205,6 +205,157 @@ Key ordering decisions and their rationale are captured below.
 
 ---
 
+## Review Framework (Applied to Sub-Agent Draft)
+
+The sub-agent produced a 1,027-line draft at
+`agent-script-skill/references/agent-script-core-language.md`.
+Review uses 5 lenses, each with findings and disposition.
+
+### Lens 1: Structural Compliance
+
+Does the file follow the finalized 13-section outline exactly?
+
+**Finding:** All 13 sections present in correct order. TOC is structural
+scaffolding (not a numbered section), so the sub-agent correctly numbered
+content sections 1-12. This pattern should be followed in Files 2-5.
+
+**Disposition:** PASS — no changes needed. Established convention: TOC
+is unnumbered; content sections start at 1.
+
+### Lens 2: Conflict Resolution Adherence
+
+Are all 5 decided resolutions applied without exception?
+
+**Finding:** All 5 applied correctly. `developer_name` used everywhere.
+`!=` only; `<>` appears only in WRONG examples. 4 spaces, never tabs.
+`prompt://` as short form with long form noted. Block ordering follows
+`.a4drules`. Clean pass.
+
+**Disposition:** PASS — no changes needed.
+
+### Lens 3: Writing Rule Violations
+
+Audience (consuming agent), identity (no other-language analogies),
+style (prose over tables, interleaved examples, WRONG/RIGHT format)?
+
+**Findings:**
+
+1. Line 814 says "Python-style capitalization." This is an analogy to
+   another language, which we explicitly prohibited. Fix: "Agent Script
+   requires `True` and `False` (capitalized first letter)."
+
+2. Section 4 (Expressions and Operators) uses bulleted lists with
+   inline examples — this is fine. Bulleted lists with interleaved
+   grammar and examples are prose with structure, not tables. The
+   "prose over tables" rule targets markdown tables with column
+   headers (e.g., "Operator | Name | Example") which LLMs process
+   poorly. Bulleted lists are acceptable.
+
+**Disposition:** ONE CHANGE NEEDED — remove Python analogy on line 814.
+
+### Lens 4: Technical Accuracy
+
+Do syntax examples and rules match `.a4drules` (authoritative) and
+official docs? Are source attributions correct?
+
+**Findings (verified against `.a4drules`):**
+
+1. **Line 160**: Claims `*`, `/`, `%` are not supported. VERIFIED
+   CORRECT — `.a4drules` line 510: "Arithmetic operators: `+`, `-`
+   only (no `*`, `/`, `%`)". No change needed.
+
+2. **Line 169**: Conditional expression `x if condition else y`.
+   VERIFIED CORRECT — `.a4drules` line 512 documents this syntax
+   and line 483 shows it in a template expression. Not Python
+   bleed-through; it's real Agent Script syntax. No change needed.
+
+3. **Line 165**: Index access `[]`. VERIFIED CORRECT — `.a4drules`
+   line 511: "Access operators: `.` (property access), `[]` (index
+   access)". No change needed.
+
+4. **Line 935**: `set @variables.last_topic = "current_topic"` inside
+   `before_reasoning`. INITIALLY FLAGGED as fabricated because
+   `.a4drules` only shows `set` as a post-action directive. HOWEVER,
+   official docs (`ascript-ref-before-after-reasoning.md` lines 10-12)
+   show bare `set @variables.X = value` in `after_reasoning` as valid
+   syntax. Line 3 of that doc explicitly lists "set customer-entered
+   information into a variable" as a typical use case for directive
+   blocks. Sub-agent's syntax is valid. Lesson: verify against ALL
+   sources, not just `.a4drules`.
+
+**Disposition:** PASS — no changes needed. All 4 flagged items verified
+correct across `.a4drules` and official docs.
+
+### Lens 5: Consuming Agent Effectiveness
+
+Would a cold agent actually write valid Agent Script after reading this?
+
+**Findings:**
+
+1. **Redundancy**: Template injection explained in Section 4, then again
+   in Section 6. Transition syntax taught in Section 9, then reinforced
+   in anti-patterns. Some repetition is pedagogically sound — evaluate
+   whether it crosses into bloat.
+
+2. **Length**: 1,027 lines vs. 300-line target. File consumes
+   significant context window. If the consuming agent reads this plus
+   SKILL.md plus any other reference file, context pressure increases.
+   Need to evaluate: is every line earning its tokens?
+
+3. **Anti-pattern count**: 10 WRONG/RIGHT pairs (vs. 7 in `.a4drules`).
+   Good coverage if accurate. Verify the 3 additional patterns have
+   source backing.
+
+**Token analysis (measured):**
+File is ~7,000-9,000 tokens total. On a 200K context window, this is
+~4.5%. Even with SKILL.md + a second reference file, total reference
+material stays under 10% of context. The 300-line target was a
+readability heuristic for skill designers, not a token budget. Token
+math shows the file is not a context pressure risk.
+
+**Section token breakdown (estimated):**
+- Anti-Patterns (Sec 12): ~1,900 tokens (heaviest, capstone)
+- Actions (Sec 10): ~1,200 tokens (unified dual-path treatment)
+- Reasoning Instructions (Sec 8): ~900 tokens
+- Flow Control (Sec 9): ~830 tokens
+- Expressions/Operators (Sec 4): ~710 tokens
+- Everything else: ~600 tokens or less each
+
+**Disposition:** Tightening pass warranted for prose conciseness, but
+do NOT cut content to hit an arbitrary line count. Token cost is
+acceptable. Focus on removing unnecessary words and redundancy, not
+removing information.
+
+### Tightening Decisions (from Lens 5 walkthrough with Vivek)
+
+**A1. Template injection repetition (Sec 4 + Sec 6): KEEP.**
+Do not replace with a forward reference to Section 4. Backward
+references force the agent to re-attend to earlier context, working
+against the progressive build-up the section ordering was designed
+for. However, FIX line 300: the guidance "Do NOT use `@variables.X`
+without the braces" must be scoped to prompt text within `|` pipe
+sections only. Bare `@variables.X` is valid in logic contexts
+(e.g., `if @variables.X == True:`).
+
+**A2. Transition syntax in Flow Control (lines 509-537): RESTRUCTURE.**
+Replace the "Critical distinction" block (lines 523-536) with a
+second affirmative example. The section should have two parallel
+patterns:
+- "In `reasoning.actions`, use `@utils.transition to`:" (existing,
+  keep as-is)
+- "In directive blocks, use bare `transition to`:" (new framing,
+  use the existing directive block example)
+Remove the repeated code block from lines 530-533. The anti-patterns
+in Section 12 already handle the "what goes wrong" angle.
+
+**B. Source citations: TBD** — decide whether to keep or strip
+`[Source: ...]` annotations from the final file.
+
+**C. Prose tightening and anti-pattern conciseness: TBD** — evaluate
+during the editing pass.
+
+---
+
 ## Key Insights for Writing
 
 - **Write for the consuming agent, not designers.** Every line should
