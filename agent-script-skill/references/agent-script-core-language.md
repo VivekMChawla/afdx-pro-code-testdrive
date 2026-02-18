@@ -21,9 +21,9 @@
 
 Agent Script operates in two phases: deterministic resolution, then LLM reasoning [Source: ascript-flow.md, ascript-lang.md].
 
-**Phase 1: Deterministic Resolution.** When the runtime processes a topic's reasoning instructions, it executes all deterministic logic from top to bottom — `if`/`else` conditions, `run` commands for actions, `set` variable assignments. The runtime does NOT invoke the LLM yet. Instead, it builds a prompt string by accumulating text instructions and executing conditional logic. If a `transition` command occurs, the runtime discards the current prompt and starts fresh with the target topic. After all deterministic logic is resolved, the runtime has a complete prompt string ready [Source: ascript-flow.md].
+**Phase 1: Deterministic Resolution.** The runtime executes a topic's reasoning instructions top to bottom — evaluating `if`/`else` conditions, running actions via `run`, and setting variables via `set`. The LLM is NOT involved yet. The runtime builds a prompt string by accumulating `|` pipe text and resolving conditional logic. If a `transition` command occurs, the runtime discards the current prompt and starts fresh with the target topic [Source: ascript-flow.md].
 
-**Phase 2: LLM Reasoning.** Once the prompt is complete, the runtime passes it to the LLM along with any reasoning actions (tools) the topic exposes. The LLM reads the resolved prompt, sees what actions are available, and decides what to do. The LLM can choose to call actions, but cannot modify the prompt text — it only reasons against what the runtime resolved in Phase 1 [Source: ascript-flow.md, ascript-ref-tools.md].
+**Phase 2: LLM Reasoning.** The runtime passes the resolved prompt to the LLM along with any reasoning actions (tools) the topic exposes. The LLM decides what to do — it can call available actions but cannot modify the prompt text. It only reasons against what Phase 1 resolved [Source: ascript-flow.md, ascript-ref-tools.md].
 
 **Worked Example.** Consider this topic:
 
@@ -297,7 +297,7 @@ instructions: |
     Your balance: {!@variables.balance}
 ```
 
-Do NOT use `@variables.X` without the braces — the braces trigger template evaluation [Source: ascript-lang.md].
+In prompt text (inside `|` pipe sections), always use `{!@variables.X}` with braces — the braces trigger template evaluation. Bare `@variables.X` without braces is valid in logic contexts (e.g., `if @variables.X == True:`) but will not interpolate in prompt text [Source: ascript-lang.md].
 
 ---
 
@@ -491,21 +491,6 @@ start_agent topic_selector:
 
 Every conversation starts at `start_agent`. Use it to classify the user's intent and route to the appropriate topic [Source: ascript-blocks.md].
 
-**Deterministic transitions in directive blocks** [Source: .a4drules, ascript-flow.md]:
-
-In `before_reasoning` and `after_reasoning`, use bare `transition to` (no `@utils`):
-
-```agentscript
-after_reasoning:
-    if @variables.session_complete:
-        transition to @topic.summary
-
-    if @variables.needs_escalation:
-        transition to @topic.escalation
-```
-
-This is deterministic — the runtime evaluates the condition and transitions immediately [Source: .a4drules].
-
 **LLM-chosen transitions in reasoning actions** [Source: .a4drules, ascript-ref-tools.md]:
 
 In `reasoning.actions`, use `@utils.transition to`:
@@ -520,20 +505,20 @@ reasoning:
 
 The LLM sees this action and decides whether to call it based on context [Source: ascript-ref-tools.md].
 
-**Critical distinction** — the syntax differs by context [Source: .a4drules]:
+**Deterministic transitions in directive blocks** [Source: .a4drules, ascript-flow.md]:
+
+In `before_reasoning` and `after_reasoning`, use bare `transition to` (no `@utils`):
 
 ```agentscript
-# Directive blocks use bare transition
 after_reasoning:
-    transition to @topic.next
+    if @variables.session_complete:
+        transition to @topic.summary
 
-# Reasoning actions use @utils.transition to
-reasoning:
-    actions:
-        go: @utils.transition to @topic.next
+    if @variables.needs_escalation:
+        transition to @topic.escalation
 ```
 
-Mixing them causes compilation errors [Source: .a4drules].
+This is deterministic — the runtime evaluates the condition and transitions immediately. Mixing the two syntaxes causes compilation errors [Source: .a4drules].
 
 **Delegation with return** — call a topic as a tool and return [Source: ascript-ref-tools.md]:
 
@@ -811,7 +796,7 @@ if @variables.is_premium == false:
     run @actions.show_basic_features
 ```
 
-**Why it fails:** Agent Script requires `True` and `False` (Python-style capitalization). The parser rejects lowercase `true`/`false` [Source: .a4drules].
+**Why it fails:** Agent Script requires `True` and `False` (capitalized first letter). The parser rejects lowercase `true`/`false` [Source: .a4drules].
 
 **CORRECT:**
 
@@ -894,27 +879,6 @@ Specify a source [Source: .a4drules].
 
 ---
 
-**WRONG: `<>` inequality operator**
-
-```agentscript
-# WRONG — <> is not supported
-if @variables.status <> "pending":
-    run @actions.proceed
-```
-
-**Why it fails:** Agent Script only recognizes `!=` for inequality [Source: .a4drules, ascript-ref-operators.md].
-
-**CORRECT:**
-
-```agentscript
-if @variables.status != "pending":
-    run @actions.proceed
-```
-
-Use `!=` [Source: .a4drules].
-
----
-
 **WRONG: Post-action directive on utility**
 
 ```agentscript
@@ -934,42 +898,16 @@ reasoning:
 before_reasoning:
     set @variables.last_topic = "current_topic"
     transition to @topic.next
-
-# Or expose an action as a tool
-reasoning:
-    actions:
-        go_next: @utils.transition to @topic.next
 ```
 
 Utilities don't produce outputs to capture [Source: .a4drules].
 
 ---
 
-**WRONG: Tabs instead of spaces**
-
-```agentscript
-# WRONG — using tabs
-topic	my_topic:
-	description: "Topic"
-```
-
-**Why it fails:** Mixing or using tabs breaks the parser. Agent Script requires consistent 4-space indentation [Source: .a4drules, ascript-lang.md].
-
-**CORRECT:**
-
-```agentscript
-topic my_topic:
-    description: "Topic"
-```
-
-Use 4 spaces per indent level, no tabs [Source: .a4drules].
-
----
-
 **WRONG: Action loop (action remains available after execution)**
 
 ```agentscript
-# WRONG — create_order stays available; LLM may call it repeatedly
+# WRONG — no gating, no post-action guidance, variable-bound input
 reasoning:
     instructions: ->
         | Place an order using the create_order action.
@@ -978,7 +916,7 @@ reasoning:
             with items = @variables.cart_items
 ```
 
-**Why it fails:** The `available when` condition is satisfied before and after the action runs. The LLM has no instruction to stop calling it. Each reasoning cycle, the action is available again [Source: .a4drules, ascript-flow.md].
+**Why it fails:** Each reasoning cycle, the LLM sees all available actions and decides which to call. This action has no `available when` gate, so it is always available. The variable-bound input (`with items = @variables.cart_items`) means the action is "ready to go" every cycle with no slot-filling decision required. The instructions don't tell the LLM what to do after the action completes, so the LLM may call it repeatedly [Source: .a4drules].
 
 **CORRECT:**
 
@@ -994,7 +932,7 @@ reasoning:
             available when @variables.cart_total > 0
 ```
 
-Add explicit post-action instructions: "Do NOT call the action again" [Source: .a4drules].
+Three mitigations applied: (1) explicit post-action instructions telling the LLM to stop, (2) an `available when` gate so the action is only available when relevant, (3) clear instructions about what to do with the result [Source: .a4drules].
 
 ---
 
