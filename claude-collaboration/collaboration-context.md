@@ -1282,12 +1282,16 @@ Sessions should consult this section to determine what to work on.
      in `claude-collaboration/rf1-context.md`. Writing prompt created
      at `claude-collaboration/reference-file-1-prompt.md`.
    - **Reading plan for remaining files:**
-     - **File 2 (Design & Agent Spec):** Agent Spec docs
-       (`salesforcedocs/.../agent-dx-create-agent-spec.md`,
-       `agent-dx-generate-agent-spec.md`), architectural pattern
-       recipes (`agent-script-recipes/.../04_architecturalPatterns/`),
-       Jag's fsm-architecture.md, Local Info Agent source (for
-       reverse-engineering exercise)
+     - **File 2 (Design & Agent Spec):** COMPLETED. Six sources read:
+       official Agent Script docs (14 files, for grounding), `.a4drules`
+       (authoritative), Jag's fsm-architecture.md and
+       instruction-resolution.md, 8 architectural pattern recipes,
+       Local Info Agent source. Four source conflicts identified and
+       resolved. Findings captured in `claude-collaboration/rf2-context.md`.
+       Writing prompt created at
+       `claude-collaboration/reference-file-2-prompt.md`.
+       NOTE: `salesforcedocs/agent-dx/` agent spec references are OUTDATED
+       and unrelated — ignored per Vivek's directive.
      - **File 3 (Validation & Debugging):** AFDX preview docs
        (`salesforcedocs/.../agent-dx-preview.md`,
        `agent-dx-nga-preview.md`), existing .a4drules files
@@ -1301,11 +1305,16 @@ Sessions should consult this section to determine what to work on.
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[IN PROGRESS — File 1 ready to write]** Write reference files —
+3. **[IN PROGRESS — File 2 under review]** Write reference files —
    one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
      → File 5 (Test Authoring)
+   - **File 1 (Core Language):** DONE. 1,017 lines. Reviewed and
+     accepted across Sessions 5-6.
+   - **File 2 (Design & Agent Spec):** First draft written by sub-agent
+     (727 lines). Under collaborative section-by-section review with
+     Vivek. Sections 1-4 reviewed and refined. Sections 5-8 in progress.
    - **Per-file acceptance criteria:** (a) Content matches the scope
      defined in the File Inventory (Section 10). (b) TOC at top.
      (c) Target 300 lines; if exceeding, justify the overage.
@@ -1338,6 +1347,15 @@ Sessions should consult this section to determine what to work on.
 
 8. **[FUTURE]** Agent Script Skill Validator — separate skill for
    ongoing platform validation. See Section 11.1.
+
+9. **[FUTURE]** Mermaid diagram conventions placement — discovered
+   `agent-script-recipes/.airules/MERMAID_DIAGRAMS.md` (380 lines of
+   detailed conventions for producing Topic Map diagrams). Currently
+   referenced as a skill asset in RF2, but the content is more
+   instructional than a passive template. Needs decision: skill asset
+   (`assets/mermaid-conventions.md`) vs. dedicated reference file.
+   Choosing reference file would require revisiting the knowledge
+   category model. Review after all planned RFs are complete.
 
 ## 11.1 Future Workstreams
 
@@ -1557,3 +1575,39 @@ Active Work Items)
 Active Work Items). Next task is Item 1: Write SKILL.md (router).
 
 **Files modified**: `collaboration-context.md`
+
+### Sessions 5-6 — February 17-18, 2026
+
+**Outputs**:
+- SKILL.md (router) written and reviewed, sub-agent routing eval passed
+  all 9 steel threads
+- RF1 (Core Language) written by sub-agent, reviewed collaboratively
+  with Vivek across multiple sessions, accepted at 1,017 lines
+- RF2 domain reads completed across 6 source categories
+- rf2-context.md created with sources, 4 conflict resolutions, 8-section
+  outline, and key writing insights
+- reference-file-2-prompt.md created
+- RF2 first draft written by sub-agent (727 lines)
+
+**Key decisions**:
+- `@topic.X` delegation does NOT implement automatic call-return semantics
+  (Conflict #3 resolved via official docs analysis)
+- `salesforcedocs/agent-dx/` agent spec references are OUTDATED and must
+  be ignored; our Agent Spec is our own design artifact
+- `sf agent generate agent-spec` does not currently produce a starter
+  spec; we must include a starter spec template as a skill asset
+- RF2 anti-patterns use inline WRONG/RIGHT pairs (not a capstone section)
+- RF2 tone must be authoritative and direct for the consuming agent
+
+**What's unresolved**: RF2 collaborative review in progress (Sections
+1-4 reviewed, Sections 5-8 in progress). Mermaid conventions placement
+TBD (asset vs. reference file — see Work Item 9).
+
+**Files modified**: `agent-script-skill/SKILL.md`,
+`agent-script-skill/references/agent-script-core-language.md`,
+`agent-script-skill/references/agent-design-and-spec-creation.md`,
+`claude-collaboration/rf1-context.md`,
+`claude-collaboration/rf2-context.md`,
+`claude-collaboration/reference-file-1-prompt.md`,
+`claude-collaboration/reference-file-2-prompt.md`,
+`claude-collaboration/collaboration-context.md`
