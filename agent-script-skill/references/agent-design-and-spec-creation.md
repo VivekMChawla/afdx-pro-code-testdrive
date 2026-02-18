@@ -415,11 +415,11 @@ Deploy the stub to the org using `sf project deploy start --source-dir <path> --
 
 ## 5. Transition Patterns
 
-Topics connect via transitions. There are two types: **handoff** (permanent) and **delegation** (with return).
+Every connection between topics is a design decision. Choosing the wrong transition type causes either lost context (user can't return when they should) or stuck navigation (user returns to a topic that no longer makes sense). Label every transition in your Agent Spec's Topic Map as either **handoff** or **delegation**.
 
 ### Handoff: Permanent Transition
 
-A handoff is a one-way transition. The user moves to a new topic and control never returns to the original topic on that topic branch. Handoffs use `@utils.transition to` in `reasoning.actions`.
+A handoff is a one-way transition. The user moves to a new topic and control never returns to the original topic. Handoffs use `@utils.transition to` in `reasoning.actions`.
 
 Use handoff when:
 - Switching modes (preview → confirm → complete)
@@ -430,21 +430,28 @@ Use handoff when:
 topic topic_selector:
     reasoning:
         actions:
-            go_checkout: @utils.transition to @topic.checkout
+            go_to_checkout: @utils.transition to @topic.checkout
                 description: "Start checkout"
 
 topic checkout:
     reasoning:
         actions:
-            go_confirm: @utils.transition to @topic.order_confirmation
+            go_to_confirm: @utils.transition to @topic.order_confirmation
                 description: "Proceed to confirmation"
 ```
 
-After `go_confirm` executes, the user is in `order_confirmation`. If they later say "go back," the agent routes them back through `topic_selector` (the entry point), not to `checkout`. Handoffs don't stack; they reset the conversation state.
+After `go_to_confirm` executes, the user is in `order_confirmation`. If they later say "go back," the agent routes them back through `topic_selector` (the entry point), not to `checkout`. Handoffs don't stack; they reset the conversation state.
 
-### Delegation: Temporary Handoff with Explicit Return
+### Delegation: Handoff with Explicit Return
 
-Delegation temporarily hands control to another topic, but does NOT automatically return. The delegated topic must explicitly transition back to the caller.
+Delegation hands control to another topic using `@topic.X` in `reasoning.actions`. It signals *intent* to return, but the return does not happen automatically — the delegated topic must explicitly transition back to the caller.
+
+Use delegation when:
+- One topic needs advice from a specialist and should continue after
+- Reusable sub-workflows (e.g., identity verification called from multiple topics)
+- A topic needs to temporarily visit another topic, then resume
+
+**Critical Rule:** `@topic.X` delegates control. It does NOT implement call-return semantics. If you want the user to return to the calling topic, code an explicit `transition to @topic.<caller>` in the delegated topic. Without it, the next user utterance falls through to `topic_selector`.
 
 WRONG: Assuming `@topic.specialist` returns automatically
 ```agentscript
@@ -457,7 +464,7 @@ topic main:
 # The next user utterance routes through topic_selector.
 ```
 
-RIGHT: Delegating topic defines explicit return transition
+RIGHT: Delegated topic defines explicit return transition
 ```agentscript
 topic main:
     reasoning:
@@ -468,16 +475,9 @@ topic main:
 topic specialist:
     reasoning:
         actions:
-            go_back: @utils.transition to @topic.main
+            go_to_main: @utils.transition to @topic.main
                 description: "Return to main"
 ```
-
-Use delegation when:
-- One topic needs advice from a specialist and should continue after
-- Reusable sub-workflows (e.g., identity verification called from multiple topics)
-- Visiting a topic temporarily, then returning
-
-**Critical Rule:** `@topic.X` delegates control. It does NOT implement call-return semantics. If you want the user to return to the calling topic, code an explicit `transition to @topic.<caller>` in the delegated topic. Without it, the next user utterance falls through to `topic_selector`.
 
 ---
 
