@@ -534,7 +534,7 @@ This is different from `@utils.transition to`, which is one-way — the calling 
 
 **Conditional branching within topics** [Source: .a4drules]:
 
-Flow control also operates within a single topic. Conditions in reasoning instructions determine which prompt text the LLM receives — the runtime resolves them in Phase 1:
+Conditions in reasoning instructions control which prompt text the LLM ultimately receives. The runtime evaluates `if`/`else` branches and includes only the matching `|` pipe sections in the resolved prompt:
 
 ```agentscript
 reasoning:
