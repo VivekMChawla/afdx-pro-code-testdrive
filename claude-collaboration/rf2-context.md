@@ -9,11 +9,14 @@
 ## Sources Read
 
 1. **Official Agent Script docs** (14 files under
-   `salesforcedocs/.../agent-script/`): Same source set as RF1.
-   Provides authoritative grounding for Agent Script syntax, runtime
-   behavior, and built-in references. Used in RF2 to verify claims
-   about action properties, transition mechanics, gating syntax, and
-   directive block behavior.
+   `salesforcedocs/.../agent-script/`): The same 14 reference files
+   used for Reference File 1 (Core Language), including `ascript-lang.md`,
+   `ascript-ref-actions.md`, `ascript-ref-variables.md`,
+   `ascript-ref-instructions.md`, `ascript-ref-before-after-reasoning.md`,
+   and others. Provides authoritative grounding for Agent Script syntax,
+   runtime behavior, and built-in references. Used in RF2 to verify
+   claims about action properties, transition mechanics, gating syntax,
+   and directive block behavior.
 
 2. **`.a4drules/agent-script-rules-no-edit.md`** (AUTHORITATIVE SOURCE):
    785 lines. Key RF2 content: Discovery Questions (lines 7-51, 5 categories),
@@ -62,7 +65,8 @@
      instruction separation
 
 6. **Local Info Agent** (`force-app/.../Local_Info_Agent/Local_Info_Agent.agent`):
-   268 lines. Canonical example. Hub-and-spoke architecture: start_agent
+   268 lines. The primary working example used throughout this skill — a
+   Coral Cloud Resort agent. Hub-and-spoke architecture: start_agent
    routes to 3 domain topics + escalation + off-topic + ambiguous_question.
    Demonstrates: gated actions (`available when`), `@utils.setVariables`
    for slot-filling, `@utils.escalate`, multiple target protocols
@@ -76,9 +80,11 @@
 ## Conflict Resolutions (Decided)
 
 1. **FSM framing vs. our execution model framing**: Jag frames everything
-   as a Finite State Machine (topics = states, transitions = state changes).
-   RF1 uses a two-phase execution model (deterministic resolution → LLM
-   reasoning). **Decision**: These are complementary, not conflicting. FSM
+   as a Finite State Machine (FSM: topics = states, transitions = state
+   changes). RF1 uses a two-phase execution model — Phase 1: runtime
+   resolves instructions deterministically (if/else, run, set); Phase 2:
+   LLM reasons over the resolved prompt text. **Decision**: These are
+   complementary, not conflicting. FSM
    is a *design* perspective — useful for RF2 when teaching topic
    architecture. Execution model is a *runtime* perspective — already
    covered in RF1. RF2 adopts the FSM lens for design thinking without
@@ -118,21 +124,26 @@
 
 ## Content Scope (What Goes in File 2)
 
-**In scope** (Knowledge Categories C + D):
+**In scope** (the collaboration-context.md File Inventory assigns
+Knowledge Categories C (Flow Control & Design Patterns) and D (Agent
+Spec Production) to this file):
 
-- Agent Spec structure and lifecycle (sparse → filled → reverse-engineered)
+- Agent Spec structure and lifecycle (see Section 1 description below
+  for the three lifecycle stages and directional/observational entries)
 - Discovery questions (5 categories from `.a4drules`)
-- Topic architecture patterns (hub-and-spoke, linear, escalation chain,
-  verification gate, single-topic)
-- Mapping backing logic to actions (scan for Apex/Flow/Prompt Templates,
-  map existing, stub missing, valid backing logic types)
+- Topic architecture patterns, including escalation and guardrail topics
+  (these are folded into the Topic Architecture section, not a separate
+  section)
+- Mapping backing logic to actions. "Backing logic" = the Salesforce
+  implementation that powers an action — an Apex class, an autolaunched
+  Flow, or a Prompt Template. The agent script action definition points
+  to this logic via a target protocol (e.g., `apex://MyClass`,
+  `flow://MyFlow`, `prompt://MyTemplate`).
 - Transition patterns (handoff vs. delegation, when to use each)
 - Deterministic vs. subjective flow control (classification framework,
   instruction ordering within topics, grounding considerations)
 - Gating patterns (`available when`, conditional instructions,
   `before_reasoning` guards, multi-condition gating, security gates)
-- Escalation and guardrail topics (escalation pattern, off-topic/ambiguous
-  redirection, guardrail rules)
 - Action loop prevention (root causes, three mitigations)
 
 **Deferred to other files**:
@@ -225,17 +236,21 @@ Ordering was debated and resolved through structured discussion with Vivek.
    the Agent Spec.
 
 5. **Transition Patterns** — Permanent handoff (`@utils.transition to`
-   in reasoning.actions) vs. delegation (`@topic.X` in reasoning.actions).
-   Design implications of each. When to use handoff (mode switches,
-   entry point routing, one-way workflows). When to use delegation
-   (specialist consultation, reusable sub-workflows). Back-navigation
-   patterns. [Note: syntax is in RF1; this section covers design
-   decisions only.]
+   in reasoning.actions — the user leaves the current topic and never
+   returns) vs. delegation (`@topic.X` in reasoning.actions — the current
+   topic delegates to another topic, with potential return). Design
+   implications of each. When to use handoff (mode switches, entry point
+   routing, one-way workflows). When to use delegation (specialist
+   consultation, reusable sub-workflows). How to navigate back to a
+   previous topic when needed. [Note: transition *syntax* is in RF1;
+   this section covers *design decisions* — when and why to choose each
+   pattern.]
 
 6. **Deterministic vs. Subjective Flow Control** — Classification
    framework: security/financial/counter/state requirements →
-   deterministic code; conversational/NLG/flexibility requirements →
-   LLM reasoning. Instruction ordering within topics: post-action checks
+   deterministic code; conversational/natural-language-generation/flexibility
+   requirements → LLM reasoning. Instruction ordering within topics:
+   post-action checks
    at top → data loading → dynamic instructions for LLM. Post-action
    loop pattern (deterministic resolution runs again with updated
    variables). Grounding considerations: paraphrase data closely, avoid
@@ -250,10 +265,16 @@ Ordering was debated and resolved through structured discussion with Vivek.
    gate pattern (state variables track progress through validation stages).
 
 8. **Action Loop Prevention** — What causes loops: action remains
-   available after executing + instructions don't say "stop." Variable-bound
-   inputs increase risk (no slot-filling friction). Three mitigations:
-   explicit post-action instructions, post-action transitions, LLM
-   slot-fill over variable binding.
+   available to the LLM after executing + instructions don't tell the
+   LLM to stop calling it. Variable-bound inputs (where `with` clauses
+   bind action inputs to variables instead of using `...` for LLM
+   slot-filling) increase risk because the LLM can invoke the action
+   without any friction — it doesn't need to extract values from the
+   conversation. Three mitigations: explicit post-action instructions
+   ("do not call X again"), post-action transitions (move to a
+   different topic after action completes), LLM slot-fill (`...`) over
+   variable binding (forces the LLM to extract values each time, adding
+   natural friction).
 
 ---
 
@@ -266,9 +287,12 @@ Ordering was debated and resolved through structured discussion with Vivek.
 - **Code examples should be shorter than RF1's.** RF2 code shows design
   intent, not complete syntax. The reader already knows syntax from RF1.
 
-- **FSM terminology is useful for design sections** (topics as states,
-  transitions as state changes) but should not conflict with RF1's
-  execution model terminology. Use it naturally without formal definition.
+- **Finite State Machine (FSM) terminology is useful for design sections**
+  (topics as states, transitions as state changes) but should not conflict
+  with RF1's execution model terminology (deterministic resolution phase +
+  LLM reasoning phase). Use FSM concepts naturally without formal
+  definition — the reader should absorb the design thinking, not learn
+  FSM theory.
 
 - **The Agent Spec is our invention.** No authoritative external source
   defines it. The collaboration-context Section 4 is the source of truth.
@@ -278,9 +302,11 @@ Ordering was debated and resolved through structured discussion with Vivek.
   confidence but clarity — the consuming agent needs to understand
   exactly what to produce.
 
-- **Backing logic analysis is high-value content.** Wiring an action to
-  invalid backing logic is a common and costly mistake. This section
-  justifies extra token spend (per collaboration-context line 1189).
+- **Mapping Logic to Actions is high-value content.** Wiring an action
+  to invalid backing logic (e.g., pointing to a Flow that isn't
+  autolaunched, or an Apex class that isn't invocable) is a common and
+  costly mistake that produces cryptic runtime errors. This section
+  justifies extra detail and token spend.
 
 - **Anti-patterns may emerge during writing.** RF1 has a dedicated
   anti-patterns capstone section. RF2 should use inline WRONG/RIGHT
