@@ -638,7 +638,23 @@ Common targets:
 - `apex` — Invocable Apex class (e.g., `"apex://CheckWeather"`)
 - `prompt` — Prompt Template (e.g., `"prompt://Get_Event_Info"`; long form: `generatePromptResponse`)
 
-Additional targets: `standardInvocableAction` (built-in actions), `externalService` (external APIs), `quickAction`, `api` (REST API), `apexRest`, `serviceCatalog`, `integrationProcedureAction`, `expressionSet`, `cdpMlPrediction`, `externalConnector`, `slack`, `namedQuery`, `auraEnabled`, `mcpTool`, `retriever` [Source: .a4drules].
+Additional targets [Source: .a4drules]:
+
+- `standardInvocableAction` — built-in Salesforce actions
+- `externalService` — external APIs registered via External Services
+- `quickAction` — Salesforce Quick Actions
+- `api` — REST API endpoints
+- `apexRest` — Apex REST services
+- `serviceCatalog` — Service Catalog items
+- `integrationProcedureAction` — OmniStudio Integration Procedures
+- `expressionSet` — Business Rules Engine expression sets
+- `cdpMlPrediction` — Data Cloud ML predictions
+- `externalConnector` — external system connectors
+- `slack` — Slack integrations
+- `namedQuery` — named SOQL queries
+- `auraEnabled` — Aura-enabled Apex methods
+- `mcpTool` — Model Context Protocol tools
+- `retriever` — knowledge retrieval sources
 
 **Deterministic invocation** — when the action must always run, use `run` in the reasoning instructions. The runtime executes it before the LLM reasons [Source: ascript-ref-actions.md]:
 
