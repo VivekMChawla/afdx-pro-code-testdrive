@@ -261,9 +261,13 @@ Every action in Agent Script needs backing logic — a Salesforce implementation
 
 ### Valid Backing Logic Types
 
-Three types of Salesforce implementations can back actions:
+The most common backing logic types are Apex, Flows, and Prompt Templates. Other types exist, but these three cover the vast majority of agent actions.
 
-**Apex**: Only **invocable Apex classes** work. A regular Apex class, even if it has public methods, will not work. Invocable classes use the `@InvocableMethod` annotation, and their inputs/outputs use `@InvocableVariable`.
+**Apex**: Only **invocable Apex classes** work. A regular Apex class, even if it has public methods, will not work. Invocable classes use two key annotations:
+
+`@InvocableMethod` marks the entry point. Its attributes provide critical context: `label` (human-readable name shown in tools like Flow Builder), `description` (what the method does). Read these attributes when comprehending existing backing logic — they explain the method's purpose.
+
+`@InvocableVariable` marks each input and output field on the inner Request/Result classes. Its attributes: `label` (human-readable field name), `description` (what the field represents), `required` (whether the field must be provided). These attributes tell you what each parameter means and whether it's mandatory — use them to build accurate action input/output definitions.
 
 ```apex
 // WRONG — regular class, not invocable
@@ -274,16 +278,16 @@ public class WeatherFetcher {
 // RIGHT — invocable class with annotated I/O
 public class WeatherFetcher {
     public class Request {
-        @InvocableVariable(required=true)
+        @InvocableVariable(label='Date' description='Date to check weather for' required=true)
         public Date dateToCheck;
     }
     public class Result {
-        @InvocableVariable
+        @InvocableVariable(label='Max Temp' description='Maximum temperature in Fahrenheit')
         public Decimal maxTemp;
-        @InvocableVariable
+        @InvocableVariable(label='Min Temp' description='Minimum temperature in Fahrenheit')
         public Decimal minTemp;
     }
-    @InvocableMethod(label='Fetch Weather')
+    @InvocableMethod(label='Fetch Weather' description='Gets weather forecast for a given date')
     public static List<Result> getWeather(List<Request> requests) { ... }
 }
 ```
@@ -365,7 +369,7 @@ topic orders:
                 orderDate: date      # maps to Result.orderDate (Date → date)
 ```
 
-**Critical gotcha**: If you point to invalid backing logic (a Flow that isn't autolaunched, or an Apex class that isn't invocable), validation may pass but the agent will fail at runtime with cryptic errors. Always verify the backing logic type before wiring.
+**Critical gotcha**: If you point to invalid backing logic (a Flow that isn't autolaunched, or an Apex class that isn't invocable), validation may pass and simulation-mode preview may also work — giving a false sense of correctness. The failure surfaces later: deployment of the AiAuthoringBundle will fail because the MDAPI deploy checks that backing logic exists in the org, or the agent will produce cryptic runtime errors in live mode. Always verify the backing logic type before wiring.
 
 ### How to Stub Missing Logic
 
