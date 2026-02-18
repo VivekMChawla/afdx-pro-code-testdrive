@@ -76,11 +76,12 @@ These five question categories drive the content of your Agent Spec. When creati
 - Are there topics that delegate to others and need to return?
 - Are there guardrail topics (off-topic redirection, ambiguity handling, security gates)?
 
-### State Management *(feeds Variables, Gating Logic)*
+### Reasoning & Instructions *(feeds Behavioral Intent)*
 
-- What information must persist across the conversation? (customer name, preferences, process state)
-- What external context is needed? (session ID, user record, linked fields)
-- What conditions should trigger different behavior in the same topic? (is_premium, role, completed_steps)
+- What should the agent do in each topic?
+- What conditions change the instructions? (if guest is premium, if step 1 is complete)
+- Should the agent do anything before or after reasoning in a given topic? (e.g., security checks, data fetches, automatic transitions)
+- What data transformations (if any) does the LLM need to do?
 
 ### Actions & External Systems *(feeds Actions & Backing Logic)*
 
@@ -91,12 +92,11 @@ These five question categories drive the content of your Agent Spec. When creati
   - External APIs (not directly; must be wrapped in Apex or Flow)
 - For each action: What inputs? What outputs? When should it be available?
 
-### Reasoning & Instructions *(feeds Behavioral Intent)*
+### State Management *(feeds Variables, Gating Logic)*
 
-- What should the agent do in each topic?
-- What conditions change the instructions? (if guest is premium, if step 1 is complete)
-- Should any actions run automatically before/after reasoning?
-- What data transformations (if any) does the LLM need to do?
+- What information must persist across the conversation? (customer name, preferences, process state)
+- What external context is needed? (session ID, user record, linked fields)
+- What conditions should trigger different behavior in the same topic? (is_premium, role, completed_steps)
 
 ---
 
