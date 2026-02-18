@@ -8,14 +8,12 @@
 
 ## Sources Read
 
-1. **Agent Spec docs** (3 files under `salesforcedocs/.../agent-dx/`):
-   `agent-dx-create-agent-spec.md` — creating non-Agent-Script agents from
-   a spec YAML (deprecated workflow, but documents the Agent Spec YAML
-   structure). `agent-dx-generate-agent-spec.md` — generating an agent spec
-   YAML via `sf agent generate agent-spec` (REPL-style interview, iterative
-   refinement). `agent-dx-reference.md` — Agent Spec file reference (YAML
-   properties: agentType, companyName, companyDescription, role, maxNumOfTopics,
-   agentUser, enrichLogs, tone, promptTemplateName, groundingContext, topics).
+1. **Official Agent Script docs** (14 files under
+   `salesforcedocs/.../agent-script/`): Same source set as RF1.
+   Provides authoritative grounding for Agent Script syntax, runtime
+   behavior, and built-in references. Used in RF2 to verify claims
+   about action properties, transition mechanics, gating syntax, and
+   directive block behavior.
 
 2. **`.a4drules/agent-script-rules-no-edit.md`** (AUTHORITATIVE SOURCE):
    785 lines. Key RF2 content: Discovery Questions (lines 7-51, 5 categories),
@@ -105,16 +103,16 @@
    requires explicit transition. This affects transition pattern guidance.
    Flag for validation during writing.
 
-4. **Agent Spec — CLI-generated vs. our design artifact**: The official
-   `sf agent generate agent-spec` produces a simple YAML (company info +
-   topic name/description list). Our Agent Spec (defined in
-   collaboration-context Section 4) is much richer: purpose, topic graph,
-   actions/backing logic, variables, gating, behavioral intent.
-   **Decision**: RF2 clearly distinguishes these. The CLI command produces
-   a *starter spec* — useful as a starting point but insufficient for
-   design. Our Agent Spec is the full design artifact that evolves over
-   the agent's lifecycle. The section should acknowledge the CLI command
-   exists but teach the richer format.
+4. **Agent Spec is our design artifact**: The `salesforcedocs` folder
+   contains references to "agent specs" in the `agent-dx/` directory.
+   These are OUTDATED artifacts that have nothing to do with the Agent
+   Spec we are designing. **Decision**: Ignore all `salesforcedocs`
+   agent spec references entirely. Our Agent Spec (defined in
+   collaboration-context Section 4) is a richer design artifact:
+   purpose, topic architecture, actions/backing logic, variables,
+   gating, behavioral intent. The CLI command `sf agent generate agent-spec` does not currently produce a starter spec. We will
+   include a starter spec template as one of the skill's assets.
+   RF2 teaches our Agent Spec format exclusively.
 
 ---
 
@@ -199,10 +197,8 @@ Ordering was debated and resolved through structured discussion with Vivek.
 1. **Agent Spec: Structure and Lifecycle** — What an Agent Spec contains
    (purpose, topic architecture, actions/backing logic, variables, gating,
    behavioral intent). How it evolves: sparse at creation → filled during
-   build → reverse-engineered during comprehension. Distinction from
-   CLI-generated spec YAML (`sf agent generate agent-spec` produces a
-   starter spec; our Agent Spec is the full design artifact). Directional
-   vs. observational entries.
+   build → reverse-engineered during comprehension. The skill provides a
+   starter spec template as an asset. Directional vs. observational entries.
 
 2. **Discovery Questions** — The 5 categories of structured questions
    from `.a4drules`: Agent Identity & Purpose, Topics & Conversation
@@ -273,8 +269,11 @@ Ordering was debated and resolved through structured discussion with Vivek.
 
 - **The Agent Spec is our invention.** No authoritative external source
   defines it. The collaboration-context Section 4 is the source of truth.
-  Write with confidence but clarity — the consuming agent needs to
-  understand exactly what to produce.
+  Ignore all `salesforcedocs/agent-dx/` references to "agent specs" —
+  those are outdated and unrelated. The skill will include a starter
+  spec template as an asset; RF2 should reference it. Write with
+  confidence but clarity — the consuming agent needs to understand
+  exactly what to produce.
 
 - **Backing logic analysis is high-value content.** Wiring an action to
   invalid backing logic is a common and costly mistake. This section
