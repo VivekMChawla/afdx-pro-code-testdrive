@@ -180,7 +180,7 @@ instructions: |
     Your status: {!@variables.status if @variables.status else "pending"}.
 ```
 
-The expression inside `{! ... }` is evaluated during Phase 1 and the result replaces the entire `{! ... }` block in the prompt.
+The expression inside `{! ... }` is evaluated by the runtime during deterministic resolution and the result replaces the entire `{! ... }` block in the prompt.
 
 **Resource references** [Source: ascript-lang.md]:
 
@@ -379,7 +379,7 @@ Directive blocks use the arrow syntax (`->`) for logic but no LLM reasoning. The
 
 ## 8. Reasoning Instructions
 
-Reasoning instructions combine deterministic logic and prompt text. The runtime resolves deterministic parts (Phase 1), then sends the resulting prompt to the LLM (Phase 2) [Source: ascript-ref-instructions.md, ascript-flow.md].
+Reasoning instructions combine deterministic logic and prompt text. The runtime resolves deterministic parts first, then sends the resulting prompt to the LLM for reasoning [Source: ascript-ref-instructions.md, ascript-flow.md].
 
 **Arrow syntax (`->`) for logic blocks** [Source: ascript-lang.md]:
 
@@ -459,7 +459,7 @@ run @actions.check_inventory
     set @variables.stock_level = @outputs.available_quantity
 ```
 
-The `run` command executes the action deterministically during Phase 1. Use `with` to pass inputs (bound to variables or literal values). Use `set` to capture outputs into variables [Source: ascript-ref-instructions.md].
+The `run` command executes the action deterministically — the runtime runs it before the LLM reasons. Use `with` to pass inputs (bound to variables or literal values). Use `set` to capture outputs into variables [Source: ascript-ref-instructions.md].
 
 **Post-action directives** (only for `@actions`, not `@utils`) [Source: .a4drules]:
 
@@ -473,7 +473,7 @@ run @actions.process_order
         transition to @topic.error_handling
 ```
 
-After an action completes, you can check outputs and transition. These directives remain deterministic (Phase 1) [Source: .a4drules].
+After an action completes, you can check outputs and transition. These directives execute deterministically — the runtime handles them, not the LLM [Source: .a4drules].
 
 **How pipe sections become the LLM prompt** [Source: ascript-flow.md]:
 
@@ -573,33 +573,17 @@ reasoning:
 
 ## 10. Actions
 
-Actions are tasks a topic can perform: invoking Flows, Apex classes, or Prompt Templates. Actions can run deterministically (Phase 1) or be exposed as tools for the LLM to choose (Phase 2) [Source: ascript-ref-actions.md, ascript-flow.md].
+Actions are tasks a topic can perform — invoking Flows, Apex classes, Prompt Templates, or other target types. Actions can run deterministically (the runtime always executes them) or be exposed as tools for the LLM to choose at reasoning time [Source: ascript-ref-actions.md, ascript-flow.md].
 
-**Action definition in topic.actions block** [Source: ascript-ref-actions.md]:
-
-```agentscript
-actions:
-    check_inventory:
-        description: "Check product availability"
-        target: "flow://CheckProductInventory"
-        inputs:
-            product_id: string
-                description: "The product ID"
-                is_required: True
-        outputs:
-            in_stock: boolean
-                description: "Whether the product is in stock"
-            quantity: number
-                description: "Units available"
-```
-
-**Full action syntax** — production agents use additional optional fields for UI and validation [Source: .a4drules]:
+**Action definition** — each action is defined in the topic's `actions` block with required and optional properties [Source: ascript-ref-actions.md, .a4drules]:
 
 ```agentscript
 actions:
     get_customer:
+        # Required properties
         target: "flow://GetCustomerInfo"
         description: "Fetches customer information"
+        # Optional UI/UX properties
         label: "Get Customer"
         require_user_confirmation: False
         include_in_progress_indicator: True
@@ -616,79 +600,72 @@ actions:
                 description: "Customer's email"
                 filter_from_agent: False
                 is_displayable: True
+            customer_info: object
+                complex_data_type_name: "lightning__recordInfoType"
+                description: "Full customer record"
 ```
 
-`label`, `require_user_confirmation`, `include_in_progress_indicator`, and `progress_indicator_message` are optional. Input metadata (`is_required`, `label`, `description`) and output metadata (`is_displayable`, `filter_from_agent`, `description`, `label`) control how the platform handles data binding and display.
+**Action properties** [Source: ascript-ref-actions.md]:
 
-**Target protocols** [Source: ascript-ref-actions.md, .a4drules]:
+- `target` (required) — reference to the executable, in the format `"type://DeveloperName"`
+- `description` (optional) — the LLM uses this to decide when to call the action
+- `label` (optional) — display name shown to the customer; auto-generated from action name if omitted
+- `require_user_confirmation` (optional boolean) — when `True`, the customer must confirm before the action runs
+- `include_in_progress_indicator` (optional boolean) — when `True`, shows a progress indicator during execution
+- `progress_indicator_message` (optional string) — text shown during execution (e.g., `"Looking up customer..."`)
 
-- `flow://FlowName` — Salesforce Flow
-- `apex://ClassName` — Invocable Apex class
-- `prompt://PromptTemplateName` — Prompt Template (short form `prompt://` or long form `generatePromptResponse://`)
+**Input properties:** `description`, `label`, `is_required` (boolean). **Output properties:** `description`, `label`, `filter_from_agent` (boolean — `True` hides the output from the LLM's context), `is_displayable` (boolean), `complex_data_type_name` (required when the output type is `object` — specifies the Apex/Flow type name) [Source: ascript-ref-actions.md].
 
-Example: `target: "flow://Get_Customer_Details"` or `target: "apex://CheckWeather"` [Source: ascript-ref-actions.md, .a4drules].
+**Target types** — use the format `"type://DeveloperName"` [Source: .a4drules, ascript-ref-actions.md]:
 
-**Complex data types** — when an output is a Salesforce object type [Source: ascript-ref-actions.md, Local_Info_Agent.agent]:
+Common targets:
 
-```agentscript
-actions:
-    check_weather:
-        target: "apex://CheckWeather"
-        outputs:
-            date_result: object
-                complex_data_type_name: "lightning__dateType"
-                description: "Date returned by Apex"
-```
+- `flow` — Salesforce Flow (e.g., `"flow://GetCustomerInfo"`)
+- `apex` — Invocable Apex class (e.g., `"apex://CheckWeather"`)
+- `prompt` — Prompt Template (e.g., `"prompt://Get_Event_Info"`; long form: `generatePromptResponse`)
 
-Use `type: object` and specify `complex_data_type_name` with the Apex/Flow type name [Source: ascript-ref-actions.md].
+Additional targets: `standardInvocableAction` (built-in actions), `externalService` (external APIs), `quickAction`, `api` (REST API), `apexRest`, `serviceCatalog`, `integrationProcedureAction`, `expressionSet`, `cdpMlPrediction`, `externalConnector`, `slack`, `namedQuery`, `auraEnabled`, `mcpTool`, `retriever` [Source: .a4drules].
 
-**Deterministic action invocation** (Phase 1 — always runs) [Source: ascript-ref-actions.md]:
+**Deterministic invocation** — when the action must always run, use `run` in the reasoning instructions. The runtime executes it before the LLM reasons [Source: ascript-ref-actions.md]:
 
 ```agentscript
 reasoning:
     instructions: ->
-        run @actions.check_inventory
-            with product_id = @variables.product_id
-            set @variables.stock_count = @outputs.quantity
+        run @actions.get_customer
+            with customer_id = @variables.customer_id
+            set @variables.customer_name = @outputs.name
+            set @variables.customer_email = @outputs.email
 ```
 
-The `run` command executes the action during Phase 1, before the LLM reasons [Source: ascript-ref-actions.md, ascript-flow.md].
-
-**LLM exposure via reasoning.actions** (Phase 2 — LLM chooses) [Source: ascript-ref-tools.md]:
+**LLM exposure** — when the LLM should decide whether and when to call the action, list it in `reasoning.actions`. The LLM sees the description and chooses based on conversation context [Source: ascript-ref-tools.md]:
 
 ```agentscript
 reasoning:
     actions:
-        lookup: @actions.check_inventory
-            description: "Check if product is in stock"
-            with product_id = @variables.selected_product
-            set @variables.stock_count = @outputs.quantity
+        lookup: @actions.get_customer
+            description: "Look up customer information"
+            with customer_id = @variables.selected_customer
+            set @variables.customer_name = @outputs.name
 ```
 
-The action is listed as a tool. The LLM sees the description and decides whether to call it [Source: ascript-ref-tools.md].
-
-**Input binding patterns** [Source: ascript-ref-actions.md]:
+**Input binding** — three patterns for providing values to action inputs [Source: ascript-ref-actions.md]:
 
 ```agentscript
 reasoning:
     actions:
         search: @actions.search_products
-            # LLM slot-fills both parameters
+            # LLM slot-fills: extracts value from conversation
             with query = ...
             with category = ...
 
         lookup: @actions.get_customer
-            # Bound to variable (LLM doesn't decide)
+            # Variable binding: prefilled from state
             with customer_id = @variables.selected_customer
-            # Fixed value
+            # Literal value: fixed at definition time
             with include_archive = False
-            # LLM slot-fills this one
-            with order_id = ...
 ```
 
-Use `...` for LLM slot-filling (LLM extracts value from conversation), variable binding (prefilled from state), or literal values [Source: ascript-ref-actions.md].
-
-**Gating with `available when`** — conditionally expose actions to the LLM [Source: ascript-ref-tools.md]:
+**Gating** — `available when` controls which actions the LLM can see based on current state [Source: ascript-ref-tools.md]:
 
 ```agentscript
 reasoning:
@@ -702,9 +679,7 @@ reasoning:
             available when @variables.cart_total > 0
 ```
 
-The LLM only sees actions whose `available when` condition is true [Source: ascript-ref-tools.md].
-
-**Output capture with `set`** (Phase 1) [Source: ascript-ref-actions.md]:
+**Output capture** — after an action returns, use `set` to store outputs in variables for use by other topics or later turns [Source: ascript-ref-actions.md]:
 
 ```agentscript
 run @actions.fetch_order
@@ -712,8 +687,6 @@ run @actions.fetch_order
     set @variables.status = @outputs.status
     set @variables.total = @outputs.total
 ```
-
-After an action returns, use `set` to store outputs in variables for later use [Source: ascript-ref-actions.md].
 
 ---
 
@@ -800,7 +773,7 @@ reasoning:
             description: "Go to next"
 ```
 
-**Why it fails:** `reasoning.actions` expose tools to the LLM (Phase 2). The LLM needs an action reference, not a bare command. The runtime rejects bare `transition to` syntax in this context [Source: .a4drules].
+**Why it fails:** `reasoning.actions` expose tools to the LLM at reasoning time. The LLM needs an action reference, not a bare command. The runtime rejects bare `transition to` syntax in this context [Source: .a4drules].
 
 **CORRECT:**
 
@@ -823,7 +796,7 @@ after_reasoning:
     @utils.transition to @topic.next
 ```
 
-**Why it fails:** Directive blocks (`before_reasoning`, `after_reasoning`) execute deterministically (Phase 1), not as tools. They use bare `transition to` syntax [Source: .a4drules, ascript-flow.md].
+**Why it fails:** Directive blocks (`before_reasoning`, `after_reasoning`) execute deterministically — the runtime handles them, not the LLM. They use bare `transition to` syntax [Source: .a4drules, ascript-flow.md].
 
 **CORRECT:**
 
@@ -832,7 +805,7 @@ after_reasoning:
     transition to @topic.next
 ```
 
-Bare `transition to` is deterministic (Phase 1) [Source: .a4drules].
+Bare `transition to` is deterministic — the runtime executes it directly [Source: .a4drules].
 
 ---
 
@@ -873,7 +846,7 @@ variables:
     customer_name: mutable string
 ```
 
-**Why it fails:** During Phase 1, the runtime needs an initial value. Mutable variables must have defaults [Source: .a4drules].
+**Why it fails:** During deterministic resolution, the runtime needs an initial value. Mutable variables must have defaults [Source: .a4drules].
 
 **CORRECT:**
 
@@ -986,7 +959,7 @@ Three mitigations applied: (1) explicit post-action instructions telling the LLM
 
 ---
 
-**WRONG: Expecting LLM to reason without Phase 1 context**
+**WRONG: Expecting LLM to reason without deterministic context**
 
 ```agentscript
 # WRONG — no instructions prepare the LLM
@@ -996,7 +969,7 @@ topic check_status:
             lookup: @actions.fetch_status
 ```
 
-**Why it fails:** The LLM needs instructions about when and how to use the action. Without Phase 1 prompt text guiding the LLM, it may not call the action even when relevant [Source: ascript-flow.md].
+**Why it fails:** The LLM needs instructions about when and how to use the action. Without prompt text from the reasoning instructions guiding the LLM, it may not call the action even when relevant [Source: ascript-flow.md].
 
 **CORRECT:**
 
@@ -1010,5 +983,5 @@ topic check_status:
                 with order_id = @variables.order_id
 ```
 
-Always pair actions with guiding instructions in Phase 1 [Source: ascript-flow.md, ascript-ref-instructions.md].
+Always pair actions with guiding instructions in the reasoning block [Source: ascript-flow.md, ascript-ref-instructions.md].
 
