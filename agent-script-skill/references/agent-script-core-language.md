@@ -19,11 +19,11 @@
 
 ## 1. How Agent Script Executes
 
-Agent Script operates in two phases: deterministic resolution, then LLM reasoning [Source: ascript-flow.md, ascript-lang.md].
+Agent Script operates in two phases: deterministic resolution, then LLM reasoning.
 
-**Phase 1: Deterministic Resolution.** The runtime executes a topic's reasoning instructions top to bottom — evaluating `if`/`else` conditions, running actions via `run`, and setting variables via `set`. The LLM is NOT involved yet. The runtime builds a prompt string by accumulating `|` pipe text and resolving conditional logic. If a `transition` command occurs, the runtime discards the current prompt and starts fresh with the target topic [Source: ascript-flow.md].
+**Phase 1: Deterministic Resolution.** The runtime executes a topic's reasoning instructions top to bottom — evaluating `if`/`else` conditions, running actions via `run`, and setting variables via `set`. The LLM is NOT involved yet. The runtime builds a prompt string by accumulating `|` pipe text and resolving conditional logic. If a `transition` command occurs, the runtime discards the current prompt and starts fresh with the target topic.
 
-**Phase 2: LLM Reasoning.** The runtime passes the resolved prompt to the LLM along with any reasoning actions (tools) the topic exposes. The LLM decides what to do — it can call available actions but cannot modify the prompt text. It only reasons against what Phase 1 resolved [Source: ascript-flow.md, ascript-ref-tools.md].
+**Phase 2: LLM Reasoning.** The runtime passes the resolved prompt to the LLM along with any reasoning actions (tools) the topic exposes. The LLM decides what to do — it can call available actions but cannot modify the prompt text. It only reasons against what Phase 1 resolved.
 
 **Worked Example.** Consider this topic:
 
@@ -53,13 +53,13 @@ You can modify it using the update_order action.
 
 The LLM then receives this prompt plus the `update` tool and decides whether to call it based on what the user asks.
 
-This split is critical: **deterministic logic controls WHAT the agent knows (via resolved prompt), and the LLM controls WHETHER and HOW to act on that knowledge** [Source: ascript-flow.md].
+This split is critical: **deterministic logic controls WHAT the agent knows (via resolved prompt), and the LLM controls WHETHER and HOW to act on that knowledge**.
 
 ---
 
 ## 2. File Structure and Block Ordering
 
-An Agent Script file (`.agent` extension) contains eight top-level blocks in this mandatory order [Source: ascript-blocks.md, .a4drules]:
+An Agent Script file (`.agent` extension) contains eight top-level blocks in this mandatory order:
 
 ```agentscript
 system:
@@ -87,11 +87,11 @@ topic my_topic:
     ...
 ```
 
-**Required blocks:** `system`, `config`, `start_agent`, and at least one `topic` [Source: .a4drules].
+**Required blocks:** `system`, `config`, `start_agent`, and at least one `topic`.
 
-**Optional blocks:** `variables`, `connections`, `knowledge`, `language`. Omit them if not needed [Source: ascript-blocks.md].
+**Optional blocks:** `variables`, `connections`, `knowledge`, `language`. Omit them if not needed.
 
-**Within `start_agent` and `topic` blocks**, the internal ordering is [Source: .a4drules]:
+**Within `start_agent` and `topic` blocks**, the internal ordering is:
 
 1. `description` (required)
 2. `system` (optional — topic-level override of global system instructions)
@@ -104,7 +104,7 @@ topic my_topic:
 
 ## 3. Naming and Formatting Rules
 
-**Naming constraints for all identifiers** (developer_name, topic names, variable names, action names, connection names) [Source: .a4drules, ascript-blocks.md]:
+**Naming constraints for all identifiers** (developer_name, topic names, variable names, action names, connection names):
 
 - Contain only letters, numbers, and underscores
 - Begin with a letter (never underscore)
@@ -115,7 +115,7 @@ topic my_topic:
 
 Example: `check_order_status` is valid. `check_order__status` is invalid (consecutive underscores).
 
-**Indentation:** Use 4 spaces per indent level. NEVER use tabs [Source: .a4drules]. Mixing spaces and tabs breaks the parser. All lines at the same nesting level must use the same indentation [Source: ascript-lang.md].
+**Indentation:** Use 4 spaces per indent level. NEVER use tabs. Mixing spaces and tabs breaks the parser. All lines at the same nesting level must use the same indentation.
 
 Each nesting level adds 4 spaces. The hierarchy follows the block structure — topic → reasoning → instructions → logic/prompt:
 
@@ -127,7 +127,7 @@ topic process_order:
             | Welcome
 ```
 
-**Comments:** Use `#` for single-line comments. The parser ignores everything after `#` on that line [Source: ascript-lang.md].
+**Comments:** Use `#` for single-line comments. The parser ignores everything after `#` on that line.
 
 Comments can appear on their own line or inline after code. Both forms are valid:
 
@@ -141,7 +141,7 @@ variables:
 
 ## 4. Expressions and Operators
 
-**Comparison operators** [Source: .a4drules, ascript-lang.md]:
+**Comparison operators**:
 
 - `==` (equal): `@variables.status == "complete"`
 - `!=` (not equal): `@variables.count != 0`
@@ -152,18 +152,18 @@ variables:
 - `is` (identity check — use for None): `@variables.value is None`
 - `is not` (negated identity check): `@variables.data is not None`
 
-**Logical operators** [Source: .a4drules]:
+**Logical operators**:
 
 - `and`: Both conditions must be true. `@variables.verified == True and @variables.age >= 18`
 - `or`: Either condition can be true. `@variables.status == "pending" or @variables.status == "review"`
 - `not`: Negates a condition. `not @variables.is_guest == True` (though `@variables.is_guest == False` is more readable)
 
-**Arithmetic operators** (limited support) [Source: ascript-lang.md, ascript-ref-operators.md]:
+**Arithmetic operators** (limited support):
 
 - `+` (addition): `@variables.count + 1`
 - `-` (subtraction): `@variables.total - @variables.discount`
 
-Do NOT use `*`, `/`, `%` — they are not supported [Source: ascript-lang.md].
+Do NOT use `*`, `/`, `%` — they are not supported.
 
 **Access operators**:
 
@@ -174,7 +174,7 @@ Do NOT use `*`, `/`, `%` — they are not supported [Source: ascript-lang.md].
 
 - `x if condition else y`: `"premium" if @variables.is_premium == True else "standard"`
 
-**Template injection in strings** (within `|` multiline text) [Source: ascript-lang.md, ascript-ref-instructions.md]:
+**Template injection in strings** (within `|` multiline text):
 
 Use `{!expression}` to inject variable values or expressions into prompt text:
 
@@ -186,7 +186,7 @@ instructions: |
 
 The expression inside `{! ... }` is evaluated by the runtime during deterministic resolution and the result replaces the entire `{! ... }` block in the prompt.
 
-**Resource references** [Source: ascript-lang.md]:
+**Resource references**:
 
 - `@actions.<name>` — reference an action defined in the topic's `actions` block
 - `@topic.<name>` — reference a topic by name
@@ -196,7 +196,7 @@ The expression inside `{! ... }` is evaluated by the runtime during deterministi
 - `@inputs.<name>` — reference an action input (in action definition)
 - `@utils.<function>` — reference a utility (escalate, transition to, setVariables)
 
-**Do NOT use `<>` as inequality operator.** Use `!=` instead [Source: .a4drules].
+**Do NOT use `<>` as inequality operator.** Use `!=` instead.
 
 ```agentscript
 # WRONG
@@ -210,7 +210,7 @@ if @variables.status != "pending":
 
 ## 5. System and Config Blocks
 
-**System block** provides global instructions and messages [Source: ascript-blocks.md, .a4drules]:
+**System block** provides global instructions and messages:
 
 ```agentscript
 system:
@@ -220,11 +220,11 @@ system:
         error: "Sorry, something went wrong. Please try again."
 ```
 
-The `instructions` field is required and contains text directives sent to the LLM in every reasoning phase [Source: .a4drules]. Topic-level system blocks can override this [Source: ascript-blocks.md].
+The `instructions` field is required and contains text directives sent to the LLM in every reasoning phase. Topic-level system blocks can override this.
 
-Both `welcome` and `error` messages are required [Source: .a4drules].
+Both `welcome` and `error` messages are required.
 
-**Config block** contains agent metadata [Source: ascript-blocks.md, .a4drules]:
+**Config block** contains agent metadata:
 
 ```agentscript
 config:
@@ -236,21 +236,21 @@ config:
 ```
 
 **Required fields:**
-- `developer_name` (NOT `agent_name`) — unique identifier following naming rules [Source: .a4drules, ascript-blocks.md]
-- `default_agent_user` (for `AgentforceServiceAgent` type only) — Salesforce user ID or email [Source: .a4drules]
+- `developer_name` (NOT `agent_name`) — unique identifier following naming rules
+- `default_agent_user` (for `AgentforceServiceAgent` type only) — Salesforce username
 
 **Optional fields:**
-- `agent_label` — human-readable display name. Defaults to normalized `developer_name` if omitted [Source: .a4drules]
-- `description` — what the agent does [Source: ascript-blocks.md]
-- `agent_type` — either `"AgentforceServiceAgent"` or `"AgentforceEmployeeAgent"` [Source: .a4drules]
+- `agent_label` — human-readable display name. Defaults to normalized `developer_name` if omitted
+- `description` — what the agent does
+- `agent_type` — either `"AgentforceServiceAgent"` or `"AgentforceEmployeeAgent"`
 
 ---
 
 ## 6. Variables
 
-**Two types of variables** [Source: ascript-ref-variables.md, .a4drules]:
+**Two types of variables**:
 
-**Mutable variables** — the agent can read AND write. MUST have a default value [Source: .a4drules]:
+**Mutable variables** — the agent can read AND write. MUST have a default value:
 
 ```agentscript
 variables:
@@ -262,9 +262,9 @@ variables:
     items: mutable list[string] = []
 ```
 
-The `description` field is optional. Include it when the LLM needs context for slot-filling via `@utils.setVariables` [Source: ascript-ref-variables.md].
+The `description` field is optional. Include it when the LLM needs context for slot-filling via `@utils.setVariables`.
 
-**Linked variables** — read-only from external context. MUST have a `source`, MUST NOT have a default value [Source: .a4drules]:
+**Linked variables** — read-only from external context. MUST have a `source`, MUST NOT have a default value:
 
 ```agentscript
 variables:
@@ -275,15 +275,15 @@ variables:
         source: @MessagingSession.MessagingEndUserId
 ```
 
-The `source` field points to the external context. At runtime, the platform provides the value [Source: .a4drules].
+The `source` field points to the external context. At runtime, the platform provides the value.
 
-**Type constraints by context** [Source: .a4drules]:
+**Type constraints by context**:
 
 - Mutable variable types: `string`, `number`, `boolean`, `object`, `date`, `timestamp`, `currency`, `id`, `list[T]`
 - Linked variable types: `string`, `number`, `boolean`, `date`, `timestamp`, `currency`, `id` (no `list`)
 - Action parameter types: `string`, `number`, `boolean`, `object`, `date`, `timestamp`, `currency`, `id`, `list[T]`, `datetime`, `time`, `integer`, `long`
 
-**Boolean capitalization** [Source: .a4drules]:
+**Boolean capitalization**:
 
 ALWAYS use `True` or `False` (capitalized). NEVER use `true` or `false`:
 
@@ -297,7 +297,7 @@ enabled: mutable boolean = True
 is_verified: mutable boolean = False
 ```
 
-**Template injection for variables** in prompt text [Source: ascript-lang.md]:
+**Template injection for variables** in prompt text:
 
 Use `{!@variables.X}` to interpolate a variable's value into prompt text:
 
@@ -307,13 +307,13 @@ instructions: |
     Your balance: {!@variables.balance}
 ```
 
-In prompt text (inside `|` pipe sections), always use `{!@variables.X}` with braces — the braces trigger template evaluation. Bare `@variables.X` without braces is valid in logic contexts (e.g., `if @variables.X == True:`) but will not interpolate in prompt text [Source: ascript-lang.md].
+In prompt text (inside `|` pipe sections), always use `{!@variables.X}` with braces — the braces trigger template evaluation. Bare `@variables.X` without braces is valid in logic contexts (e.g., `if @variables.X == True:`) but will not interpolate in prompt text.
 
 ---
 
 ## 7. Topics
 
-**Topic structure** — a named scope for reasoning, actions, and flow control [Source: ascript-blocks.md, .a4drules]:
+**Topic structure** — a named scope for reasoning, actions, and flow control:
 
 ```agentscript
 topic order_lookup:
@@ -336,9 +336,9 @@ topic order_lookup:
                 status: string
 ```
 
-**Description is required** — the LLM uses this to understand when the topic is relevant [Source: ascript-blocks.md].
+**Description is required** — the LLM uses this to understand when the topic is relevant.
 
-**Topic-level system override** (optional) — override global system instructions for this topic only [Source: .a4drules]:
+**Topic-level system override** (optional) — override global system instructions for this topic only:
 
 ```agentscript
 topic product_specialist:
@@ -350,7 +350,7 @@ topic product_specialist:
             | Help with product specs.
 ```
 
-**Internal block ordering within a topic** [Source: .a4drules]:
+**Internal block ordering within a topic**:
 
 1. `description`
 2. `system` (optional override)
@@ -359,7 +359,7 @@ topic product_specialist:
 5. `after_reasoning` (optional)
 6. `actions` (optional definitions)
 
-**Before/after reasoning directive blocks** [Source: .a4drules]:
+**Before/after reasoning directive blocks**:
 
 `before_reasoning` and `after_reasoning` contain deterministic logic that runs outside the reasoning phase:
 
@@ -377,15 +377,15 @@ after_reasoning:
         transition to @topic.confirmation
 ```
 
-Directive blocks use the arrow syntax (`->`) for logic but no LLM reasoning. They run deterministically [Source: .a4drules].
+Directive blocks use the arrow syntax (`->`) for logic but no LLM reasoning. They run deterministically.
 
 ---
 
 ## 8. Reasoning Instructions
 
-Reasoning instructions combine deterministic logic and prompt text. The runtime resolves deterministic parts first, then sends the resulting prompt to the LLM for reasoning [Source: ascript-ref-instructions.md, ascript-flow.md].
+Reasoning instructions combine deterministic logic and prompt text. The runtime resolves deterministic parts first, then sends the resulting prompt to the LLM for reasoning.
 
-**Arrow syntax (`->`) for logic blocks** [Source: ascript-lang.md]:
+**Arrow syntax (`->`) for logic blocks**:
 
 ```agentscript
 reasoning:
@@ -400,7 +400,7 @@ reasoning:
 
 The `->` prefix indicates "start with logic, then switch to prompt". The runtime evaluates the `if` condition and `run` command, then appends the pipe-delimited text to the prompt.
 
-**Multiline strings with `|`** — two forms [Source: ascript-lang.md, .a4drules]:
+**Multiline strings with `|`** — two forms:
 
 For static text with no logic, use `|` directly after the property:
 
@@ -421,7 +421,7 @@ instructions: ->
         | Suggest self-service options.
 ```
 
-Within `->` blocks, a line without `|` continues the previous line. A new `|` starts a new line [Source: .a4drules]:
+Within `->` blocks, a line without `|` continues the previous line. A new `|` starts a new line:
 
 ```agentscript
 instructions: ->
@@ -430,7 +430,7 @@ instructions: ->
     | This starts a new logical line.
 ```
 
-**If/Else (no "else if")** [Source: .a4drules, ascript-lang.md]:
+**If/Else (no "else if")**:
 
 ```agentscript
 if @variables.status == "pending":
@@ -455,7 +455,7 @@ if @variables.status == "pending":
         run @actions.queue_pending
 ```
 
-**Inline action invocation (`run @actions.X`)** [Source: ascript-ref-instructions.md, .a4drules]:
+**Inline action invocation (`run @actions.X`)**:
 
 ```agentscript
 run @actions.check_inventory
@@ -463,9 +463,9 @@ run @actions.check_inventory
     set @variables.stock_level = @outputs.available_quantity
 ```
 
-The `run` command executes the action deterministically — the runtime runs it before the LLM reasons. Use `with` to pass inputs (bound to variables or literal values). Use `set` to capture outputs into variables [Source: ascript-ref-instructions.md].
+The `run` command executes the action deterministically — the runtime runs it before the LLM reasons. Use `with` to pass inputs (bound to variables or literal values). Use `set` to capture outputs into variables.
 
-**Post-action directives** (only for `@actions`, not `@utils`) [Source: .a4drules]:
+**Post-action directives** (only for `@actions`, not `@utils`):
 
 ```agentscript
 run @actions.process_order
@@ -477,9 +477,9 @@ run @actions.process_order
         transition to @topic.error_handling
 ```
 
-After an action completes, you can check outputs and transition. These directives execute deterministically — the runtime handles them, not the LLM [Source: .a4drules].
+After an action completes, you can check outputs and transition. These directives execute deterministically — the runtime handles them, not the LLM.
 
-**How pipe sections become the LLM prompt** [Source: ascript-flow.md]:
+**How pipe sections become the LLM prompt**:
 
 Every line with `|` is concatenated in order as the prompt text. All logic (if/else, run, set) is resolved first, and only matching pipe lines are included:
 
@@ -502,7 +502,7 @@ instructions: ->
 
 Flow control determines how execution moves between topics and responds to conditions.
 
-**Start agent topic** — the mandatory entry point [Source: ascript-blocks.md]:
+**Start agent topic** — the mandatory entry point:
 
 Every conversation begins at `start_agent`. The LLM classifies the user's intent and routes to the appropriate topic:
 
@@ -519,7 +519,7 @@ start_agent topic_selector:
                 description: "For account questions"
 ```
 
-**LLM-chosen transitions in reasoning actions** [Source: .a4drules, ascript-ref-tools.md]:
+**LLM-chosen transitions in reasoning actions**:
 
 When the decision to leave a topic depends on conversation context or user intent — and the LLM should judge the right moment — expose the transition as a reasoning action using `@utils.transition to`:
 
@@ -531,7 +531,7 @@ reasoning:
             available when @variables.ready == True
 ```
 
-**Deterministic transitions in directive blocks** [Source: .a4drules, ascript-flow.md]:
+**Deterministic transitions in directive blocks**:
 
 When the decision to leave a topic is based on known state — not a judgment call — use bare `transition to` in `before_reasoning` and `after_reasoning`:
 
@@ -545,9 +545,9 @@ after_reasoning:
         transition to @topic.summary
 ```
 
-The runtime evaluates the condition and transitions immediately. Do NOT use `@utils.transition to` in directive blocks — it causes compilation errors [Source: .a4drules].
+The runtime evaluates the condition and transitions immediately. Do NOT use `@utils.transition to` in directive blocks — it causes compilation errors.
 
-**Delegation with return** [Source: ascript-ref-tools.md]:
+**Delegation with return**:
 
 When a topic needs another topic's expertise but still has work to do afterward, use `@topic.X` to delegate. The target topic runs its reasoning, then returns control to the caller:
 
@@ -558,9 +558,9 @@ reasoning:
             description: "Consult the expert topic"
 ```
 
-This is different from `@utils.transition to`, which is one-way — the calling topic does not resume [Source: ascript-ref-tools.md].
+This is different from `@utils.transition to`, which is one-way — the calling topic does not resume.
 
-**Conditional branching within topics** [Source: .a4drules]:
+**Conditional branching within topics**:
 
 Conditions in reasoning instructions control which prompt text the LLM ultimately receives. The runtime evaluates `if`/`else` branches and includes only the matching `|` pipe sections in the resolved prompt:
 
@@ -577,9 +577,9 @@ reasoning:
 
 ## 10. Actions
 
-Actions are tasks a topic can perform — invoking Flows, Apex classes, Prompt Templates, or other target types. Actions can run deterministically (the runtime always executes them) or be exposed as tools for the LLM to choose at reasoning time [Source: ascript-ref-actions.md, ascript-flow.md].
+Actions are tasks a topic can perform — invoking Flows, Apex classes, Prompt Templates, or other target types. Actions can run deterministically (the runtime always executes them) or be exposed as tools for the LLM to choose at reasoning time.
 
-**Action definition** — each action is defined in the topic's `actions` block with required and optional properties [Source: ascript-ref-actions.md, .a4drules]:
+**Action definition** — each action is defined in the topic's `actions` block with required and optional properties:
 
 ```agentscript
 actions:
@@ -607,7 +607,7 @@ actions:
                 filter_from_agent: True
 ```
 
-**Action properties** [Source: ascript-ref-actions.md]:
+**Action properties**:
 
 - `target` (required) — reference to the executable, in the format `"type://DeveloperName"`
 - `description` (optional) — the LLM uses this to decide when to call the action
@@ -616,13 +616,13 @@ actions:
 - `include_in_progress_indicator` (optional boolean) — when `True`, shows a progress indicator during execution
 - `progress_indicator_message` (optional string) — text shown during execution (e.g., `"Looking up customer..."`)
 
-**Input properties** [Source: ascript-ref-actions.md]:
+**Input properties**:
 
 - `description` — metadata about the input parameter
 - `label` — display name shown in UI; auto-generated from parameter name if omitted
 - `is_required` (boolean) — when `True`, the input must be provided
 
-**Output properties** [Source: ascript-ref-actions.md]:
+**Output properties**:
 
 - `description` — metadata about the output parameter
 - `label` — display name shown in UI; auto-generated from parameter name if omitted
@@ -630,7 +630,7 @@ actions:
 - `is_displayable` (boolean) — controls whether output is shown to the customer
 - `complex_data_type_name` — required when the parameter is a complex data type; indicates the type returned by the target (e.g., `"lightning__recordInfoType"`)
 
-**Target types** — use the format `"type://DeveloperName"` [Source: .a4drules, ascript-ref-actions.md]:
+**Target types** — use the format `"type://DeveloperName"`:
 
 Common targets:
 
@@ -638,7 +638,7 @@ Common targets:
 - `apex` — Invocable Apex class (e.g., `"apex://CheckWeather"`)
 - `prompt` — Prompt Template (e.g., `"prompt://Get_Event_Info"`; long form: `generatePromptResponse`)
 
-Additional targets [Source: .a4drules]:
+Additional targets:
 
 - `standardInvocableAction` — built-in Salesforce actions
 - `externalService` — external APIs registered via External Services
@@ -656,7 +656,7 @@ Additional targets [Source: .a4drules]:
 - `mcpTool` — Model Context Protocol tools
 - `retriever` — knowledge retrieval sources
 
-**Deterministic invocation** — when the action must always run, use `run` in the reasoning instructions. The runtime executes it before the LLM reasons [Source: ascript-ref-actions.md]:
+**Deterministic invocation** — when the action must always run, use `run` in the reasoning instructions. The runtime executes it before the LLM reasons:
 
 ```agentscript
 reasoning:
@@ -667,7 +667,7 @@ reasoning:
             set @variables.customer_email = @outputs.email
 ```
 
-**LLM exposure** — when the LLM should decide whether and when to call the action, list it in `reasoning.actions`. The LLM sees the description and chooses based on conversation context [Source: ascript-ref-tools.md]:
+**LLM exposure** — when the LLM should decide whether and when to call the action, list it in `reasoning.actions`. The LLM sees the description and chooses based on conversation context:
 
 ```agentscript
 reasoning:
@@ -678,7 +678,7 @@ reasoning:
             set @variables.customer_name = @outputs.name
 ```
 
-**Input binding** — three patterns for providing values to action inputs [Source: ascript-ref-actions.md]:
+**Input binding** — three patterns for providing values to action inputs:
 
 ```agentscript
 reasoning:
@@ -695,7 +695,7 @@ reasoning:
             with include_archive = False
 ```
 
-**Gating** — `available when` controls which actions the LLM can see based on current state [Source: ascript-ref-tools.md]:
+**Gating** — `available when` controls which actions the LLM can see based on current state:
 
 ```agentscript
 reasoning:
@@ -709,7 +709,7 @@ reasoning:
             available when @variables.cart_total > 0
 ```
 
-**Output capture** — after an action returns, use `set` to store outputs in variables for use by other topics or later turns [Source: ascript-ref-actions.md]:
+**Output capture** — after an action returns, use `set` to store outputs in variables for use by other topics or later turns:
 
 ```agentscript
 run @actions.fetch_order
@@ -722,9 +722,9 @@ run @actions.fetch_order
 
 ## 11. Utility Functions
 
-Utility functions are special actions the agent can invoke. They do not call external systems; they control flow and state [Source: ascript-ref-utils.md, .a4drules].
+Utility functions are special actions the agent can invoke. They do not call external systems; they control flow and state.
 
-**`@utils.transition to`** — permanent one-way handoff to another topic [Source: ascript-ref-utils.md]:
+**`@utils.transition to`** — permanent one-way handoff to another topic:
 
 ```agentscript
 reasoning:
@@ -734,9 +734,9 @@ reasoning:
             available when @variables.cart_has_items == True
 ```
 
-Transition discards the current topic's prompt and starts fresh with the target topic [Source: ascript-ref-utils.md, ascript-flow.md].
+Transition discards the current topic's prompt and starts fresh with the target topic.
 
-**`@utils.escalate`** — route to a human agent [Source: ascript-ref-utils.md]:
+**`@utils.escalate`** — route to a human agent:
 
 ```agentscript
 reasoning:
@@ -746,9 +746,9 @@ reasoning:
             available when @variables.needs_human == True
 ```
 
-Escalation ends the current conversation and routes to the escalation system defined in the connection block [Source: ascript-ref-utils.md].
+Escalation ends the current conversation and routes to the escalation system defined in the connection block.
 
-**`@utils.setVariables`** — LLM-driven variable capture (slot-filling) [Source: ascript-ref-utils.md, .a4drules]:
+**`@utils.setVariables`** — LLM-driven variable capture (slot-filling):
 
 ```agentscript
 reasoning:
@@ -759,9 +759,9 @@ reasoning:
             with budget = ...
 ```
 
-The LLM extracts values from the conversation and populates the specified variables [Source: ascript-ref-utils.md, .a4drules].
+The LLM extracts values from the conversation and populates the specified variables.
 
-**`@topic.X`** — delegation to another topic with return [Source: ascript-ref-tools.md]:
+**`@topic.X`** — delegation to another topic with return:
 
 ```agentscript
 reasoning:
@@ -771,9 +771,9 @@ reasoning:
             available when @variables.needs_expert_help == True
 ```
 
-Calling a topic as a tool runs that topic's reasoning, then returns control to the calling topic [Source: ascript-ref-tools.md].
+Calling a topic as a tool runs that topic's reasoning, then returns control to the calling topic.
 
-**Post-action directives apply only to `@actions`, not `@utils`** [Source: .a4drules]:
+**Post-action directives apply only to `@actions`, not `@utils`**:
 
 ```agentscript
 # WRONG — utilities don't support set
@@ -785,7 +785,7 @@ process: @actions.process_order
     set @variables.result = @outputs.status
 ```
 
-Utilities cannot have output, so `set` is invalid [Source: .a4drules].
+Utilities cannot have output, so `set` is invalid.
 
 ---
 
@@ -803,7 +803,7 @@ reasoning:
             description: "Go to next"
 ```
 
-**Why it fails:** `reasoning.actions` expose tools to the LLM at reasoning time. The LLM needs an action reference, not a bare command. The runtime rejects bare `transition to` syntax in this context [Source: .a4drules].
+**Why it fails:** `reasoning.actions` expose tools to the LLM at reasoning time. The LLM needs an action reference, not a bare command. The runtime rejects bare `transition to` syntax in this context.
 
 **CORRECT:**
 
@@ -814,7 +814,7 @@ reasoning:
             description: "Go to next"
 ```
 
-The `@utils.transition to` syntax creates a callable tool [Source: .a4drules].
+The `@utils.transition to` syntax creates a callable tool.
 
 ---
 
@@ -826,7 +826,7 @@ after_reasoning:
     @utils.transition to @topic.next
 ```
 
-**Why it fails:** Directive blocks (`before_reasoning`, `after_reasoning`) execute deterministically — the runtime handles them, not the LLM. They use bare `transition to` syntax [Source: .a4drules, ascript-flow.md].
+**Why it fails:** Directive blocks (`before_reasoning`, `after_reasoning`) execute deterministically — the runtime handles them, not the LLM. They use bare `transition to` syntax.
 
 **CORRECT:**
 
@@ -835,7 +835,7 @@ after_reasoning:
     transition to @topic.next
 ```
 
-Bare `transition to` is deterministic — the runtime executes it directly [Source: .a4drules].
+Bare `transition to` is deterministic — the runtime executes it directly.
 
 ---
 
@@ -851,7 +851,7 @@ if @variables.is_premium == false:
     run @actions.show_basic_features
 ```
 
-**Why it fails:** Agent Script requires `True` and `False` (capitalized first letter). The parser rejects lowercase `true`/`false` [Source: .a4drules].
+**Why it fails:** Agent Script requires `True` and `False` (capitalized first letter). The parser rejects lowercase `true`/`false`.
 
 **CORRECT:**
 
@@ -864,7 +864,7 @@ if @variables.is_premium == False:
     run @actions.show_basic_features
 ```
 
-Always use capitalized boolean values [Source: .a4drules].
+Always use capitalized boolean values.
 
 ---
 
@@ -876,7 +876,7 @@ variables:
     customer_name: mutable string
 ```
 
-**Why it fails:** During deterministic resolution, the runtime needs an initial value. Mutable variables must have defaults [Source: .a4drules].
+**Why it fails:** During deterministic resolution, the runtime needs an initial value. Mutable variables must have defaults.
 
 **CORRECT:**
 
@@ -885,7 +885,7 @@ variables:
     customer_name: mutable string = ""
 ```
 
-Provide a default value [Source: .a4drules].
+Provide a default value.
 
 ---
 
@@ -898,7 +898,7 @@ variables:
         source: @session.sessionID
 ```
 
-**Why it fails:** Linked variables are populated by external context at runtime. Providing a default is contradictory [Source: .a4drules].
+**Why it fails:** Linked variables are populated by external context at runtime. Providing a default is contradictory.
 
 **CORRECT:**
 
@@ -908,7 +908,7 @@ variables:
         source: @session.sessionID
 ```
 
-Omit the default [Source: .a4drules].
+Omit the default.
 
 ---
 
@@ -920,7 +920,7 @@ variables:
     user_role: linked string
 ```
 
-**Why it fails:** The runtime cannot populate a linked variable without knowing where to get the value [Source: .a4drules].
+**Why it fails:** The runtime cannot populate a linked variable without knowing where to get the value.
 
 **CORRECT:**
 
@@ -930,7 +930,7 @@ variables:
         source: @context.userRole
 ```
 
-Specify a source [Source: .a4drules].
+Specify a source.
 
 ---
 
@@ -944,7 +944,7 @@ reasoning:
             set @variables.transitioned = True
 ```
 
-**Why it fails:** Utilities like `@utils.transition to` do not return outputs. The `set` directive only works with `@actions` [Source: .a4drules].
+**Why it fails:** Utilities like `@utils.transition to` do not return outputs. The `set` directive only works with `@actions`.
 
 **CORRECT:**
 
@@ -969,7 +969,7 @@ reasoning:
             with items = @variables.cart_items
 ```
 
-**Why it fails:** Each reasoning cycle, the LLM sees all available actions and decides which to call. This action has no `available when` gate, so it is always available. The variable-bound input (`with items = @variables.cart_items`) means the action is "ready to go" every cycle with no slot-filling decision required. The instructions don't tell the LLM what to do after the action completes, so the LLM may call it repeatedly [Source: .a4drules].
+**Why it fails:** Each reasoning cycle, the LLM sees all available actions and decides which to call. This action has no `available when` gate, so it is always available. The variable-bound input (`with items = @variables.cart_items`) means the action is "ready to go" every cycle with no slot-filling decision required. The instructions don't tell the LLM what to do after the action completes, so the LLM may call it repeatedly.
 
 **CORRECT:**
 
@@ -985,7 +985,7 @@ reasoning:
             available when @variables.cart_total > 0
 ```
 
-Three mitigations applied: (1) explicit post-action instructions telling the LLM to stop, (2) an `available when` gate so the action is only available when relevant, (3) clear instructions about what to do with the result [Source: .a4drules].
+Three mitigations applied: (1) explicit post-action instructions telling the LLM to stop, (2) an `available when` gate so the action is only available when relevant, (3) clear instructions about what to do with the result.
 
 ---
 
@@ -999,7 +999,7 @@ topic check_status:
             lookup: @actions.fetch_status
 ```
 
-**Why it fails:** The LLM needs instructions about when and how to use the action. Without prompt text from the reasoning instructions guiding the LLM, it may not call the action even when relevant [Source: ascript-flow.md].
+**Why it fails:** The LLM needs instructions about when and how to use the action. Without prompt text from the reasoning instructions guiding the LLM, it may not call the action even when relevant.
 
 **CORRECT:**
 
@@ -1013,5 +1013,5 @@ topic check_status:
                 with order_id = @variables.order_id
 ```
 
-Always pair actions with guiding instructions in the reasoning block [Source: ascript-flow.md, ascript-ref-instructions.md].
+Always pair actions with guiding instructions in the reasoning block.
 
