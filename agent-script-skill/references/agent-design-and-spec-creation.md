@@ -257,11 +257,13 @@ Real agents often combine patterns. A hub-and-spoke agent may use a verification
 
 ## 4. Mapping Logic to Actions
 
-Before you write an action definition in Agent Script, identify what Salesforce implementation backs it. Every action needs backing logic — either existing or stubbed with requirements.
+Every action in Agent Script needs backing logic — a Salesforce implementation that does the work. When creating a new agent, identify existing backing logic and stub what's missing. When comprehending an existing agent, trace each action to its backing implementation to understand what it does.
 
 ### Valid Backing Logic Types
 
-**Apex**: Only **invocable Apex classes** can back actions. A regular Apex class, even if it has public methods, will not work. Invocable classes are decorated with `@InvocableMethod`.
+Three types of Salesforce implementations can back actions:
+
+**Apex**: Only **invocable Apex classes** work. A regular Apex class, even if it has public methods, will not work. Invocable classes use the `@InvocableMethod` annotation, and their inputs/outputs use `@InvocableVariable`.
 
 ```apex
 // WRONG — regular class, not invocable
@@ -269,45 +271,68 @@ public class WeatherFetcher {
     public static String getWeather(String date) { ... }
 }
 
-// RIGHT — invocable class
+// RIGHT — invocable class with annotated I/O
 public class WeatherFetcher {
+    public class Request {
+        @InvocableVariable(required=true)
+        public Date dateToCheck;
+    }
+    public class Result {
+        @InvocableVariable
+        public Decimal maxTemp;
+        @InvocableVariable
+        public Decimal minTemp;
+    }
     @InvocableMethod(label='Fetch Weather')
     public static List<Result> getWeather(List<Request> requests) { ... }
 }
 ```
 
-Wire to the Apex action with: `target: "apex://ClassName"`
+Wire with: `target: "apex://ClassName"`
 
-**Flows**: Only **autolaunched Flows** can back actions. Flows triggered by UI or record change events will not work. The Flow must have no trigger — it starts only when explicitly invoked.
+**Flows**: Only **autolaunched Flows** work. Screen Flows, record-triggered Flows, and schedule-triggered Flows will not work. The Flow must start only when explicitly invoked.
 
-Wire to the Flow action with: `target: "flow://FlowName"`
+Wire with: `target: "flow://FlowApiName"`
 
-**Prompt Templates**: Use Salesforce Prompt Templates (custom or industry-specific).
+**Prompt Templates**: Salesforce Prompt Templates (custom or industry-specific).
 
-Wire to the Prompt Template action with: `target: "prompt://TemplateName"`
+Wire with: `target: "prompt://TemplateName"` (short form). The long form `generatePromptResponse://TemplateName` also works but prefer the short form.
 
 ### How to Identify Existing Backing Logic
 
-1. **Scan the project** — look in `force-app/main/default/classes/` for Apex classes, `flows/` for Flows, and `promptTemplates/` for templates
-2. **Check decorators** — grep for `@InvocableMethod` to find invocable Apex
-3. **Check Flow type** — open the Flow editor; if "Autolaunch" appears, it's valid
-4. **Review metadata** — check `sfdx-project.json` to understand package directory structure
+Start by identifying the project's packaging directories. Read `sfdx-project.json` and look at the `packageDirectories` array — each entry's `path` field tells you where source files live (typically `force-app/main/default/`).
+
+Then scan for each type within those directories:
+
+**Finding invocable Apex:** Search `classes/` for files containing `@InvocableMethod`. For each match, read the class to extract the `@InvocableVariable` annotations on its inner `Request` and `Result` classes — these define the action's input and output contract. Pay attention to the `@InvocableVariable` types: they map to Agent Script types (`String` → `string`, `Boolean` → `boolean`, `Decimal`/`Integer` → `number`, `Date`/`Datetime` → `date`).
+
+**Finding autolaunched Flows:** Search `flows/` for `.flow-meta.xml` files. Read each file and check the `<processType>` element. Only `AutoLaunchedFlow` is valid for actions. Examine the `<variables>` elements to identify inputs (`isInput=true`) and outputs (`isOutput=true`) with their data types.
+
+**Finding Prompt Templates:** Search `promptTemplates/` for template metadata files. Review the template's input variables and output format.
 
 ### How to Map Existing Implementations
 
-Once you find a candidate implementation, verify it matches what the action needs:
+For each candidate implementation, verify it matches what the action needs:
 
-1. **Input contract** — does the implementation accept the parameters the action will send?
-2. **Output contract** — does the implementation return data the agent needs?
-3. **Target format** — use the correct protocol (`apex://`, `flow://`, `prompt://`)
+- **Input contract** — does the implementation accept the parameters the action will send?
+- **Output contract** — does the implementation return data the agent needs?
+- **Target format** — use the correct protocol (`apex://`, `flow://`, `prompt://`)
 
-Example:
+Example — existing Apex class `OrderLookup`:
 
-Existing Apex class `OrderLookup`:
 ```apex
-@InvocableMethod(label='Fetch Order')
-public static List<OrderResult> getOrderStatus(List<OrderRequest> requests) {
-    // accepts order_id, returns status, amount, date
+public class OrderLookup {
+    public class Request {
+        @InvocableVariable(required=true)
+        public String orderId;
+    }
+    public class Result {
+        @InvocableVariable public String status;
+        @InvocableVariable public Decimal amount;
+        @InvocableVariable public Date orderDate;
+    }
+    @InvocableMethod(label='Fetch Order')
+    public static List<Result> getOrderStatus(List<Request> requests) { ... }
 }
 ```
 
@@ -316,46 +341,71 @@ In the Agent Spec, record:
 check_order action:
   Backing: Apex class OrderLookup (invocable)
   Target: apex://OrderLookup
-  Inputs: order_id (string)
-  Outputs: status (string), amount (number), date (date)
+  Inputs: orderId (string, required)
+  Outputs: status (string), amount (number), orderDate (date)
   Status: IMPLEMENTED
 ```
 
+### Connecting Backing Logic to Action Definitions
+
+The action definition in Agent Script mirrors the backing logic's I/O contract. Each `@InvocableVariable` on the request class becomes an action input; each on the result class becomes an output. The `target` field points to the implementation.
+
+```agentscript
+topic orders:
+    actions:
+        check_order: @actions.check_order
+            target: "apex://OrderLookup"
+            description: "Look up order status"
+            inputs:
+                orderId: string      # maps to Request.orderId
+                                     # (@InvocableVariable)
+            outputs:
+                status: string       # maps to Result.status
+                amount: number       # maps to Result.amount (Decimal → number)
+                orderDate: date      # maps to Result.orderDate (Date → date)
+```
+
+**Critical gotcha**: If you point to invalid backing logic (a Flow that isn't autolaunched, or an Apex class that isn't invocable), validation may pass but the agent will fail at runtime with cryptic errors. Always verify the backing logic type before wiring.
+
 ### How to Stub Missing Logic
 
-When no implementation exists, stub it with I/O specs in your Agent Spec:
+When no backing logic exists for an action, stub it as an invocable Apex class. Always use Apex for stubs — do not attempt to hand-craft Flow XML or Prompt Template metadata.
 
+First, record the stub in the Agent Spec:
 ```
 fetch_invoice action:
   Backing: (needs creation)
   Target: apex://InvoiceFetcher (proposed)
-  Inputs: invoice_id (string, required)
-  Outputs: invoice_amount (number), due_date (date), status (string)
-  Requirements: Invocable Apex class that accepts invoice_id,
-                queries Invoice records, returns amount/due_date/status
+  Inputs: invoiceId (string, required)
+  Outputs: invoiceAmount (number), dueDate (date), status (string)
+  Requirements: Invocable Apex class that accepts invoiceId,
+                queries Invoice records, returns amount/dueDate/status
 ```
 
-This becomes acceptance criteria for an Apex developer to build against. Include target protocol, parameter names, types, and descriptions.
+Then create the stub Apex class with the correct invocable structure:
 
-### Wiring Actions in Agent Script
-
-In your Agent Script, reference the backing logic via the `target` field:
-
-```agentscript
-topic booking:
-    actions:
-        confirm: @actions.confirm_booking
-            target: "apex://BookingConfirmer"
-            description: "Confirm the spa booking"
-            inputs:
-                reservation_id: string
-                guest_name: string
-            outputs:
-                confirmation_number: string
-                booking_date: date
+```apex
+public class InvoiceFetcher {
+    public class Request {
+        @InvocableVariable(required=true)
+        public String invoiceId;
+    }
+    public class Result {
+        @InvocableVariable public Decimal invoiceAmount;
+        @InvocableVariable public Date dueDate;
+        @InvocableVariable public String status;
+    }
+    @InvocableMethod(label='Fetch Invoice')
+    public static List<Result> fetch(List<Request> requests) {
+        // TODO: implement query logic
+        Result r = new Result();
+        r.status = 'stub';
+        return new List<Result>{ r };
+    }
+}
 ```
 
-**Critical gotcha**: If you point to invalid backing logic (a Flow that isn't autolaunched, or an Apex class that isn't invocable), validation will pass but the agent will fail at runtime with cryptic errors. Always verify the backing logic type before wiring.
+Deploy the stub to the org using `sf project deploy start --source-dir <path> --json`. You do not need test classes for stubs — the goal is to get the class into the org so the action can wire to it. Deployment will fail if the Apex doesn't compile, which catches structural errors early.
 
 ---
 
