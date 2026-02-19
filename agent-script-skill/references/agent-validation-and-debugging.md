@@ -359,19 +359,17 @@ To connect a failed turn to its trace, find the agent response in the transcript
 
 Each trace step type reveals specific execution information:
 
-| Step Type | What It Tells You |
-|-----------|-------------------|
-| `UserInputStep` | The user's utterance that triggered this turn |
-| `SessionInitialStateStep` | Variable values and directive context at turn start |
-| `NodeEntryStateStep` | Which agent/topic is executing and its full state snapshot |
-| `VariableUpdateStep` | A variable was changed — shows old/new value and reason |
-| `BeforeReasoningIterationStep` | `before_reasoning` block ran — lists actions executed |
-| `EnabledToolsStep` | Which tools/actions are available to the LLM for this reasoning cycle |
-| `LLMStep` | The LLM call — full prompt, response, available tools, latency |
-| `FunctionStep` | An action executed — shows input, output, and latency |
-| `ReasoningStep` | Grounding check result — `GROUNDED` or `UNGROUNDED` with reason |
-| `TransitionStep` | Topic transition — shows from/to topics and transition type |
-| `PlannerResponseStep` | Final response delivered to user — includes safety scores |
+- **`UserInputStep`** — The user's utterance that triggered this turn.
+- **`SessionInitialStateStep`** — Variable values and directive context at turn start.
+- **`NodeEntryStateStep`** — Which agent/topic is executing and its full state snapshot.
+- **`VariableUpdateStep`** — A variable was changed — shows old/new value and reason.
+- **`BeforeReasoningIterationStep`** — `before_reasoning` block ran — lists actions executed.
+- **`EnabledToolsStep`** — Which tools/actions are available to the LLM for this reasoning cycle.
+- **`LLMStep`** — The LLM call — full prompt, response, available tools, latency.
+- **`FunctionStep`** — An action executed — shows input, output, and latency.
+- **`ReasoningStep`** — Grounding check result — `GROUNDED` or `UNGROUNDED` with reason.
+- **`TransitionStep`** — Topic transition — shows from/to topics and transition type.
+- **`PlannerResponseStep`** — Final response delivered to user — includes safety scores.
 
 [SOURCE: agent-debugging-rules (lines 44-58)]
 
