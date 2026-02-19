@@ -483,72 +483,100 @@ topic specialist:
 
 ## 6. Deterministic vs. Subjective Flow Control
 
-Decide what's enforced by code vs. what's decided by the LLM.
+Every requirement you implement falls into one of two categories: things the LLM must never get wrong, and things where flexibility is acceptable. Getting this classification right is critical — instructions are suggestions the LLM *may* follow, but gates and guards are enforced by the runtime and *cannot* be bypassed. If you put a security rule in an instruction, the LLM can ignore it. If you put it in a gate, the runtime enforces it before the LLM ever sees the topic.
 
-### Classification Framework
+### Classifying Requirements
 
-**Deterministic control** (code enforces it): Use when requirements are non-negotiable.
+When you encounter a new requirement, ask: **what happens if the LLM gets this wrong?**
+
+If the consequence is a security breach, financial error, data corruption, or broken workflow → **enforce it with code** (gates, `before_reasoning` guards, conditional action visibility). The LLM never gets the chance to make the wrong choice.
+
+If the consequence is an awkward response, suboptimal tone, or slightly off summary → **leave it to the LLM** via reasoning instructions. Flexibility is acceptable and the LLM's judgment adds value.
+
+WRONG: Security rule as an instruction (LLM can ignore it)
+```agentscript
+topic admin_panel:
+    reasoning:
+        instructions: ->
+            | Only respond if the user is an admin.
+              If they are not an admin, tell them access is denied.
+```
+
+RIGHT: Security rule as a gate (runtime enforces it)
+```agentscript
+topic admin_panel:
+    before_reasoning:
+        if @variables.user_role != "admin":
+            transition to @topic.access_denied
+
+    reasoning:
+        instructions: ->
+            | You are in the admin panel. Help the user manage settings.
+```
+
+**Deterministic control** (code enforces it — use for non-negotiable requirements):
 - Security: "only admin users can access this"
 - Financial: "never approve transactions above $10,000 without human review"
 - State: "don't show the payment form until the user provides a delivery address"
 - Counter: "you can only call this action once per session"
 
-**Subjective control** (LLM decides): Use when flexibility is OK.
+**Subjective control** (LLM decides — use when flexibility is acceptable):
 - Conversational tone: "respond professionally but warmly"
 - Natural language generation: "summarize the results in your own words"
 - User preferences: "if the user is impatient, give short answers; if curious, explain more"
 
-### Instruction Ordering Within Topics
+### Writing Effective Instructions
 
-Order your instructions deterministically. The runtime evaluates them top-to-bottom during Phase 1, building the prompt the LLM sees in Phase 2.
+When you choose subjective control, the quality of your instructions determines how well the LLM performs. Two things matter: the order you write them in, and how you reference data.
 
-**Best practice ordering**:
-
-1. **Post-action checks** — if the previous action had a specific result, mention it first
-2. **Data loading** — fetch or reference data the LLM needs
-3. **Dynamic instructions** — conditional text based on state
+**Ordering matters.** The runtime resolves instructions top-to-bottom, evaluating `if/else` blocks and expanding template expressions before the LLM ever sees the result. The resolved text becomes the prompt the LLM reasons over. This means the order you write instructions in determines what the LLM receives — put post-action checks at the top so the LLM sees them first, data references next, then dynamic conditional text.
 
 ```agentscript
 topic checkout:
     reasoning:
         instructions: ->
-            # Check the last action result
-            if @outputs.cart_validation_failed:
+            # Post-action check — LLM sees this first
+            if @variables.cart_validation_failed:
                 | Your cart has items that are no longer available.
                   Please remove them and try again.
 
-            # Load data
+            # Data reference — LLM sees the resolved value
             | Your current cart total is {!@variables.cart_total}.
 
-            # Dynamic instructions
+            # Dynamic instructions — conditional on state
             if @variables.is_premium:
                 | You qualify for FREE shipping.
             else:
                 | Standard shipping is {!@variables.shipping_cost}.
 
-            # Standard prompt
             | Proceed to payment or cancel?
 ```
 
-### The Post-Action Loop Pattern
+WRONG: Post-action check at the bottom (LLM may respond before seeing it)
+```agentscript
+topic checkout:
+    reasoning:
+        instructions: ->
+            | Your current cart total is {!@variables.cart_total}.
+              Proceed to payment or cancel?
 
-If an action doesn't trigger a transition, the topic stays active. The LLM may call the same action again on the next cycle. The runtime re-evaluates the entire topic — Phase 1 runs again with updated variables, and Phase 2 passes the new resolved prompt to the LLM.
+            # Too late — LLM may already be generating a response
+            if @variables.cart_validation_failed:
+                | Your cart has items that are no longer available.
+```
 
-This is NOT a separate "Phase 3." It's Phase 1 running again with new data.
+**Grounding matters.** The platform's grounding service validates that the agent's response matches action output data. If the agent paraphrases or embellishes, grounding may fail.
 
-To prevent unwanted loops, see Section 8 (Action Loop Prevention).
+- Use specific values from action results: `"The event is on {!@variables.event_date}"` grounds reliably; `"The event is next week"` may not.
+- Avoid transforming values: return `"Tuesday"` as-is instead of converting to `"day after Monday"`.
+- Avoid instructions that encourage embellishment: `"Respond like a pirate"` increases grounding risk because embellished content has no output to ground against.
+- The closer the response text matches action output, the more reliably it grounds.
 
-### Grounding Considerations
+Grounding validation requires **live mode preview** (`sf agent preview --use-live-actions --json`). Simulated mode generates fake action outputs, so the grounding checker has nothing real to validate against.
 
-The platform's grounding service validates that the agent's response matches the action output data. If the agent paraphrases or embellishes, grounding may fail.
+### Post-Action Behavior
 
-**Rules**:
-- Use specific values from action results. `"The event is on {!@outputs.event_date}"` (grounds) vs. `"The event is next week"` (may not ground).
-- Avoid transforming values. Return `"Tuesday"` as-is instead of converting to `"day after Monday"`.
-- Avoid instructions that encourage embellishment. `"Respond like a pirate"` increases risk — embellished content has no output to ground against.
-- Paraphrase or directly quote data. The closer the response text matches the action output, the more reliably it grounds.
-
-**Important**: Grounding validation requires **live mode preview** (`sf agent preview --use-live-actions`). Simulated mode generates fake action outputs, so the grounding checker has nothing real to validate against.
+If an action completes but doesn't trigger a transition, the topic stays active. The runtime re-evaluates the entire topic — resolving instructions top-to-bottom again with updated variables, then passing the new resolved prompt to the LLM. The LLM may call the same action again on the next cycle. This is not a separate phase; it's the same resolution-then-reasoning cycle running again with new data. To prevent unwanted loops, see Section 8 (Action Loop Prevention).
 
 ---
 
