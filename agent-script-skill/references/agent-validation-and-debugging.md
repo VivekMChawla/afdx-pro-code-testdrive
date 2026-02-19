@@ -218,25 +218,25 @@ This command returns the path to session trace files. Call it when the conversat
 
 ### Execution Modes
 
-Agent Script agents in authoring bundles support two execution modes: simulated (default) and live.
+Agent Script agents in authoring bundles support two preview execution modes: simulated (default) and live.
 
-**Simulated Mode (Default).** The LLM generates fake action outputs. Use simulated mode when:
+**Simulated Preview Mode (Default).** The LLM generates fake action outputs. Use simulated preview mode when:
 - Backing Apex, Flows, or Prompt Templates don't exist yet (you're experimenting with instructions and flow before building actions)
-- No default agent user is configured (live mode requires a real, active user; simulated mode skips this requirement)
+- No default agent user is configured (live preview mode requires a real, active user; simulated preview mode skips this requirement)
 
-Simulated mode speeds up inner-loop development but cannot validate real action outputs, variable-driven branching, or grounding behavior. [SOURCE: agent-preview-rules (lines 44-54)]
+Simulated preview mode speeds up inner-loop development but cannot validate real action outputs, variable-driven branching, or grounding behavior. [SOURCE: agent-preview-rules (lines 44-54)]
 
-**Live Mode.** Real backing code executes and returns real outputs. Pass `--use-live-actions`:
+**Live Preview Mode.** Real backing code executes and returns real outputs. Pass `--use-live-actions`:
 
 ```bash
 sf agent preview start --authoring-bundle <BUNDLE_NAME> --use-live-actions --json
 ```
 
-Use live mode when:
+Use live preview mode when:
 - Backing code is deployed and a default agent user is configured
 - Your test depends on real action output values (grounding validation, variable-driven branching, output formatting)
 
-Live mode is specifically required for testing grounding — the grounding checker compares the agent's response against real action output data. Simulated mode cannot reproduce grounding failures. [SOURCE: agent-preview-rules (lines 56-61)]
+Live preview mode is specifically required for testing grounding — the grounding checker compares the agent's response against real action output data. Simulated preview mode cannot reproduce grounding failures. [SOURCE: agent-preview-rules (lines 56-61)]
 
 CRITICAL: `--use-live-actions` is ONLY valid with `--authoring-bundle`. Published agents (`--api-name`) always execute real actions — do NOT pass `--use-live-actions` with `--api-name`. [SOURCE: agent-preview-rules (line 46)]
 
@@ -679,9 +679,9 @@ reasoning:
           Quote action output values verbatim whenever possible.
 ```
 
-#### Why Simulated Mode Cannot Reproduce Grounding Failures
+#### Why Simulated Preview Mode Cannot Reproduce Grounding Failures
 
-Simulated mode generates fake action outputs via LLM, so the grounding checker has no real data to validate against. The grounding checker only runs against live action outputs. If you need to test grounding, use live mode (`--use-live-actions`) with real backing Apex/Flows/Prompt Templates deployed. [SOURCE: agent-preview-rules (line 59)]
+Simulated preview mode generates fake action outputs via LLM, so the grounding checker has no real data to validate against. The grounding checker only runs against live action outputs. If you need to test grounding, use live preview mode (`--use-live-actions`) with real backing Apex/Flows/Prompt Templates deployed. [SOURCE: agent-preview-rules (line 59)]
 
 ---
 
