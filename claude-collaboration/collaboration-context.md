@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 19, 2026 — Session 10 (RF3 complete, adversarial review passed, context docs updated)
+> **Last updated**: February 19, 2026 — Session 11 (RF4 domain reads complete, outline collaboratively finalized, context docs and writing prompt created)
 
 ---
 
@@ -1300,16 +1300,22 @@ Sessions should consult this section to determine what to work on.
        trace data validated against 3 fresh sessions. Findings in
        `claude-collaboration/rf3-context.md`. Writing prompt at
        `claude-collaboration/reference-file-3-prompt.md`.
-     - **File 4 (Metadata & Lifecycle):** AFDX metadata docs
-       (`salesforcedocs/.../agent-dx-metadata.md`,
-       `agent-dx-nga-authbundle.md`, `agent-dx-manage.md`), deploy/publish
-       docs (`agent-dx-nga-publish.md`)
+     - **File 4 (Metadata & Lifecycle):** COMPLETED. 13 sources read:
+       7 AFDX docs (metadata, authbundle, publish, manage, synch,
+       reference, test), 2 `.a4drules` files (script-rules partial,
+       testing-rules full), real published metadata from reference
+       project (Bot, BotVersion, GenAiPlannerBundle v1/v2,
+       bundle-meta.xml with `<target>`), sfdx-project.json, RF1/RF2/RF3
+       boundary checks. 4 conflict resolutions documented. Vivek
+       provided 6 direct clarifications including AAB draft versioning
+       behavior. Findings in `claude-collaboration/rf4-context.md`.
+       Writing prompt at `claude-collaboration/reference-file-4-prompt.md`.
      - **File 5 (Test Authoring):** Testing docs
        (`salesforcedocs/.../agent-dx-test*.md`), testing metadata
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[IN PROGRESS — File 3 complete, File 4 next]** Write reference files —
+3. **[IN PROGRESS — File 4 outline finalized, writing prompt created, AAB brain dump next]** Write reference files —
    one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
@@ -1478,8 +1484,19 @@ writing or revising a reference file.
 - `claude-collaboration/rf3-analysis-report.md` — Adversarial review
   output, no critical findings, 3 MEDIUM items triaged with Vivek.
 
-**Reference Files 4-5:** Working context and prompts to be created
-following the same pattern as Files 1-3.
+**Reference File 4 (Metadata & Lifecycle):**
+- `claude-collaboration/rf4-context.md` — Working context: 13 sources
+  read, 4 conflict resolutions, content scope, collaboratively finalized
+  7-section outline with ordering rationale, writing insights, and
+  Vivek's direct clarifications (AAB draft versioning, published agent
+  preview activation requirement, version accumulation, `<target>`
+  element behavior).
+- `claude-collaboration/reference-file-4-prompt.md` — Self-contained
+  writing prompt (to be updated to match finalized 7-section outline
+  after AAB brain dump).
+
+**Reference File 5:** Working context and prompts to be created
+following the same pattern as Files 1-4.
 
 ---
 
@@ -1733,4 +1750,43 @@ asset creation planned for post-RF5.
 `claude-collaboration/reference-file-3-prompt.md`,
 `claude-collaboration/rf3-review-prompt.md`,
 `claude-collaboration/rf3-analysis-report.md`,
+`claude-collaboration/collaboration-context.md`
+
+### Session 11 — February 19, 2026
+
+**Outputs**:
+- RF4 domain reads completed (13 sources: 7 AFDX docs, 2 `.a4drules`,
+  real published metadata, sfdx-project.json, boundary checks)
+- rf4-context.md created with sources, 4 conflict resolutions,
+  collaboratively finalized 7-section outline, writing insights,
+  and Vivek's direct clarifications
+- reference-file-4-prompt.md created (needs update after AAB brain dump)
+- Real published metadata inspected: Bot, BotVersion (v1/v2),
+  GenAiPlannerBundle (v1/v2), bundle-meta.xml with `<target>` element
+
+**Key decisions**:
+- RF4 outline collaboratively refined from 8 sections to 7. Key
+  changes: (1) added lifecycle overview section (Generate → Deploy →
+  Publish → Activate → Test) as conceptual foundation before detail
+  sections, (2) "Creating an Agent" elevated to focused section due
+  to LLM failure frequency, (3) "Working With Authoring Bundles"
+  added as dedicated section for AAB oddities and hidden traps,
+  (4) "Publishing" and "Activating" split into separate sections,
+  (5) deploy/retrieve/delete/rename/test consolidated into a single
+  "Lifecycle Operations" section as a CLI reference
+- "Naked" AAB (no version suffix) always points to highest DRAFT
+  version in the org — not the most recently published version.
+  This is undocumented and counterintuitive. Vivek clarification.
+- Test lifecycle commands folded into Lifecycle Operations section
+  (Section 7) rather than standalone — thin content (3 CLI commands)
+  better as one more lifecycle operation than a standalone section
+- Claude correctly caught that outline should have been presented
+  for discussion before writing context doc and prompt — process
+  corrected mid-session
+
+**What's unresolved**: AAB oddities brain dump with Vivek needed
+before writing prompt can be finalized and sub-agent launched.
+
+**Files modified**: `claude-collaboration/rf4-context.md`,
+`claude-collaboration/reference-file-4-prompt.md`,
 `claude-collaboration/collaboration-context.md`
