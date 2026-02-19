@@ -409,13 +409,13 @@ public class InvoiceFetcher {
 }
 ```
 
-Deploy the stub to the org using `sf project deploy start --source-dir <path> --json`. You do not need test classes for stubs — the goal is to get the class into the org so the action can wire to it. Deployment will fail if the Apex doesn't compile, which catches structural errors early.
+Deploy the stub to the org using `sf project deploy start --source-dir <path> --json`. You do not need test classes for stubs — the goal is to get the class into the org so the action can wire to it. Stub classes must compile. Verify compilation before deploying — deployment will fail if the Apex has syntax errors, and this catches structural mistakes early.
 
 ---
 
 ## 5. Transition Patterns
 
-Every connection between topics is a design decision. Choosing the wrong transition type causes either lost context (user can't return when they should) or stuck navigation (user returns to a topic that no longer makes sense). Label every transition in your Agent Spec's Topic Map as either **handoff** or **delegation**.
+Every connection between topics is a design decision. Choosing the wrong transition type causes either lost context (user can't return when they should) or stuck navigation (user returns to a topic that no longer makes sense). When creating a new agent, label every transition in your Agent Spec's Topic Map as either **handoff** or **delegation**. When analyzing an existing agent, classify each transition to determine whether context flow matches the design intent.
 
 ### Handoff: Permanent Transition
 
