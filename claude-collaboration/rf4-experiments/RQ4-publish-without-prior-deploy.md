@@ -65,10 +65,34 @@ sf agent validate authoring-bundle --api-name Publish_Test_Agent --json
 
 Record: Does validation pass? If not, fix issues and retry.
 
-### Step 4: Attempt to publish WITHOUT prior deploy
+### Step 4: Test `sf project deploy start` on a fresh AAB (no prior org state)
 
-This is the key test. Do NOT deploy the AAB first. Go straight to
-publish:
+**IMPORTANT**: This step explicitly tests whether `sf project deploy start`
+works for an AAB that has never been in the org. Do NOT skip this step
+or substitute `sf agent publish`. We need direct evidence.
+
+```
+sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/Publish_Test_Agent --json
+```
+
+Record: Does it succeed or fail?
+- If it **succeeds**: `sf project deploy start` can deploy a fresh AAB.
+  Record the output. Check if a DRAFT V1 was created in the org by
+  trying to open it in Builder:
+  ```
+  sf org open agent --api-name Publish_Test_Agent
+  ```
+- If it **fails**: Record the EXACT error message. What does it say?
+
+### Step 5: Attempt to publish WITHOUT prior deploy (if Step 4 failed)
+
+If Step 4 succeeded, delete the test agent from the org first so we
+test publish from a clean slate:
+```
+sf project delete source --metadata Agent:Publish_Test_Agent --json --no-prompt
+```
+
+Now attempt publish on a fresh AAB with no org state:
 ```
 sf agent publish authoring-bundle --api-name Publish_Test_Agent --json
 ```
@@ -79,7 +103,7 @@ Record: Does it succeed or fail?
 - If it **fails**: Record the EXACT error message. Does it say
   the agent must be deployed first? Does it give a different error?
 
-### Step 5: If publish succeeded, inspect the results
+### Step 6: If publish succeeded, inspect the results
 
 ```
 sf project retrieve start --metadata Agent:Publish_Test_Agent --json
@@ -97,7 +121,7 @@ Read the `bundle-meta.xml`:
 cat force-app/main/default/aiAuthoringBundles/Publish_Test_Agent/Publish_Test_Agent.bundle-meta.xml
 ```
 
-### Step 6: Clean up — delete the test agent from the org
+### Step 7: Clean up — delete the test agent from the org
 
 ```
 sf project delete source --metadata AiAuthoringBundle:Publish_Test_Agent --json --no-prompt
@@ -108,7 +132,7 @@ If that doesn't clean up everything:
 sf project delete source --metadata Agent:Publish_Test_Agent --json --no-prompt
 ```
 
-### Step 7: Clean up — remove local files
+### Step 8: Clean up — remove local files
 
 Remove the generated directories:
 ```
@@ -132,7 +156,11 @@ For each step, capture:
 
 ## Expected Outcome
 
-One of:
-- **A**: Publish-without-deploy works → simplifies pipeline guidance significantly
-- **B**: Publish-without-deploy fails with clear "deploy first" error → skill must document the two-step requirement
-- **C**: Publish-without-deploy fails with a confusing error → skill must warn and explain
+For Step 4 (`sf project deploy start` on fresh AAB):
+- **A**: Deploy succeeds, creates DRAFT V1 → confirms Vivek's experience, deploy works independently
+- **B**: Deploy fails → record exact error, investigate why
+
+For Step 5 (`sf agent publish` without prior deploy):
+- **C**: Publish-without-deploy works → publish handles initial deploy internally
+- **D**: Publish-without-deploy fails with clear error → skill must document
+- **E**: Publish-without-deploy fails with confusing error → add to Bad Error Message Inventory
