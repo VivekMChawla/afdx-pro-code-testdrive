@@ -236,7 +236,7 @@ Use live preview mode when:
 - Backing code is deployed and a default agent user is configured
 - Your test depends on real action output values (grounding validation, variable-driven branching, output formatting)
 
-Live preview mode is specifically required for testing grounding — the grounding checker compares the agent's response against real action output data. Simulated preview mode cannot reproduce grounding failures. [SOURCE: agent-preview-rules (lines 56-61)]
+Live preview mode is required for reliable grounding testing. The grounding checker runs in both modes, but simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures in simulated preview mode, switch to live preview mode before diagnosing — the failure may be an artifact of simulation, not a real problem. [SOURCE: agent-preview-rules (lines 56-61)]
 
 CRITICAL: `--use-live-actions` is ONLY valid with `--authoring-bundle`. Published agents (`--api-name`) always execute real actions — do NOT pass `--use-live-actions` with `--api-name`. [SOURCE: agent-preview-rules (line 46)]
 
@@ -609,7 +609,7 @@ Use this systematic 8-step approach when diagnosing any agent behavior issue.
 
 [SOURCE: agent-debugging-rules (lines 161-178)]
 
-### Grounding Subsection
+### Grounding
 
 Grounding is a platform service that validates an agent's response against real action output data. When grounding fails, the platform gives the LLM a second chance. Understanding how grounding works, why it fails, and how to fix it is critical for behavioral diagnosis.
 
@@ -627,6 +627,7 @@ When the platform's grounding checker flags a response as UNGROUNDED:
 2. The LLM is given another chance to respond
 3. If the second attempt is also UNGROUNDED, the agent returns the system error message ("I apologize, but I encountered an unexpected error") and gives up
 4. This retry is visible in traces as repeated `LLMStep` → `ReasoningStep` pairs for the same topic
+5. When this happens, the actual action output is still in the trace's `FunctionStep.function.output`. The LLM's failed response attempts are in the `LLMStep.response_messages`. Use these to understand what the agent tried to say versus what the action actually returned.
 
 [SOURCE: agent-debugging-rules (lines 115-130)]
 
@@ -679,9 +680,9 @@ reasoning:
           Quote action output values verbatim whenever possible.
 ```
 
-#### Why Simulated Preview Mode Cannot Reproduce Grounding Failures
+#### Grounding in Simulated Preview Mode
 
-Simulated preview mode generates fake action outputs via LLM, so the grounding checker has no real data to validate against. The grounding checker only runs against live action outputs. If you need to test grounding, use live preview mode (`--use-live-actions`) with real backing Apex/Flows/Prompt Templates deployed. [SOURCE: agent-preview-rules (line 59)]
+The grounding checker runs in both simulated and live preview modes. However, simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures during simulated preview, switch to live preview mode (`--use-live-actions`) before investing time in diagnosis — the failure may be an artifact of simulation, not a real instruction problem. [SOURCE: agent-preview-rules (line 59)]
 
 ---
 
