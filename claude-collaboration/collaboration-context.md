@@ -1500,7 +1500,21 @@ following the same pattern as Files 1-4.
 
 ---
 
-## 13. Session Log
+## 13. Bad Error Message Inventory
+
+> **Purpose**: Running list of actions/contexts where Salesforce platform
+> error messages are unhelpful or misleading. Targeted for Vivek's
+> engineering team to fix. Add new entries as they are discovered during
+> skill development and experiment runs.
+
+| # | Action / Context | Error Message Returned | What It Should Say | Source |
+|---|---|---|---|---|
+| 1 | `sf agent publish` with `default_agent_user` set to a non-Einstein-Agent-licensed user | `"Internal Error, try again later"` | `"The default_agent_user must have the Einstein Agent license. User [username] has [license_type] which is not supported."` | RQ1 experiment (2026-02-19) |
+| 2 | `sf agent publish` (or NGA Web publish) with changed `default_agent_user` on already-published agent | CLI: `"Default Agent user [X] does not match the existing Default Agent user [Y]"` / NGA Web: `"API validation failed. Error details: ..."` | Error message is technically accurate but the underlying behavior (immutability) is undocumented. The error should include: `"The default agent user cannot be changed after first publish."` | RQ1 experiment + Vivek NGA Web confirmation (2026-02-19) |
+
+---
+
+## 14. Session Log
 
 ### How to Write a Session Log Entry
 
