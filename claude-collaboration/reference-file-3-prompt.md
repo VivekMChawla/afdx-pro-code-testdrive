@@ -73,21 +73,18 @@ resolutions documented in `rf3-context.md`.
    14 items), and error prevention section (lines 704-785, 7 common
    mistakes with WRONG/RIGHT pairs).
 
-**OFFICIAL DOCUMENTATION** (OUT OF DATE on preview — use with caution):
+**OFFICIAL DOCUMENTATION** (grounding for authoritative claims):
 
 4. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-nga-preview.md`
-   — VS Code Agent Preview pane, simulated vs. live mode descriptions,
-   Apex Replay Debugger integration, Agent Tracer tab. **CAUTION**: The
-   connected app / OAuth / `--client-app` requirements described in these
-   docs have been REMOVED. The only difference between previewing an
-   Agent Script agent and a published agent is the flag:
-   `--authoring-bundle` (Agent Script) vs. `--api-name` (published).
-   Do NOT include connected app setup instructions.
-
-5. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-preview.md`
-   — Published agent preview. Same caution as above — connected app
-   setup is outdated. Use only for transcript/response file format
-   reference.
+   — Preview and Debug an Agent. Covers VS Code Agent Preview pane,
+   simulated vs. live mode descriptions, Apex Replay Debugger integration,
+   Agent Tracer tab, programmatic preview commands (start/send/sessions/end),
+   `--authoring-bundle` vs. `--api-name` flag distinction, and session
+   trace file structure (transcript.json + traces/<sessionID>.json).
+   This doc is accurate and aligned with `.a4drules`. However, it is
+   written for human developers using VS Code — it does NOT cover
+   `--json` flag usage, trace step types, or diagnostic patterns. Use
+   it to verify factual claims. Use `.a4drules` for programmatic depth.
 
 **CANONICAL EXAMPLE**:
 
@@ -214,11 +211,14 @@ positioning decision.
 These were resolved through discussion with the skill author. Do NOT
 revisit or present alternatives. Apply them as stated.
 
-1. **AFDX docs vs. `.a4drules` on published agent preview**: AFDX docs
-   describe complex connected app / OAuth / `--client-app` setup. This
-   has been REMOVED. The only difference is `--api-name` (published) vs.
-   `--authoring-bundle` (Agent Script). Use `.a4drules` as authoritative.
-   Do NOT include connected app setup instructions.
+1. **AFDX docs vs. `.a4drules` on preview**: The updated AFDX doc
+   (`agent-dx-nga-preview.md`) is now accurate — connected app requirements
+   have been removed, programmatic preview commands are documented, and the
+   `--authoring-bundle` vs. `--api-name` flag distinction is correct.
+   However, `.a4drules` remains authoritative because it provides
+   programmatic-first guidance (`--json` flag, trace step types, diagnostic
+   patterns) that the AFDX doc does not cover. Use AFDX doc for factual
+   verification. Use `.a4drules` for consuming-agent-specific guidance.
 
 2. **Jag's validate command vs. `.a4drules`**: Jag uses
    `sf agent validate --source-dir ./agent`. The correct command per
