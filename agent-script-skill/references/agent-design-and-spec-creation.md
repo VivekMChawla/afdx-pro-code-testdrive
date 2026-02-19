@@ -523,10 +523,11 @@ topic admin_panel:
 
 ### Writing Effective Instructions
 
-When you choose subjective control, two things determine how well the LLM performs: instruction order and data referencing.
+When you choose subjective control, two things determine how well the LLM performs: instruction ordering and grounding.
 
-**Ordering.** The runtime resolves instructions top-to-bottom — evaluating `if/else` blocks and expanding template expressions — before the LLM sees the result. The resolved text becomes the LLM's prompt. Put post-action checks first, data references next, dynamic conditional text last.
+**Instruction Ordering.** The runtime resolves instructions top-to-bottom — evaluating `if/else` blocks and expanding template expressions — before the LLM sees the result. The resolved text becomes the LLM's prompt. Put post-action checks first, data references next, dynamic conditional text last.
 
+RIGHT: Post-action check at the top (LLM sees it first)
 ```agentscript
 topic checkout:
     reasoning:
@@ -567,7 +568,7 @@ topic checkout:
 - Avoid transforming values: return `"Tuesday"` as-is, not `"day after Monday"`.
 - Avoid embellishment instructions: `"Respond like a pirate"` increases grounding risk — embellished content has no output to ground against.
 
-Grounding validation requires **live mode preview** (`sf agent preview --use-live-actions --json`). Simulated mode generates fake outputs, so grounding has nothing real to validate against.
+Grounding validation requires **live mode preview** (`sf agent preview --use-live-actions --json`). Simulated mode preview generates fake outputs, so grounding has nothing real to validate against.
 
 ### Post-Action Behavior
 
