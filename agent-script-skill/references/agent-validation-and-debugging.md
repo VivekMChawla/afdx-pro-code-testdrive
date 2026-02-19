@@ -579,41 +579,6 @@ Note: repeated `LLMStep` → `ReasoningStep` pairs in a trace may indicate groun
 
 [SOURCE: agent-debugging-rules (lines 105-111)]
 
-### Pattern: Post-Action Logic Not Running
-
-**Symptom:** After an action executes, conditional logic or transitions that should follow don't happen. For example, `set @variables.x = @outputs.y` doesn't set the variable.
-
-**Trace Analysis:**
-
-1. Find the `FunctionStep` for the action — did it execute successfully?
-2. Find the following `VariableUpdateStep` entries — were variables updated?
-3. Check the instructions in the topic's `reasoning.instructions` — are instructions evaluated TOP TO BOTTOM?
-4. Verify post-action checks (`if @outputs.x`, `transition to`, `run @actions.y`) are at the TOP of the instructions block, not after other instructions
-
-**Root Cause:** Post-action directives are placed after other instructions, so they're evaluated after the LLM has already reasoned about the original prompt. Instructions are accumulated top-to-bottom during Phase 1 (deterministic resolution). If post-action directives come after other instructions, they don't affect the LLM's reasoning.
-
-**Fix:** Place post-action directives at the TOP of instructions:
-
-```agentscript
-# WRONG — post-action checks come after the main instructions
-reasoning:
-    instructions: ->
-        | Help the guest with their inquiry.
-          Always be professional.
-
-        if @outputs.requires_escalation:
-            | This requires human assistance.
-
-# CORRECT — post-action checks come FIRST
-reasoning:
-    instructions: ->
-        if @outputs.requires_escalation:
-            | This requires human assistance.
-
-        | Help the guest with their inquiry.
-          Always be professional.
-```
-
 ---
 
 ## 6. Diagnostic Workflow
