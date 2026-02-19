@@ -580,7 +580,7 @@ topic booking:
     reasoning:
         instructions: ->
             | if @variables.booking_pending:
-                  Do NOT call confirm yet.
+                  Do NOT call {!@actions.confirm_booking} yet.
 
         actions:
             confirm: @actions.confirm_booking  # Always visible
