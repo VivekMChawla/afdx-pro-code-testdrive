@@ -28,15 +28,15 @@
    checklist, 14 items), lines 704-785 (error prevention, 7 common
    mistakes with WRONG/RIGHT pairs).
 
-4. **AFDX docs** (`agent-dx-preview.md`, `agent-dx-nga-preview.md`):
-   Preview UI and CLI docs. **CAUTION: OUT OF DATE on preview mechanics.**
-   The connected app / OAuth / `--client-app` requirements for published
-   agent preview have been removed. Per Vivek: the only difference now
-   is `--authoring-bundle` (Agent Script agent) vs. `--api-name`
-   (published agent). Use `.a4drules` as authoritative for preview.
-   Useful content from these docs: VS Code Agent Preview pane description,
-   Apex Replay Debugger integration (live mode only), Agent Tracer tab,
-   transcript/response file format for published agent conversations.
+4. **AFDX docs** (`agent-dx-nga-preview.md` — updated Feb 2026):
+   Now accurate. Connected app requirements removed. Includes programmatic
+   preview commands (start/send/sessions/end), `--authoring-bundle` vs.
+   `--api-name` flag distinction, session trace file structure. The old
+   `agent-dx-preview.md` no longer exists. `.a4drules` remains
+   authoritative for programmatic depth (`--json`, trace step types,
+   diagnostic patterns) not covered in AFDX docs. AFDX docs useful for:
+   VS Code Agent Preview pane, Apex Replay Debugger integration (live
+   mode only), Agent Tracer tab, trace file format verification.
 
 5. **Jag's `debugging-guide.md`** (318 lines): 4 debugging views
    (Interaction Details, Trace Waterfall, Variable State, Script View
@@ -63,10 +63,10 @@
 
 ## Conflict Resolutions (Decided)
 
-1. **AFDX docs vs. `.a4drules` on published agent preview**: AFDX docs
-   describe complex connected app / OAuth / `--client-app` setup for
-   previewing published agents. Per Vivek, this has been removed. The
-   only difference is `--api-name` (published) vs. `--authoring-bundle`
+1. **AFDX docs vs. `.a4drules` on preview**: Updated AFDX doc is now
+   accurate (connected app removed, programmatic commands documented).
+   `.a4drules` remains authoritative for programmatic-first guidance.
+   The only difference is `--api-name` (published) vs. `--authoring-bundle`
    (Agent Script). **Decision**: Use `.a4drules` as authoritative. Ignore
    AFDX docs' connected app setup. Document the simplified flag
    distinction.
