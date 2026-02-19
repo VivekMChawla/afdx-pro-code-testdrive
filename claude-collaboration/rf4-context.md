@@ -313,30 +313,51 @@ results. CLI commands appear in both files (intentional duplication).
    that follow explain each step.
 
 3. **Creating an Agent** — `sf agent generate authoring-bundle` in
-   depth. What the command does, what it creates, what the generated
-   files contain, and what the consuming agent should do next. This
-   is the step LLMs fail at most consistently — needs careful
-   treatment of common failure modes.
+   depth. The full command with required flags: `--no-spec` (prevents
+   requiring a classic-style agent spec), `--name` (→ `agent_label`),
+   `--api-name` (→ `developer_name`). What it creates (two files:
+   `.agent` and `.bundle-meta.xml`). What the generated files contain.
+   WRONG/RIGHT for omitting `--no-spec`. This is the step LLMs fail
+   at most consistently — likely failures: omitting `--no-spec`,
+   confusing `--name`/`--api-name`, omitting flags and getting
+   interactive prompts.
 
 4. **Working With Authoring Bundles** — The finer points and hidden
-   traps. Key content: the "naked" AAB (no version suffix) always
-   points to the highest DRAFT version in the org, not the most
-   recently published version. Version-suffixed AABs (e.g.,
-   `Local_Info_Agent_1`) are published snapshots. The deploy caution
-   from `.a4drules`: NEVER deploy `.agent` or AiAuthoringBundle
-   metadata in routine deploys. Additional AAB oddities to be
-   captured during brain dump session with Vivek.
+   traps. Key content:
+   - The "naked" AAB (no version suffix) always points to the highest
+     DRAFT version in the org, not the most recently published version.
+   - Version-suffixed AABs (e.g., `Local_Info_Agent_1`) are published
+     snapshots — frozen, not editable.
+   - First deploy creates DRAFT V1 in the org.
+   - No pro-code way to create new draft versions — only via Builder's
+     "create new draft version" button. But drafts CAN be retrieved
+     with version-suffixed names.
+   - Deploying an AAB (without publishing) is legitimately useful:
+     enables pro-code/low-code collaboration where pro-code developers
+     author Agent Script locally while low-code users refine in Builder.
+   - The deploy caution from `.a4drules`: NEVER deploy `.agent` or
+     AiAuthoringBundle metadata in routine backing-code deploys.
+   - `default_agent_user` must be set to a valid agent user (license
+     type requirements UNKNOWN — see Research Questions).
+   - Deploy validates backing logic existence (validation depth
+     UNKNOWN — see Research Questions).
+   - "Backing code" defined: Apex classes, Flows, Prompt Templates,
+     and any other metadata that agent actions reference as invocation
+     targets.
 
 5. **Publishing Authoring Bundles** — Why publishing is needed (locks
    a version, creates runtime metadata). When to publish (after
-   validation passes, backing code is deployed). What happens:
-   validates → commits version → creates Bot/GenAi* metadata →
-   auto-retrieves hydrated metadata to local. The `<target>` element
-   in `bundle-meta.xml`. Multiple published versions and how they
-   accumulate. What metadata actually gets created (Bot container,
-   BotVersion files, GenAiPlannerBundle directories with
-   version-suffixed names and org-generated ID suffixes). Use real
-   metadata from the reference project to illustrate.
+   validation passes, backing code is deployed). Key detail: publishing
+   INCLUDES deploying the AAB to the org — the developer does NOT need
+   to manually deploy the AAB before publishing. The pipeline is:
+   deploy backing code (manual) → publish (deploys AAB, validates,
+   commits version, hydrates Bot/GenAi* metadata, retrieves). The
+   `<target>` element in `bundle-meta.xml`. Multiple published versions
+   and how they accumulate. What metadata gets created (Bot container,
+   BotVersion files, GenAiPlannerBundle directories with version-suffixed
+   names and org-generated ID suffixes). Post-publish draft behavior
+   UNKNOWN — see Research Questions. Use real metadata from the
+   reference project to illustrate.
 
 6. **Activating Published Agents** — `sf agent activate` /
    `sf agent deactivate`. Only one published version active at a
@@ -457,5 +478,235 @@ documentation:
 
 6. **AAB oddities need dedicated coverage.** There are enough
    non-obvious behaviors with AABs that a dedicated section (Section 4:
-   Working With Authoring Bundles) is needed. Additional oddities to
-   be captured in a brain dump session with Vivek.
+   Working With Authoring Bundles) is needed. Additional oddities
+   captured in brain dump below.
+
+---
+
+## AAB Brain Dump (from Vivek — Session 11)
+
+This section captures Vivek's deep knowledge of AAB behaviors, organized
+into confirmed facts, open questions requiring validation, and a
+research plan for resolving the unknowns.
+
+### Confirmed Facts
+
+**1. Generation command requires specific flags.**
+
+The correct command is:
+```
+sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name>
+```
+
+- `--no-spec` — prevents the command from requiring a classic-style
+  agent spec file. Without this flag, the command expects a spec path.
+  NOTE: this is NOT the same "Agent Spec" artifact we've defined as a
+  first-class design artifact in RF2. The classic-style spec is from
+  the deprecated `sf agent generate agent-spec` / `sf agent create`
+  workflow.
+- `--name "<Label>"` — becomes the `agent_label` in the generated
+  Agent Script boilerplate.
+- `--api-name <Developer_Name>` — becomes the `developer_name` in the
+  generated Agent Script boilerplate.
+
+This is the step where LLMs fail most consistently. Likely failure
+modes: omitting `--no-spec` (command hangs or errors waiting for a
+spec file), confusing `--name` and `--api-name`, or omitting flags
+entirely and getting interactive prompts the LLM can't handle.
+
+**2. "Backing code" defined explicitly.**
+
+"Backing code" means: Apex classes, Flows, Prompt Templates, and any
+other metadata that agent actions reference as their invocation targets.
+These are the components that actually execute when an agent action
+fires. The term is used throughout RF4 to distinguish routine deploys
+(backing code only) from agent metadata deploys (AiAuthoringBundle).
+
+**3. `default_agent_user` must be set for AAB deployment.**
+
+Deploying an AAB to an org fails if `default_agent_user` is not set
+to a valid Salesforce agent user. The specifics of which license types
+qualify are UNKNOWN (see Research Questions below).
+
+**4. Deploy validates backing logic existence.**
+
+Deploying an AAB fails when any backing logic for the agent's actions
+is invalid or does not exist in the org. The depth of this validation
+is UNKNOWN — unclear if it's referential integrity only (does the
+class exist?) or if it also validates method/property signatures (see
+Research Questions below).
+
+**5. First AAB deploy creates DRAFT V1.**
+
+The first time an AAB is deployed to an org (if unpublished), the org
+creates DRAFT V1 of the AAB. This is the starting state for a new
+agent.
+
+**6. No pro-code way to create new draft versions.**
+
+There is no CLI command to create a new DRAFT version of an AAB from
+pro-code tools. In the low-code Agentforce Studio (Agent Builder), a
+user can open a published AAB version and click "create a new draft
+version." This can be done multiple times, resulting in multiple
+DRAFT (unpublished) versions in the org. Those draft versions CAN be
+retrieved to a pro-code project:
+```
+sf project retrieve start -m AiAuthoringBundle:Local_Info_Agent_3
+```
+(with the version number appended to the API name).
+
+**7. Publishing includes deployment.**
+
+When publishing an AAB, the current version of the AAB is deployed
+to the org as part of the publish process. So a developer CAN publish
+without manually deploying the AAB first — the publish operation
+handles deploying the AAB into the org. However, backing code must
+already be deployed, since publish validation checks for it.
+
+This corrects the earlier framing of "deploy then publish" as two
+mandatory manual steps. The pipeline is more accurately:
+- Deploy backing code (Apex, Flows, etc.) — manual, required
+- Publish AAB (which deploys the AAB, validates, commits version,
+  hydrates Bot/GenAi* metadata, retrieves) — handles AAB deployment
+  internally
+- Activate — makes the published version live
+
+**8. Deploying AAB before publishing has legitimate uses.**
+
+Deploying an AAB to an org WITHOUT publishing is genuinely useful:
+it lets someone use the org-based Agent Builder to contribute to the
+agent's development. This enables a pro-code/low-code collaboration
+model where pro-code developers author Agent Script locally and deploy
+to the org, while low-code users refine the agent in Builder. This is
+a valuable feature of the Agent Script workflow, not just a step in
+the publish pipeline.
+
+**9. Post-publish draft behavior is uncertain.**
+
+After publishing an AAB, something happens regarding the next draft
+version. If the `<target>` field in `bundle-meta.xml` is empty or
+points to a published bundle, either an error occurs or a new DRAFT
+version is created automatically. This needs experimental validation
+(see Research Questions below).
+
+### AAB Lifecycle Model (Structured from Brain Dump)
+
+This is the conceptual model that emerges from the confirmed facts.
+The lifecycle has more states and transitions than the source
+documentation suggests:
+
+```
+GENERATE (sf agent generate authoring-bundle)
+    ↓
+LOCAL ONLY — AAB exists in local project, not in org
+    ↓
+DEPLOY to org (explicit or as part of publish)
+    ↓
+DRAFT V1 in org — editable in Builder, previewable via
+                   --authoring-bundle
+    ↓
+[Optional: low-code user creates new draft versions in Builder]
+    ↓
+DRAFT VN in org — "naked" local AAB always points to highest draft
+    ↓
+PUBLISH (sf agent publish authoring-bundle)
+    ↓
+PUBLISHED VN — version locked, Bot/GenAi* metadata created,
+               version-suffixed AAB appears in local project,
+               <target> updated in bundle-meta.xml
+    ↓
+[New draft auto-created? Or must be created via Builder? UNKNOWN]
+    ↓
+ACTIVATE (sf agent activate)
+    ↓
+ACTIVE — one version at a time, required for preview via --api-name,
+         required for test execution, available for runtime channels
+```
+
+Key insight: the pro-code developer's "naked" AAB always floats to
+the highest draft. Published versions are frozen snapshots with
+version-suffixed names. The developer never edits a published version
+— they edit the current draft and publish again.
+
+### Open Research Questions
+
+These questions CANNOT be answered from documentation. They require
+experimental validation against a live org.
+
+**RQ1: Which license types qualify for `default_agent_user`?**
+Can a SysAdmin user with a standard Salesforce license be used as
+the agent user? Or does this require a user with the Agentforce
+Agent license type (exact license name may differ)?
+- **Why it matters**: If only special license types work, the skill
+  must guide the developer to check license requirements before
+  deploying.
+- **Test approach**: Try deploying an AAB with `default_agent_user`
+  set to (a) a SysAdmin with Salesforce license, (b) a user with
+  an Agentforce-specific license. Record which succeeds/fails.
+
+**RQ2: How deep is deploy validation of backing logic?**
+Does deployment validation only check referential integrity (does
+the "CheckWeather" class exist in the org?) or does it also validate
+against method and property signatures (does the class have the
+expected `@InvocableMethod` with the right parameters)?
+- **Why it matters**: Determines whether the skill should advise
+  deploying stub classes (existence-only) or fully implemented
+  classes before deploying the AAB.
+- **Test approach**: Deploy an AAB that references (a) a non-existent
+  Apex class, (b) an existing class with wrong method signature,
+  (c) an existing class with correct signature. Compare error messages.
+
+**RQ3: What happens after publishing when the current AAB has no
+draft to point to?**
+After publishing, the `<target>` element points to the published
+version. If the developer then tries to deploy or modify the "naked"
+AAB, does the platform (a) auto-create a new draft version, (b)
+throw an error, or (c) overwrite the published version?
+- **Why it matters**: Determines whether the skill must warn about
+  post-publish state or can rely on automatic draft creation.
+- **Test approach**: Publish an AAB, then immediately try to deploy
+  a modified version of the "naked" AAB. Observe org state.
+
+**RQ4: Can you publish an AAB that has never been manually deployed?**
+The publish command deploys the AAB internally. Does this work for a
+brand-new AAB that has never been in the org, or does the org need
+to have a pre-existing draft?
+- **Why it matters**: Simplifies the pipeline guidance if publish
+  handles everything.
+- **Test approach**: Generate a fresh AAB locally, ensure backing
+  code is deployed, run `sf agent publish authoring-bundle` without
+  a prior deploy. Observe whether it succeeds.
+
+**RQ5: Can version-suffixed AABs be deployed independently?**
+If a developer retrieves `Local_Info_Agent_3` (a draft created in
+Builder), can they modify it locally and deploy it back? Or is the
+version-suffixed AAB read-only in the local project?
+- **Why it matters**: Affects guidance on the pro-code/low-code
+  collaboration model.
+- **Test approach**: Retrieve a version-suffixed AAB, modify it,
+  attempt to deploy. Observe result.
+
+### Validation Plan: Claude Code Experiment Prompts
+
+Vivek has a local Claude Code agent with access to Salesforce CLI
+auth (not sandboxed). We can write prompts for that agent to run
+the experiments above against a live org. The approach:
+
+1. Write a self-contained prompt for each research question
+2. Each prompt includes: the hypothesis, the exact commands to run,
+   what to observe, and how to record the result
+3. Vivek runs the prompts via Claude Code locally
+4. Results feed back into rf4-context.md as confirmed facts or
+   updated guidance
+5. Updated context flows into the writing prompt and final RF4 content
+
+**Prompts to create** (after brain dump is complete):
+- RQ1 prompt: `default_agent_user` license type experiment
+- RQ2 prompt: Deploy validation depth experiment
+- RQ3 prompt: Post-publish draft behavior experiment
+- RQ4 prompt: Publish-without-prior-deploy experiment
+- RQ5 prompt: Version-suffixed AAB deploy experiment
+
+These prompts should be saved to
+`claude-collaboration/rf4-experiments/` as individual files that
+Vivek can feed directly to his local Claude Code agent.
