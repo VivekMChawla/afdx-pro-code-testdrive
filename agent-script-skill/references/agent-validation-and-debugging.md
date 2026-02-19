@@ -518,7 +518,7 @@ reasoning:
 
 **Symptom:** The agent keeps asking the same question or repeating the same response across multiple turns, even though the user already provided the requested information.
 
-**Diagnosis:** Observe the conversation output rather than relying on trace data (trace structure varies). A common cause is instructions that collect information and act on it within the same topic — when the topic is re-entered, the collection logic runs again even though the data was already gathered.
+**Diagnosis:** Observe the conversation output first — the behavioral symptom is often obvious (e.g., the agent asking the same question repeatedly). A common cause is instructions that collect information and act on it within the same topic — when the topic is re-entered, the collection logic runs again even though the data was already gathered.
 
 **Fix Example:** In this real scenario, the `local_events` topic asks about interests and then looks up events. But each time the topic is re-entered, the agent asks about interests again instead of checking whether it already knows them:
 
