@@ -342,19 +342,18 @@ Traces are available immediately after each `send` — you do NOT need to end th
 
 ### File Structure
 
-**metadata.json** contains session-level information: agent ID, start time, execution mode (simulated or live).
+**metadata.json** contains session-level information: `sessionId`, `agentId`, `startTime`, and `mockMode` (either `"Mock"` for simulated or `"Live Test"` for live).
 
-**transcript.jsonl** is a human-readable conversation log with one JSON object per line:
+**transcript.jsonl** is a conversation log with one JSON object per line. Each entry includes `timestamp`, `agentId`, `sessionId`, `role` (`"user"` or `"agent"`), and `text`. Agent responses also include a `raw` array with additional metadata — most importantly, the `planId` field that links to the corresponding trace file.
 
 ```json
-{"role":"agent","text":"Hi, I'm an AI assistant..."}
-{"role":"user","text":"What's the weather?"}
-{"role":"agent","text":"The weather will be..."}
+{"timestamp":"...","agentId":"Local_Info_Agent","sessionId":"abc123","role":"user","text":"What's the weather?"}
+{"timestamp":"...","agentId":"Local_Info_Agent","sessionId":"abc123","role":"agent","text":"The weather on 2026-02-19...","raw":[{"planId":"def456","isContentSafe":true,...}]}
 ```
 
-Use the transcript to identify which turn failed, then open the corresponding trace file for execution details. [SOURCE: agent-debugging-rules (lines 24-35)]
+To connect a failed turn to its trace, find the agent response in the transcript and read the `planId` from its `raw` array. That `planId` is the filename under `traces/`. [SOURCE: agent-debugging-rules (lines 24-35)]
 
-**traces/<PLAN_ID>.json** is the detailed execution log for a single turn. It contains a `plan` array with execution steps in chronological order.
+**traces/<PLAN_ID>.json** is the detailed execution log for a single turn. It contains top-level fields (`type`, `planId`, `sessionId`, `intent`, `topic`) and a `plan` array with execution steps in chronological order.
 
 ### Step Types (Reference Table)
 
