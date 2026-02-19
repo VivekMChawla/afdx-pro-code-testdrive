@@ -689,15 +689,13 @@ Each step becomes visible only after the previous step completes (updates its va
 
 ## 8. Action Loop Prevention
 
-An action loop occurs when the LLM calls the same action repeatedly without new user input. Two conditions cause loops:
+An action loop occurs when the LLM calls the same action repeatedly without new user input. Three things combine to cause loops:
 
-1. The action remains **available** to the LLM after it executes
-2. The **instructions don't tell the LLM to stop** calling it
+- **No `available when` gate.** An action without an `available when` condition appears in the LLM's context every reasoning cycle. There is no mechanism that automatically hides an action after it executes — if you don't gate it, it stays visible indefinitely.
+- **Variable-bound input.** When you bind an input to a variable (`with param = @variables.x`), the action is "ready to go" every cycle — the LLM doesn't need to extract values from the conversation. It can invoke the action with zero friction.
+- **No post-action instructions.** The instructions don't tell the LLM what to do after the action completes, so it may call the action again.
 
-### What Triggers Loops
-
-Variable-bound inputs increase loop risk. When you bind an input to a variable (`with param = @variables.x`), the action is "ready to go" every cycle — the LLM doesn't need to extract values from the conversation. It can invoke the action with zero friction.
-
+**WRONG: All three loop conditions present**
 ```agentscript
 topic events:
     reasoning:
@@ -709,7 +707,7 @@ topic events:
                 with interest = @variables.guest_interest  # Variable-bound input
 ```
 
-The LLM can call `check_events` repeatedly because the input is always ready. If instructions don't explicitly forbid it, loops happen.
+No gate, variable-bound input, no post-action guidance. The LLM can call `check_events` every cycle.
 
 ### Three Mitigations
 
