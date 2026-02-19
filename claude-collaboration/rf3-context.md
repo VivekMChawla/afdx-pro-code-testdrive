@@ -114,8 +114,8 @@ Behavioral Debugging) to this file):
 - Preview: programmatic workflow (start/send/end), execution modes
   (simulated vs. live), when to use each, agent identification flags
 - Session traces: file structure, step types, how to read them
-- Diagnostic patterns: wrong topic routing, actions not firing, action
-  loops, "unexpected error" responses, post-action logic not running
+- Diagnostic patterns: wrong topic routing, actions not firing,
+  behavioral loops, "unexpected error" responses
 - Diagnostic workflow: the systematic approach (reproduce → locate →
   read trace → follow execution → identify gap → fix → validate →
   re-test), with grounding as a dedicated subsection covering the retry
@@ -214,8 +214,9 @@ when deployment fails because of it.
 
 5. **Diagnostic Patterns** — Structured symptom → trace analysis →
    root cause → fix patterns for: wrong topic routing, actions not
-   firing, action loops, "unexpected error" responses, post-action
-   logic not running. Each pattern maps to specific trace step types.
+   firing, behavioral loops, "unexpected error" responses. Each
+   pattern maps to specific trace step types. (Post-action logic
+   pattern was cut during review — premise was fabricated.)
 
 6. **Diagnostic Workflow** — The systematic 8-step approach: reproduce
    → locate failing turn → read trace → follow execution → identify
@@ -226,7 +227,7 @@ when deployment fails because of it.
    causes (date inference, unit conversion, embellishment, loose
    paraphrasing), diagnosing via traces (ReasoningStep + FunctionStep
    comparison), fix approach (use specific values verbatim), and why
-   simulated mode can't reproduce grounding failures.
+   simulated preview mode triggers false grounding failures.
 
 ---
 
@@ -269,3 +270,64 @@ when deployment fails because of it.
   11 step types from `.a4drules` map directly to diagnostic questions.
   Present them as a reference the agent can consult when reading traces,
   not as a list to memorize.
+
+---
+
+## Review Findings (Sessions 9-10)
+
+### Collaborative Section-by-Section Review
+
+Key changes made during review with Vivek:
+
+- **Section 1 (Validation output):** Replaced fabricated JSON schema with
+  real CLI output. Success: `{"status": 0, "result": {"success": true}}`.
+  Failure: CLI error format with all detail in `message` field containing
+  ANSI codes. Don't prescribe rigid error structure.
+- **Section 2 (Error categories):** Compressed six category descriptions
+  into one sentence. WRONG/RIGHT pairs do the real teaching work.
+- **Section 3 (Preview modes):** "simulated mode" → "simulated preview
+  mode" and "live mode" → "live preview mode" throughout.
+- **Section 3 (End session):** Removed "when you need to access traces"
+  — traces are available immediately after each `send`.
+- **Section 4 (Trace structure):** Replaced fabricated transcript example
+  with real data including the `planId` bridge (`raw[].planId` →
+  `traces/<PLAN_ID>.json`). Converted step types table to bullet list
+  per project convention (no markdown tables).
+- **Section 5 (Topic routing):** Changed WRONG/RIGHT to BEFORE/AFTER.
+  Minimal selector isn't wrong — it's improvable when routing fails.
+- **Section 5 (Behavioral loops):** Complete rewrite using Vivek's real
+  `local_events` topic. BEFORE re-asks interests every re-entry; AFTER
+  conditions on `@variables.guest_interests`.
+- **Section 5 (Post-action logic):** Cut entirely — premise fabricated.
+  `@outputs` only valid in post-action context, not floating in
+  `instructions: ->`.
+- **Section 6 (Diagnostic workflow):** Removed "End the session to write
+  trace files" — contradicted by confirmed immediate trace availability.
+- **Section 6 (Grounding fix):** Removed `{!@outputs.date}` template
+  expressions from pipe text — invalid outside post-action context.
+- **Section 6 (Grounding in simulation):** Corrected false claim that
+  "grounding checker only runs against live action outputs." The checker
+  runs in both modes; simulated outputs trigger false failures.
+- **Section 6 (Grounding retry):** Added step 5 documenting where to
+  find actual action output (`FunctionStep.function.output`) and failed
+  response attempts (`LLMStep.response_messages`) after double-grounding
+  failure.
+- **Section 6 (Heading):** "Grounding Subsection" → "Grounding".
+
+### Adversarial Sub-Agent Review
+
+Review prompt: `claude-collaboration/rf3-review-prompt.md`
+Report: `claude-collaboration/rf3-analysis-report.md`
+
+**Findings:** No critical issues. Three MEDIUM items triaged:
+1. Line 521 "trace structure varies" — clarified to "behavioral symptom
+   may be obvious from conversation alone." Applied.
+2. Line 345 `mockMode` field values — already accurate as-is. Skipped.
+3. Line 479 cross-reference to RF1 for `available when` — skipped per
+   Vivek (unclear how cross-RF references work with skills).
+
+### All Code Examples Validated
+
+After cutting Pattern 5, all remaining code examples validated against
+authoritative sources (`.a4drules`, agent-script-recipes, salesforcedocs).
+All passed.

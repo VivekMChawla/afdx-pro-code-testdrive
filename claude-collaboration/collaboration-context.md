@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 19, 2026 — Session 8 (RF2 review complete, adversarial review process established, context docs updated)
+> **Last updated**: February 19, 2026 — Session 10 (RF3 complete, adversarial review passed, context docs updated)
 
 ---
 
@@ -1292,10 +1292,14 @@ Sessions should consult this section to determine what to work on.
        `claude-collaboration/reference-file-2-prompt.md`.
        NOTE: `salesforcedocs/agent-dx/` agent spec references are OUTDATED
        and unrelated — ignored per Vivek's directive.
-     - **File 3 (Validation & Debugging):** AFDX preview docs
-       (`salesforcedocs/.../agent-dx-preview.md`,
-       `agent-dx-nga-preview.md`), existing .a4drules files
-       (`afdx-pro-code-testdrive/.a4drules/`), Jag's debugging-guide.md
+     - **File 3 (Validation & Debugging):** COMPLETED. Three
+       authoritative `.a4drules` sources read (preview-rules,
+       debugging-rules, script-rules partial), AFDX docs (elevated
+       to OFFICIAL after update), Jag's debugging-guide.md, RF1/RF2
+       boundary checks. Five conflict resolutions documented. Real
+       trace data validated against 3 fresh sessions. Findings in
+       `claude-collaboration/rf3-context.md`. Writing prompt at
+       `claude-collaboration/reference-file-3-prompt.md`.
      - **File 4 (Metadata & Lifecycle):** AFDX metadata docs
        (`salesforcedocs/.../agent-dx-metadata.md`,
        `agent-dx-nga-authbundle.md`, `agent-dx-manage.md`), deploy/publish
@@ -1305,7 +1309,7 @@ Sessions should consult this section to determine what to work on.
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[IN PROGRESS — File 2 complete, File 3 next]** Write reference files —
+3. **[IN PROGRESS — File 3 complete, File 4 next]** Write reference files —
    one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
@@ -1316,6 +1320,14 @@ Sessions should consult this section to determine what to work on.
      section review completed (Sessions 7-8). Adversarial sub-agent
      review (v2) run, findings triaged with Vivek, actionable items
      applied. Review findings captured in rf2-context.md.
+   - **File 3 (Validation & Debugging):** DONE. ~680 lines. Sub-agent
+     first draft, collaborative section-by-section review (Sessions
+     9-10), adversarial sub-agent review passed with no critical
+     findings. Key corrections: fabricated validation output replaced
+     with real CLI output, Pattern 5 (post-action logic) cut as
+     fabricated, behavioral loops rewritten with real scenario,
+     grounding guidance corrected (checker runs in both preview modes).
+     Source citations stripped. Review findings in rf3-context.md.
    - **Per-file acceptance criteria:** (a) Content matches the scope
      defined in the File Inventory (Section 10). (b) TOC at top.
      (c) Target 300 lines; if exceeding, justify the overage.
@@ -1454,8 +1466,20 @@ writing or revising a reference file.
 - `claude-collaboration/rf2-analysis-report-v1-soft.md` — Backup of
   discarded v1 (soft) review report, kept for comparison.
 
-**Reference Files 3-5:** Working context and prompts to be created
-following the same pattern as Files 1 and 2.
+**Reference File 3 (Validation & Debugging):**
+- `claude-collaboration/rf3-context.md` — Working context: all sources
+  read, 5 conflict resolutions, content scope, finalized 6-section
+  outline with ordering rationale, writing insights, and review findings
+  (section-by-section decisions + adversarial review triage).
+- `claude-collaboration/reference-file-3-prompt.md` — Self-contained
+  writing prompt used by sub-agent to produce the first draft.
+- `claude-collaboration/rf3-review-prompt.md` — Self-contained adversarial
+  review prompt with RF3-specific custom evaluations (7 custom checks).
+- `claude-collaboration/rf3-analysis-report.md` — Adversarial review
+  output, no critical findings, 3 MEDIUM items triaged with Vivek.
+
+**Reference Files 4-5:** Working context and prompts to be created
+following the same pattern as Files 1-3.
 
 ---
 
@@ -1667,4 +1691,46 @@ asset creation planned for post-RF5.
 `claude-collaboration/rf2-review-prompt.md`,
 `claude-collaboration/rf2-analysis-report.md`,
 `claude-collaboration/rf2-analysis-report-v1-soft.md`,
+`claude-collaboration/collaboration-context.md`
+
+### Sessions 9-10 — February 19, 2026
+
+**Outputs**:
+- RF3 (Validation & Debugging) written, reviewed, and accepted (~680 lines)
+- AFDX docs evaluated after update — elevated from "OUT OF DATE" to
+  "OFFICIAL DOCUMENTATION"
+- rf3-context.md created with sources, conflict resolutions, outline,
+  and review findings
+- reference-file-3-prompt.md created
+- rf3-review-prompt.md created (7 custom evaluations)
+- rf3-analysis-report.md produced (no critical findings)
+- Cowork rendering bug workaround discovered (later fixed by Anthropic)
+
+**Key decisions**:
+- AFDX doc (`agent-dx-nga-preview.md`) elevated to OFFICIAL but
+  `.a4drules` remains authoritative for programmatic depth
+- Validation output: don't prescribe rigid error structure — CLI error
+  format changes frequently
+- Pattern 5 (Post-Action Logic Not Running) cut — premise was fabricated.
+  `@outputs` only valid in post-action context.
+- Behavioral loops rewritten with real `local_events` scenario instead
+  of theoretical example
+- Grounding checker runs in both preview modes — simulated outputs
+  trigger false failures. Previous claim that checker "only runs against
+  live action outputs" was incorrect.
+- "simulated mode" / "live mode" → "simulated preview mode" / "live
+  preview mode" throughout RF3
+- No markdown tables — project convention is bullet lists
+- Cross-RF references (e.g., pointing to RF1 for `available when`)
+  skipped — unclear how cross-RF references work with skills
+- All remaining code examples validated against authoritative sources
+  after Pattern 5 discovery
+
+**What's unresolved**: RF4 (Metadata & Lifecycle) is next.
+
+**Files modified**: `agent-script-skill/references/agent-validation-and-debugging.md`,
+`claude-collaboration/rf3-context.md`,
+`claude-collaboration/reference-file-3-prompt.md`,
+`claude-collaboration/rf3-review-prompt.md`,
+`claude-collaboration/rf3-analysis-report.md`,
 `claude-collaboration/collaboration-context.md`
