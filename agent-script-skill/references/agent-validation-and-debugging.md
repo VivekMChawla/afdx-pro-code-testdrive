@@ -74,21 +74,7 @@ Before running the validation command, mentally check these 14 items. This check
 
 ## 2. Error Taxonomy and Prevention
 
-Agent Script validation errors fall into six categories. Understanding which category your error belongs to speeds up diagnosis.
-
-### Error Categories
-
-**Block Ordering Errors.** Blocks appear in the wrong sequence. The mandatory order is: `system`, `config`, `variables`, `connections`, `knowledge`, `language`, `start_agent`, then `topic` blocks. Within `start_agent` and `topic` blocks, the order is: `description`, `system`, `before_reasoning`, `reasoning`, `after_reasoning`. [SOURCE: agent-script-rules (lines 77-136)]
-
-**Indentation Errors.** Use exactly 4 spaces per indent level. Tabs, mixed spaces/tabs, or incorrect nesting break the parser. Indentation is structural — it determines block boundaries. [SOURCE: agent-script-rules (line 161)]
-
-**Syntax Errors.** Malformed expressions, invalid operators, unclosed strings, or incorrect field names. Examples: using `==` in a variable assignment (should be `=`), using `true` instead of `True`, or misspelling a block keyword like `reasoning` as `reason`.
-
-**Missing Declarations.** Required fields are absent. Examples: `topic` block missing `description`, `config` missing `developer_name`, `mutable` variable missing default value, `linked` variable missing `source`.
-
-**Type Mismatches.** A value doesn't match the declared type. Examples: assigning a string to a number variable, using a `list[string]` in a `linked` variable (linked variables cannot be lists), or using `True` (boolean) where a string is expected. [SOURCE: agent-script-rules (lines 225-227)]
-
-**Structural Errors.** Logical problems that parse correctly but violate Agent Script rules. Examples: referencing a topic that doesn't exist, using `available when` with invalid syntax, calling `@outputs.x` outside a post-action context, or using post-action directives on utility actions (which don't support them). [SOURCE: agent-script-rules (lines 774-784)]
+Validation errors fall into several categories: block ordering, indentation, syntax, missing declarations, type mismatches, and structural violations. The following examples show the most common mistakes and their fixes.
 
 ### Common Mistakes with WRONG/RIGHT Pairs
 
