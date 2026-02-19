@@ -485,15 +485,15 @@ topic specialist:
 
 Instructions are suggestions the LLM *may* follow. Gates and guards are enforced by the runtime and *cannot* be bypassed. For every requirement, choose the right flow control type.
 
-### Classifying Requirements
+### Classifying Flow Control Requirements
 
-**Deterministic control** — the runtime enforces it. Use when the requirement is non-negotiable:
+**Deterministic flow control** — the runtime enforces it. Use when the requirement is non-negotiable:
 - Security: "only admin users can access this"
 - Financial: "never approve transactions above $10,000 without human review"
 - State: "don't show the payment form until the user provides a delivery address"
 - Counter: "you can only call this action once per session"
 
-**Subjective control** — the LLM decides. Use when flexibility is acceptable:
+**Subjective flow control** — the LLM decides. Use when flexibility is acceptable:
 - Conversational tone: "respond professionally but warmly"
 - Natural language generation: "summarize the results in your own words"
 - User preferences: "if the user is impatient, give short answers; if curious, explain more"
@@ -568,7 +568,7 @@ When an action completes without triggering a transition, the topic stays active
 
 ## 7. Gating Patterns
 
-These mechanisms enforce requirements that the LLM must not be allowed to bypass.
+These mechanisms control what the agent can see and do — some enforced by the runtime, others by shaping the LLM's prompt.
 
 ### `available when` — Action Visibility Gate
 
@@ -578,12 +578,12 @@ An action marked `available when <condition>` is hidden from the LLM when the co
 ```agentscript
 topic booking:
     reasoning:
-        actions:
-            confirm: @actions.confirm_booking  # Always visible
-
         instructions: ->
             | if @variables.booking_pending:
                   Do NOT call confirm yet.
+
+        actions:
+            confirm: @actions.confirm_booking  # Always visible
 ```
 
 The action is visible; instructions tell the LLM not to call it. The LLM may ignore instructions.
