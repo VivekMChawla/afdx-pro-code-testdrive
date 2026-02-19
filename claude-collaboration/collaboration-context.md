@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 17, 2026 — Session 4 (antagonistic review applied, document hardened for cold-start sessions)
+> **Last updated**: February 19, 2026 — Session 8 (RF2 review complete, adversarial review process established, context docs updated)
 
 ---
 
@@ -1305,16 +1305,17 @@ Sessions should consult this section to determine what to work on.
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[IN PROGRESS — File 2 under review]** Write reference files —
+3. **[IN PROGRESS — File 2 complete, File 3 next]** Write reference files —
    one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
      → File 5 (Test Authoring)
    - **File 1 (Core Language):** DONE. 1,017 lines. Reviewed and
      accepted across Sessions 5-6.
-   - **File 2 (Design & Agent Spec):** First draft written by sub-agent
-     (727 lines). Under collaborative section-by-section review with
-     Vivek. Sections 1-4 reviewed and refined. Sections 5-8 in progress.
+   - **File 2 (Design & Agent Spec):** DONE. Collaborative section-by-
+     section review completed (Sessions 7-8). Adversarial sub-agent
+     review (v2) run, findings triaged with Vivek, actionable items
+     applied. Review findings captured in rf2-context.md.
    - **Per-file acceptance criteria:** (a) Content matches the scope
      defined in the File Inventory (Section 10). (b) TOC at top.
      (c) Target 300 lines; if exceeding, justify the overage.
@@ -1437,8 +1438,24 @@ writing or revising a reference file.
   10-point quality checklist. Can be used by the primary agent or a
   sub-agent to write the file independently.
 
-**Reference Files 2-5:** Working context and prompts to be created
-following the same pattern as File 1.
+**Reference File 2 (Design & Agent Spec):**
+- `claude-collaboration/rf2-context.md` — Working context: all sources
+  read, 4 conflict resolutions, content scope, finalized 8-section
+  outline with ordering rationale, writing insights, and review findings
+  (section-by-section decisions + adversarial review triage).
+- `claude-collaboration/reference-file-2-prompt.md` — Self-contained
+  writing prompt used by sub-agent to produce the first draft.
+- `claude-collaboration/rf-review-prompt.md` — Generic 4-dimension
+  review framework, reusable across all reference files and by other PMs.
+- `claude-collaboration/rf2-review-prompt.md` — Self-contained adversarial
+  review prompt with RF2-specific custom evaluations.
+- `claude-collaboration/rf2-analysis-report.md` — Adversarial review (v2)
+  output, modified by Vivek with triage notes.
+- `claude-collaboration/rf2-analysis-report-v1-soft.md` — Backup of
+  discarded v1 (soft) review report, kept for comparison.
+
+**Reference Files 3-5:** Working context and prompts to be created
+following the same pattern as Files 1 and 2.
 
 ---
 
@@ -1610,4 +1627,44 @@ TBD (asset vs. reference file — see Work Item 9).
 `claude-collaboration/rf2-context.md`,
 `claude-collaboration/reference-file-1-prompt.md`,
 `claude-collaboration/reference-file-2-prompt.md`,
+`claude-collaboration/collaboration-context.md`
+
+### Sessions 7-8 — February 18-19, 2026
+
+**Outputs**:
+- RF2 collaborative section-by-section review completed (Sections 5-8)
+- Adversarial sub-agent review framework created (reusable for other PMs)
+- Two sub-agent review passes run; v1 discarded, v2 findings triaged
+- RF1 action reference tagging fixes (3 violations in anti-patterns)
+- rf2-context.md updated with review findings
+- Sample asset creation deferred to post-RF5
+
+**Key decisions**:
+- Section 6/7 separation: Section 6 = classification (WHEN), Section 7 =
+  mechanisms (HOW). No back-references from 7→6.
+- Section 8 loop prevention: unified explanation with three concrete
+  bullets. "No `available when` gate" = action stays visible (explicit
+  mechanism, not abstract state).
+- Stub flow: 5 sequential steps. Use `sfdx-project.json` to find default
+  package directory (don't hardcode `force-app`). Use CLI to generate
+  class files. Deploy one class at a time.
+- Sub-agent review methodology: adversarial stance, collaboration context
+  banned as source, design artifacts marked UNVERIFIABLE, permitted sources
+  explicitly listed. This process is documented in rf-review-prompt.md and
+  rf2-review-prompt.md for reuse by other PMs (Objective 3).
+- Dismissed v2 findings about boolean capitalization, `before_reasoning`
+  definitions, and "Topic used before introduced" — RF1 is always loaded
+  as prerequisite per SKILL.md.
+- Sample assets deferred to after all RFs are complete.
+
+**What's unresolved**: RF3 (Validation & Debugging) is next. Sample
+asset creation planned for post-RF5.
+
+**Files modified**: `agent-script-skill/references/agent-design-and-spec-creation.md`,
+`agent-script-skill/references/agent-script-core-language.md`,
+`claude-collaboration/rf2-context.md`,
+`claude-collaboration/rf-review-prompt.md`,
+`claude-collaboration/rf2-review-prompt.md`,
+`claude-collaboration/rf2-analysis-report.md`,
+`claude-collaboration/rf2-analysis-report-v1-soft.md`,
 `claude-collaboration/collaboration-context.md`
