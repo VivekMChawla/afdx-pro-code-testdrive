@@ -214,7 +214,7 @@ sf agent preview send --authoring-bundle Local_Info_Agent --session-id abc123def
 sf agent preview end --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> --json
 ```
 
-This command returns the path to session trace files. Call it when the conversation is complete or when you need to access traces. Do not end prematurely — if the user may ask follow-up questions, keep the session open. [SOURCE: agent-preview-rules (lines 87-95)]
+This command returns the path to session trace files. Call it when the conversation is complete. Do not end prematurely — if the user may ask follow-up questions, keep the session open. [SOURCE: agent-preview-rules (lines 87-95)]
 
 ### Execution Modes
 
