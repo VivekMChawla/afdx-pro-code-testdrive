@@ -587,7 +587,7 @@ Use this systematic 8-step approach when diagnosing any agent behavior issue.
 
 1. **Reproduce** — Use `sf agent preview start/send/end` with `--json` to recreate the issue with the exact user input that triggered it
 
-2. **Locate** — End the session to write trace files. Open `transcript.jsonl` and find the failing turn. Note the `planId` (or look up the turn in the transcript).
+2. **Locate** — Open `transcript.jsonl` and find the failing agent turn. Read the `planId` from its `raw` array.
 
 3. **Read the Trace** — Open `traces/<PLAN_ID>.json` for the failing turn. Read the plan array in order.
 
@@ -670,13 +670,13 @@ reasoning:
     instructions: ->
         | Tell the user about the weather.
 
-# CORRECT — explicit instructions to use specific values
+# CORRECT — explicit instructions to use verbatim values
 reasoning:
     instructions: ->
-        | After getting weather results, respond with the exact date and temperature values from the results.
-          For example: "The weather on {!@outputs.date} will be {!@outputs.temperature}."
-          Do NOT paraphrase dates (say "2025-02-19", not "today").
-          Do NOT round temperatures (say the exact value from the results).
+        | After getting weather results, respond using the exact date and temperature
+          values returned by the action. Do NOT paraphrase dates (say "2025-02-19",
+          not "today"). Do NOT round temperatures (say the exact value from the results).
+          Quote action output values verbatim whenever possible.
 ```
 
 #### Why Simulated Mode Cannot Reproduce Grounding Failures
