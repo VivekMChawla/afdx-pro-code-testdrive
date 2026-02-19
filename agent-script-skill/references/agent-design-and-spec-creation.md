@@ -509,17 +509,7 @@ topic admin_panel:
               If they are not an admin, tell them access is denied.
 ```
 
-RIGHT: Security rule as a gate (runtime enforces it)
-```agentscript
-topic admin_panel:
-    before_reasoning:
-        if @variables.user_role != "admin":
-            transition to @topic.access_denied
-
-    reasoning:
-        instructions: ->
-            | You are in the admin panel. Help the user manage settings.
-```
+The LLM may comply, or it may not — instructions are suggestions. The RIGHT approach uses a `before_reasoning` guard that the runtime enforces before the LLM is ever invoked. See Section 7 for all gating mechanisms.
 
 ### Writing Effective Instructions
 
@@ -578,23 +568,13 @@ When an action completes without triggering a transition, the topic stays active
 
 ## 7. Gating Patterns
 
-Gating controls what the agent can see and do.
+These mechanisms enforce requirements that the LLM must not be allowed to bypass.
 
 ### `available when` — Action Visibility Gate
 
 An action marked `available when <condition>` is hidden from the LLM when the condition is false. The LLM cannot call an unavailable action.
 
-```agentscript
-topic booking:
-    reasoning:
-        actions:
-            confirm: @actions.confirm_booking
-                available when @variables.booking_pending == True
-```
-
-If `booking_pending` is False, the LLM sees no `confirm` action in this topic. This is the strongest gate — absence itself is a signal.
-
-**WRONG: Not using `available when`**
+**WRONG: Relying on instructions to prevent action calls**
 ```agentscript
 topic booking:
     reasoning:
@@ -606,9 +586,9 @@ topic booking:
                   Do NOT call confirm yet.
 ```
 
-The action is still visible; instructions tell the LLM not to call it. The LLM may ignore instructions.
+The action is visible; instructions tell the LLM not to call it. The LLM may ignore instructions.
 
-**RIGHT: Using `available when`**
+**RIGHT: Using `available when` to hide the action**
 ```agentscript
 topic booking:
     reasoning:
@@ -617,7 +597,7 @@ topic booking:
                 available when @variables.booking_pending == True
 ```
 
-The action is literally absent from the LLM's view. No temptation to call it.
+If `booking_pending` is False, the LLM sees no `confirm` action. This is the strongest gate.
 
 ### Conditional Instructions — Prompt Text Gate
 
@@ -642,7 +622,7 @@ Use conditional instructions when you want to steer the LLM's reasoning without 
 
 ### `before_reasoning` Guards — Early Exit
 
-Run code before the LLM is even invoked. Use for security gates and mandatory checks.
+The `before_reasoning` block runs before the LLM is invoked. Code here executes every time the topic is entered. The LLM never sees it, cannot override it, and cannot skip it.
 
 ```agentscript
 topic admin_panel:
@@ -654,7 +634,7 @@ topic admin_panel:
         instructions: | You are in the admin panel.
 ```
 
-If the guard fails, the user never sees the admin topic. They transition out before Phase 2 (LLM reasoning) runs.
+If the user is not an admin, they transition out before the LLM is invoked. The admin topic's reasoning instructions never execute.
 
 ### Multi-Condition Gating
 
