@@ -963,7 +963,7 @@ before_reasoning:
 # WRONG — no gating, no post-action guidance, variable-bound input
 reasoning:
     instructions: ->
-        | Place an order using the create_order action.
+        | Place an order using the {!@actions.create_order} action.
     actions:
         create_order: @actions.create_order
             with items = @variables.cart_items
@@ -976,7 +976,7 @@ reasoning:
 ```agentscript
 reasoning:
     instructions: ->
-        | Place an order using the create_order action.
+        | Place an order using the {!@actions.create_order} action.
           After the order is created, confirm the order number.
           Do NOT call the action again — you have the result.
     actions:
@@ -1007,7 +1007,7 @@ topic check_status:
 topic check_status:
     reasoning:
         instructions: ->
-            | If the customer asks about their order status, use the fetch_status action.
+            | If the customer asks about their order status, use the {!@actions.fetch_status} action.
         actions:
             lookup: @actions.fetch_status
                 with order_id = @variables.order_id
