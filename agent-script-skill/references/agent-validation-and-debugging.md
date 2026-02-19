@@ -23,7 +23,7 @@ After modifying any `.agent` file, always run this command:
 sf agent validate authoring-bundle --api-name <AGENT_NAME> --json
 ```
 
-Replace `<AGENT_NAME>` with the directory name under `aiAuthoringBundles/` (without the `.agent` extension). Always include `--json` so the output is machine-readable. [SOURCE: agent-script-rules (line 60)]
+Replace `<AGENT_NAME>` with the directory name under `aiAuthoringBundles/` (without the `.agent` extension). Always include `--json` so the output is machine-readable.
 
 Example:
 
@@ -49,26 +49,26 @@ When validation fails, the CLI treats it as an error. The output uses the CLI er
 
 The `message` field contains the compilation errors. These errors may include ANSI terminal color codes (`\u001b[31m`, `\u001b[39m`, etc.) — strip these before interpreting the message. Errors typically include line and column references (e.g., `[Ln 92, Col 13]`) that map to the `.agent` file, but do not assume a fixed error format. Read the `message` content naturally and reason about what it tells you.
 
-Do not attempt to preview or deploy until validation passes. [SOURCE: agent-preview-rules (line 9)]
+Do not attempt to preview or deploy until validation passes.
 
 ### Validation Checklist (Pre-Validate Mental Model)
 
 Before running the validation command, mentally check these 14 items. This checklist prevents the most common errors and speeds up the feedback loop:
 
-- Block ordering is correct: `system` → `config` → `variables` → `connections` → `knowledge` → `language` → `start_agent` → `topic` blocks [SOURCE: agent-script-rules (line 77)]
-- `config` block has `developer_name` (required for service agents: also needs `default_agent_user`) [SOURCE: agent-script-rules (line 687)]
-- `system` block has `messages.welcome`, `messages.error`, and `instructions` [SOURCE: agent-script-rules (line 689)]
-- `start_agent` block exists with description and at least one transition action [SOURCE: agent-script-rules (line 690)]
-- Each `topic` has a `description` and `reasoning` block [SOURCE: agent-script-rules (line 691)]
-- All `mutable` variables have default values (required) [SOURCE: agent-script-rules (line 692)]
-- All `linked` variables have `source` specified and NO default value [SOURCE: agent-script-rules (line 693)]
-- Action `target` uses valid format (`flow://`, `apex://`, `prompt://`, etc.) [SOURCE: agent-script-rules (line 694)]
-- Boolean values use `True`/`False` (capitalized, not `true`/`false`) [SOURCE: agent-script-rules (line 695)]
-- `...` is used for LLM slot-filling in reasoning action inputs, not as variable defaults [SOURCE: agent-script-rules (line 696)]
-- Transition syntax is correct: `@utils.transition to` in `reasoning.actions`, bare `transition to` in directive blocks [SOURCE: agent-script-rules (lines 697-698)]
-- Indentation is consistent (4 spaces recommended) [SOURCE: agent-script-rules (line 699)]
-- Names follow naming rules (letters, numbers, underscores only; no spaces; start with letter) [SOURCE: agent-script-rules (line 700)]
-- No duplicate block names or action names within the same scope [SOURCE: agent-script-rules (line 687)]
+- Block ordering is correct: `system` → `config` → `variables` → `connections` → `knowledge` → `language` → `start_agent` → `topic` blocks
+- `config` block has `developer_name` (required for service agents: also needs `default_agent_user`)
+- `system` block has `messages.welcome`, `messages.error`, and `instructions`
+- `start_agent` block exists with description and at least one transition action
+- Each `topic` has a `description` and `reasoning` block
+- All `mutable` variables have default values (required)
+- All `linked` variables have `source` specified and NO default value
+- Action `target` uses valid format (`flow://`, `apex://`, `prompt://`, etc.)
+- Boolean values use `True`/`False` (capitalized, not `true`/`false`)
+- `...` is used for LLM slot-filling in reasoning action inputs, not as variable defaults
+- Transition syntax is correct: `@utils.transition to` in `reasoning.actions`, bare `transition to` in directive blocks
+- Indentation is consistent (4 spaces recommended)
+- Names follow naming rules (letters, numbers, underscores only; no spaces; start with letter)
+- No duplicate block names or action names within the same scope
 
 ---
 
@@ -92,7 +92,7 @@ after_reasoning:
     transition to @topic.next
 ```
 
-In reasoning actions (where the LLM decides what to do), use `@utils.transition to`. In directive blocks (`before_reasoning`, `after_reasoning`), use bare `transition to`. These are two different syntaxes for two different contexts. [SOURCE: agent-script-rules (lines 708-720)]
+In reasoning actions (where the LLM decides what to do), use `@utils.transition to`. In directive blocks (`before_reasoning`, `after_reasoning`), use bare `transition to`. These are two different syntaxes for two different contexts.
 
 **2. Missing Default for Mutable Variable**
 
@@ -104,7 +104,7 @@ count: mutable number
 count: mutable number = 0
 ```
 
-Mutable variables are initialized at runtime. They must have a default value so the runtime knows the initial state. [SOURCE: agent-script-rules (lines 722-730)]
+Mutable variables are initialized at runtime. They must have a default value so the runtime knows the initial state.
 
 **3. Wrong Boolean Capitalization**
 
@@ -116,7 +116,7 @@ enabled: mutable boolean = true
 enabled: mutable boolean = True
 ```
 
-Agent Script requires `True`/`False` (capitalized). This is consistent across all boolean contexts: variable defaults, conditional comparisons, and field values. [SOURCE: agent-script-rules (lines 732-740)]
+Agent Script requires `True`/`False` (capitalized). This is consistent across all boolean contexts: variable defaults, conditional comparisons, and field values.
 
 **4. Using `...` as Variable Default (It's for Slot-Filling Only)**
 
@@ -128,7 +128,7 @@ my_var: mutable string = ...
 my_var: mutable string = ""
 ```
 
-`...` tells the LLM "extract this value from the conversation" during reasoning actions. It cannot be a variable default. [SOURCE: agent-script-rules (lines 742-750)]
+`...` tells the LLM "extract this value from the conversation" during reasoning actions. It cannot be a variable default.
 
 **5. List Type for Linked Variables**
 
@@ -140,7 +140,7 @@ items: linked list[string]
 items: mutable list[string] = []
 ```
 
-Linked variables come from external context (session ID, user record, etc.) which are scalar values. Lists must be mutable. [SOURCE: agent-script-rules (lines 752-760)]
+Linked variables come from external context (session ID, user record, etc.) which are scalar values. Lists must be mutable.
 
 **6. Default Value on Linked Variable**
 
@@ -154,7 +154,7 @@ session_id: linked string
     source: @session.sessionID
 ```
 
-Linked variables are populated from their `source` at runtime. Do not assign a default value. [SOURCE: agent-script-rules (lines 762-772)]
+Linked variables are populated from their `source` at runtime. Do not assign a default value.
 
 **7. Post-Action Directives on Utility Actions**
 
@@ -168,7 +168,7 @@ process: @actions.process_order
     set @variables.result = @outputs.result
 ```
 
-Post-action directives (`set`, `run`, `if`, `transition`) only work after `@actions.*` invocations. Utility actions (`@utils.*`) and topic delegates (`@topic.*`) do not produce outputs, so post-action directives are not applicable. [SOURCE: agent-script-rules (lines 774-784)]
+Post-action directives (`set`, `run`, `if`, `transition`) only work after `@actions.*` invocations. Utility actions (`@utils.*`) and topic delegates (`@topic.*`) do not produce outputs, so post-action directives are not applicable.
 
 ---
 
@@ -178,7 +178,7 @@ Preview lets you test an agent's behavior by sending utterances and observing re
 
 ### Programmatic Workflow
 
-ALWAYS use `--json` when calling from a script or AI assistant (not interactive REPL). [SOURCE: agent-preview-rules (line 67)]
+ALWAYS use `--json` when calling from a script or AI assistant (not interactive REPL).
 
 #### Step 1: Start a Session
 
@@ -186,7 +186,7 @@ ALWAYS use `--json` when calling from a script or AI assistant (not interactive 
 sf agent preview start --authoring-bundle <BUNDLE_NAME> --json
 ```
 
-This command returns a session ID. Capture it immediately — you need it for every subsequent command. [SOURCE: agent-preview-rules (lines 69-75)]
+This command returns a session ID. Capture it immediately — you need it for every subsequent command.
 
 Example:
 
@@ -200,7 +200,7 @@ sf agent preview start --authoring-bundle Local_Info_Agent --json
 sf agent preview send --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> -u "<MESSAGE>" --json
 ```
 
-Include the same `--authoring-bundle` name and the session ID from Step 1. You can send multiple utterances in the same session — do not end and restart between turns. [SOURCE: agent-preview-rules (lines 77-86)]
+Include the same `--authoring-bundle` name and the session ID from Step 1. You can send multiple utterances in the same session — do not end and restart between turns.
 
 Example:
 
@@ -214,7 +214,7 @@ sf agent preview send --authoring-bundle Local_Info_Agent --session-id abc123def
 sf agent preview end --authoring-bundle <BUNDLE_NAME> --session-id <SESSION_ID> --json
 ```
 
-This command returns the path to session trace files. Call it when the conversation is complete. Do not end prematurely — if the user may ask follow-up questions, keep the session open. [SOURCE: agent-preview-rules (lines 87-95)]
+This command returns the path to session trace files. Call it when the conversation is complete. Do not end prematurely — if the user may ask follow-up questions, keep the session open.
 
 ### Execution Modes
 
@@ -224,7 +224,7 @@ Agent Script agents in authoring bundles support two preview execution modes: si
 - Backing Apex, Flows, or Prompt Templates don't exist yet (you're experimenting with instructions and flow before building actions)
 - No default agent user is configured (live preview mode requires a real, active user; simulated preview mode skips this requirement)
 
-Simulated preview mode speeds up inner-loop development but cannot validate real action outputs, variable-driven branching, or grounding behavior. [SOURCE: agent-preview-rules (lines 44-54)]
+Simulated preview mode speeds up inner-loop development but cannot validate real action outputs, variable-driven branching, or grounding behavior.
 
 **Live Preview Mode.** Real backing code executes and returns real outputs. Pass `--use-live-actions`:
 
@@ -236,9 +236,9 @@ Use live preview mode when:
 - Backing code is deployed and a default agent user is configured
 - Your test depends on real action output values (grounding validation, variable-driven branching, output formatting)
 
-Live preview mode is required for reliable grounding testing. The grounding checker runs in both modes, but simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures in simulated preview mode, switch to live preview mode before diagnosing — the failure may be an artifact of simulation, not a real problem. [SOURCE: agent-preview-rules (lines 56-61)]
+Live preview mode is required for reliable grounding testing. The grounding checker runs in both modes, but simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures in simulated preview mode, switch to live preview mode before diagnosing — the failure may be an artifact of simulation, not a real problem.
 
-CRITICAL: `--use-live-actions` is ONLY valid with `--authoring-bundle`. Published agents (`--api-name`) always execute real actions — do NOT pass `--use-live-actions` with `--api-name`. [SOURCE: agent-preview-rules (line 46)]
+CRITICAL: `--use-live-actions` is ONLY valid with `--authoring-bundle`. Published agents (`--api-name`) always execute real actions — do NOT pass `--use-live-actions` with `--api-name`.
 
 ### Agent Identification
 
@@ -247,13 +247,13 @@ Use exactly one of these mutually exclusive flags:
 - `--authoring-bundle <name>` — for a local Agent Script agent. The name is the directory name under `aiAuthoringBundles/` (without the `.agent` extension).
 - `--api-name <name>` — for a published agent in the org. The name is the directory name under `Bots/`.
 
-These flags identify which agent to preview. [SOURCE: agent-preview-rules (lines 29-32)]
+These flags identify which agent to preview.
 
-To use a published agent, switch from `--authoring-bundle` to `--api-name`. No additional setup is required. The agent runs real actions; `--use-live-actions` is not passed. [SOURCE: agent-preview-rules (line 46)]
+To use a published agent, switch from `--authoring-bundle` to `--api-name`. No additional setup is required. The agent runs real actions; `--use-live-actions` is not passed.
 
 ### Target Org
 
-The CLI automatically uses the project's default target org. Always omit `--target-org` and rely on the project default. Only pass `--target-org` if the user explicitly tells you which org to use. Never guess or invent an org username. [SOURCE: agent-preview-rules (lines 15-23)]
+The CLI automatically uses the project's default target org. Always omit `--target-org` and rely on the project default. Only pass `--target-org` if the user explicitly tells you which org to use. Never guess or invent an org username.
 
 ### Common Preview Mistakes with WRONG/RIGHT Pairs
 
@@ -267,7 +267,7 @@ sf agent preview --authoring-bundle My_Bundle
 sf agent preview start --authoring-bundle My_Bundle --json
 ```
 
-The bare `sf agent preview` command is an interactive REPL for humans. Automation cannot provide terminal input (ESC), so it hangs. Use `start`/`send`/`end` with `--json`. [SOURCE: agent-preview-rules (lines 117-125)]
+The bare `sf agent preview` command is an interactive REPL for humans. Automation cannot provide terminal input (ESC), so it hangs. Use `start`/`send`/`end` with `--json`.
 
 **2. Combining `--authoring-bundle` and `--api-name`**
 
@@ -279,7 +279,7 @@ sf agent preview start --authoring-bundle My_Bundle --api-name My_Agent --json
 sf agent preview start --authoring-bundle My_Bundle --json
 ```
 
-These flags are mutually exclusive. Use the one matching your agent type. [SOURCE: agent-preview-rules (lines 127-135)]
+These flags are mutually exclusive. Use the one matching your agent type.
 
 **3. Sending Before Starting**
 
@@ -292,7 +292,7 @@ sf agent preview start --authoring-bundle My_Bundle --json
 sf agent preview send --authoring-bundle My_Bundle --session-id <ID> -u "Hello" --json
 ```
 
-Each session has a unique ID. You must start before sending. [SOURCE: agent-preview-rules (lines 137-146)]
+Each session has a unique ID. You must start before sending.
 
 **4. Forgetting the Agent Identifier on `send` and `end`**
 
@@ -304,7 +304,7 @@ sf agent preview send --session-id <ID> -u "Hello" --json
 sf agent preview send --authoring-bundle My_Bundle --session-id <ID> -u "Hello" --json
 ```
 
-Every command after `start` must include the same `--authoring-bundle` or `--api-name` flag. [SOURCE: agent-preview-rules (lines 158-166)]
+Every command after `start` must include the same `--authoring-bundle` or `--api-name` flag.
 
 **5. Omitting `--session-id` on `send` or `end`**
 
@@ -316,7 +316,7 @@ sf agent preview send --authoring-bundle My_Bundle -u "Hello" --json
 sf agent preview send --authoring-bundle My_Bundle --session-id <ID> -u "Hello" --json
 ```
 
-If multiple agents have concurrent sessions against the same agent, omitting the session ID causes them to interfere. Always pass the session ID from `start`. [SOURCE: agent-preview-rules (lines 168-176)]
+If multiple agents have concurrent sessions against the same agent, omitting the session ID causes them to interfere. Always pass the session ID from `start`.
 
 ---
 
@@ -336,9 +336,9 @@ Traces are stored locally at:
     └── <PLAN_ID>.json      # Detailed execution trace for each turn
 ```
 
-Replace `<AGENT_NAME>` with your authoring bundle name (e.g., `Local_Info_Agent`). The `<SESSION_ID>` is the value returned by `sf agent preview start`. A separate trace file (identified by `<PLAN_ID>`) is written for each conversation turn. [SOURCE: agent-debugging-rules (lines 7-20)]
+Replace `<AGENT_NAME>` with your authoring bundle name (e.g., `Local_Info_Agent`). The `<SESSION_ID>` is the value returned by `sf agent preview start`. A separate trace file (identified by `<PLAN_ID>`) is written for each conversation turn.
 
-Traces are available immediately after each `send` — you do NOT need to end the session to read them. [SOURCE: agent-preview-rules (lines 99-101)]
+Traces are available immediately after each `send` — you do NOT need to end the session to read them.
 
 ### File Structure
 
@@ -351,7 +351,7 @@ Traces are available immediately after each `send` — you do NOT need to end th
 {"timestamp":"...","agentId":"Local_Info_Agent","sessionId":"abc123","role":"agent","text":"The weather on 2026-02-19...","raw":[{"planId":"def456","isContentSafe":true,...}]}
 ```
 
-To connect a failed turn to its trace, find the agent response in the transcript and read the `planId` from its `raw` array. That `planId` is the filename under `traces/`. [SOURCE: agent-debugging-rules (lines 24-35)]
+To connect a failed turn to its trace, find the agent response in the transcript and read the `planId` from its `raw` array. That `planId` is the filename under `traces/`.
 
 **traces/<PLAN_ID>.json** is the detailed execution log for a single turn. It contains top-level fields (`type`, `planId`, `sessionId`, `intent`, `topic`) and a `plan` array with execution steps in chronological order.
 
@@ -371,7 +371,6 @@ Each trace step type reveals specific execution information:
 - **`TransitionStep`** — Topic transition — shows from/to topics and transition type.
 - **`PlannerResponseStep`** — Final response delivered to user — includes safety scores.
 
-[SOURCE: agent-debugging-rules (lines 44-58)]
 
 ### How to Read a Trace
 
@@ -402,7 +401,6 @@ The `messages_sent` array shows you exactly what the LLM saw. This is invaluable
 - You can verify that variable interpolation (`{!@variables.x}`) worked correctly
 - You can see platform-injected system prompts (tool usage protocol, safety routing, language guidelines) that your Agent Script instructions sit alongside
 
-[SOURCE: agent-debugging-rules (lines 139-158)]
 
 ### When to Use Traces vs. Transcript
 
@@ -466,7 +464,6 @@ start_agent topic_selector:
                 description: "Route to hours topic for facility hours questions"
 ```
 
-[SOURCE: agent-debugging-rules (lines 62-67)]
 
 ### Pattern: Actions Not Firing
 
@@ -512,7 +509,6 @@ reasoning:
             with Event_Type = @variables.guest_interests
 ```
 
-[SOURCE: agent-debugging-rules (lines 69-74)]
 
 ### Pattern: Behavioral Loops
 
@@ -560,7 +556,7 @@ reasoning:
 
 The key difference: the AFTER version explicitly references the variable value to decide whether to ask or act, and includes a stop condition ("Do NOT ask about interests again").
 
-Note: repeated `LLMStep` → `ReasoningStep` pairs in a trace may indicate grounding retry rather than a behavioral loop — see Diagnostic Workflow: Grounding subsection. [SOURCE: agent-debugging-rules (lines 93-103)]
+Note: repeated `LLMStep` → `ReasoningStep` pairs in a trace may indicate grounding retry rather than a behavioral loop — see Diagnostic Workflow: Grounding subsection.
 
 ### Pattern: "Unexpected Error" Responses
 
@@ -577,7 +573,6 @@ Note: repeated `LLMStep` → `ReasoningStep` pairs in a trace may indicate groun
 
 **Fix:** See Diagnostic Workflow: Grounding subsection for grounding failures. For action errors, verify the backing Apex/Flow/Prompt Template is deployed and handles edge cases correctly. For transition errors, verify all referenced topics exist and are spelled correctly.
 
-[SOURCE: agent-debugging-rules (lines 105-111)]
 
 ---
 
@@ -607,7 +602,6 @@ Use this systematic 8-step approach when diagnosing any agent behavior issue.
 
 8. **Re-Test** — Run a new preview session with the same input and compare traces. Verify the fix resolved the issue.
 
-[SOURCE: agent-debugging-rules (lines 161-178)]
 
 ### Grounding
 
@@ -629,11 +623,10 @@ When the platform's grounding checker flags a response as UNGROUNDED:
 4. This retry is visible in traces as repeated `LLMStep` → `ReasoningStep` pairs for the same topic
 5. When this happens, the actual action output is still in the trace's `FunctionStep.function.output`. The LLM's failed response attempts are in the `LLMStep.response_messages`. Use these to understand what the agent tried to say versus what the action actually returned.
 
-[SOURCE: agent-debugging-rules (lines 115-130)]
 
 #### Non-Deterministic Behavior
 
-The grounding checker is non-deterministic. The same response may be flagged as UNGROUNDED on one attempt and GROUNDED on the next. When diagnosing intermittent grounding failures, look for responses that require the grounding checker to make inferences (date inference, unit conversions, paraphrased values). [SOURCE: agent-debugging-rules (lines 132-135)]
+The grounding checker is non-deterministic. The same response may be flagged as UNGROUNDED on one attempt and GROUNDED on the next. When diagnosing intermittent grounding failures, look for responses that require the grounding checker to make inferences (date inference, unit conversions, paraphrased values).
 
 #### Common Grounding Failure Causes
 
@@ -642,7 +635,6 @@ The grounding checker is non-deterministic. The same response may be flagged as 
 - **Embellishment:** Agent adds details not in the function output (e.g., "gentle breeze" when the function only returned temperature data).
 - **Loose Paraphrasing:** Agent restates function output in words that don't closely match the original.
 
-[SOURCE: agent-debugging-rules (lines 81-88)]
 
 #### Diagnosing Grounding Failures
 
@@ -663,7 +655,7 @@ Grounding fails because: "today" requires inference (the checker doesn't know if
 
 #### Fix Approach
 
-Update Agent Script instructions to tell the agent to use specific values from action output verbatim rather than paraphrasing or inferring. [SOURCE: agent-debugging-rules (lines 89-91)]
+Update Agent Script instructions to tell the agent to use specific values from action output verbatim rather than paraphrasing or inferring.
 
 ```agentscript
 # WRONG — allows paraphrasing and inference
@@ -682,8 +674,7 @@ reasoning:
 
 #### Grounding in Simulated Preview Mode
 
-The grounding checker runs in both simulated and live preview modes. However, simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures during simulated preview, switch to live preview mode (`--use-live-actions`) before investing time in diagnosis — the failure may be an artifact of simulation, not a real instruction problem. [SOURCE: agent-preview-rules (line 59)]
+The grounding checker runs in both simulated and live preview modes. However, simulated preview mode generates fake action outputs via LLM, and those outputs can trigger false grounding failures because they don't match real data patterns. If you see grounding failures during simulated preview, switch to live preview mode (`--use-live-actions`) before investing time in diagnosis — the failure may be an artifact of simulation, not a real instruction problem.
 
 ---
 
-**Citation Format:** All claims in this file are attributed to source files via `[SOURCE: filename (line N)]` citations. These citations make the file auditable and will be regex-stripped after review.
