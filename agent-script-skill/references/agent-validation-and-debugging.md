@@ -437,10 +437,10 @@ These patterns map symptoms to trace analysis techniques. Each pattern follows t
 
 **Root Cause:** Topic selector instructions are ambiguous, missing context, or don't map user requests to the correct topics.
 
-**Fix Example:**
+**Fix:** A minimal topic selector with well-named actions often routes correctly. When it doesn't, add routing instructions and action descriptions to give the LLM more context:
 
 ```agentscript
-# WRONG — too vague
+# BEFORE — relies on action names alone for routing
 start_agent topic_selector:
     description: "Route to appropriate topics"
     reasoning:
@@ -448,7 +448,7 @@ start_agent topic_selector:
             go_to_weather: @utils.transition to @topic.local_weather
             go_to_events: @utils.transition to @topic.local_events
 
-# CORRECT — explicit routing instructions
+# AFTER — explicit instructions and descriptions improve routing accuracy
 start_agent topic_selector:
     description: "Route to appropriate topics"
     reasoning:
@@ -514,57 +514,53 @@ reasoning:
 
 [SOURCE: agent-debugging-rules (lines 69-74)]
 
-### Pattern: Action Loops
+### Pattern: Behavioral Loops
 
-**Symptom:** The agent calls the same action repeatedly in a single conversation turn or keeps returning to the same topic.
+**Symptom:** The agent keeps asking the same question or repeating the same response across multiple turns, even though the user already provided the requested information.
 
-**Trace Analysis:**
+**Diagnosis:** Observe the conversation output rather than relying on trace data (trace structure varies). A common cause is instructions that collect information and act on it within the same topic — when the topic is re-entered, the collection logic runs again even though the data was already gathered.
 
-1. Look for repeated `TransitionStep` entries — is the same topic being entered multiple times?
-2. Look for repeated `FunctionStep` entries for the same action — is it executing more than once per turn?
-3. Check `BeforeReasoningIterationStep` — are `before_reasoning` actions running unconditionally on every cycle?
-4. Check `after_reasoning` transitions — is there an unconditional transition that re-enters the same topic?
-5. Look for repeated `LLMStep` → `ReasoningStep` pairs — this may indicate grounding retry (see Diagnostic Workflow: Grounding subsection).
-
-**Root Cause:** The `available when` condition remains satisfied after the action runs AND the instructions don't tell the agent to stop calling it.
-
-**Fix Example:**
+**Fix Example:** In this real scenario, the `local_events` topic asks about interests and then looks up events. But each time the topic is re-entered, the agent asks about interests again instead of checking whether it already knows them:
 
 ```agentscript
-# WRONG — action stays available after it runs, instructions don't say to stop
+# BEFORE — agent asks about interests every time the topic is entered
 reasoning:
     instructions: ->
-        | Use the {!@actions.check_events} action to get a list of events.
+        | If you do not already know the guest's interests, ask them about their
+          interests so you can provide relevant event information.
+          Use the {!@actions.check_events} action to get a list of events once
+          you know what the guest is interested in.
 
     actions:
+        collect_interests: @utils.setVariables
+            description: "Collect the guest's interests when they share them"
+            with guest_interests = ...
+
         check_events: @actions.check_events
             available when @variables.guest_interests != ""
             with Event_Type = @variables.guest_interests
 
-# CORRECT — explicitly tell the agent to call it ONCE and then stop
+# AFTER — condition on the variable, not on re-asking
 reasoning:
     instructions: ->
-        | Use the {!@actions.check_events} action to get a list of events.
-          After receiving event results, summarize them for the guest.
-          Do NOT call the action again — present the results directly.
+        | If @variables.guest_interests is empty, ask the guest about their interests.
+          If @variables.guest_interests is already set, use {!@actions.check_events}
+          to find matching events and present the results.
+          Do NOT ask about interests again if you already have them.
 
     actions:
+        collect_interests: @utils.setVariables
+            description: "Collect the guest's interests when they share them"
+            with guest_interests = ...
+
         check_events: @actions.check_events
             available when @variables.guest_interests != ""
             with Event_Type = @variables.guest_interests
 ```
 
-Alternative fix: use a post-action transition to move out of the topic:
+The key difference: the AFTER version explicitly references the variable value to decide whether to ask or act, and includes a stop condition ("Do NOT ask about interests again").
 
-```agentscript
-reasoning:
-    actions:
-        check_events: @actions.check_events
-            with Event_Type = @variables.guest_interests
-            transition to @topic.summary_topic
-```
-
-[SOURCE: agent-debugging-rules (lines 93-103)]
+Note: repeated `LLMStep` → `ReasoningStep` pairs in a trace may indicate grounding retry rather than a behavioral loop — see Diagnostic Workflow: Grounding subsection. [SOURCE: agent-debugging-rules (lines 93-103)]
 
 ### Pattern: "Unexpected Error" Responses
 
