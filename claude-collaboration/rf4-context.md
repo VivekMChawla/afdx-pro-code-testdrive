@@ -337,8 +337,12 @@ results. CLI commands appear in both files (intentional duplication).
      author Agent Script locally while low-code users refine in Builder.
    - The deploy caution from `.a4drules`: NEVER deploy `.agent` or
      AiAuthoringBundle metadata in routine backing-code deploys.
-   - `default_agent_user` must be set to a valid agent user (license
-     type requirements UNKNOWN — see Research Questions).
+   - `default_agent_user` must be set to a user with "Einstein Agent"
+     license (CONFIRMED via RQ1). Wrong license → misleading "Internal
+     Error, try again later." Immutable after first publish.
+   - Two validation layers: compile (CLI `validate`) and API (during
+     `publish`). API validation catches agent user and backing logic
+     issues that compile validation misses. Open TD to integrate them.
    - Deploy validates backing logic existence (validation depth
      UNKNOWN — see Research Questions).
    - "Backing code" defined: Apex classes, Flows, Prompt Templates,
@@ -522,11 +526,68 @@ These are the components that actually execute when an agent action
 fires. The term is used throughout RF4 to distinguish routine deploys
 (backing code only) from agent metadata deploys (AiAuthoringBundle).
 
-**3. `default_agent_user` must be set for AAB deployment.**
+**3. `default_agent_user` requires "Einstein Agent" license.**
+**(CONFIRMED via RQ1 experiment — 2026-02-19)**
 
-Deploying an AAB to an org fails if `default_agent_user` is not set
-to a valid Salesforce agent user. The specifics of which license types
-qualify are UNKNOWN (see Research Questions below).
+The `default_agent_user` field requires a user with the **"Einstein
+Agent"** license type (profile: "Einstein Agent User"). Standard
+"Salesforce"-licensed users — even System Administrators — cannot be
+used. The platform returns a misleading `"Internal Error, try again
+later"` instead of a license-related error, making this hard to
+diagnose. Reproduced 3 times across 2 different agents.
+
+**3a. `default_agent_user` is immutable after first publish.**
+**(DISCOVERED via RQ1 experiment — 2026-02-19)**
+
+Once an agent has been published, `default_agent_user` cannot be
+changed. Confirmed in BOTH CLI and NGA Web (Agent Builder):
+- CLI: `"Default Agent user [X] does not match the existing Default
+  Agent user [Y]"`
+- NGA Web: `"API validation failed. Error details: Default Agent user
+  [005DL00000JbQJa] does not match the existing Default Agent user
+  [005DL00000JbLoZ]"`
+This means the agent user is permanently bound at first publish.
+Getting this right on the first publish is critical.
+
+**3b. `sf agent validate` does NOT validate `default_agent_user`.**
+**(DISCOVERED via RQ1 experiment — 2026-02-19)**
+
+Validation only checks Agent Script syntax/compilation. User validity
+is only checked during `sf agent publish`, at the publish step (not
+the compile step). A developer can validate successfully and still
+fail at publish due to an invalid agent user.
+
+**3c. RETRACTED — `sf project deploy start` CAN deploy an AAB
+without pre-existing BotVersion.**
+
+The RQ1 local agent claimed deploy requires a pre-existing BotVersion.
+This is WRONG — Vivek has personally deployed AABs to an org before
+publishing. The local agent pivoted from `sf project deploy start` to
+`sf agent publish` without actually testing deploy, then stated this
+as fact in its approach rationale (line 87 of the experiment results).
+The claim had no supporting evidence.
+
+**Confirmed fact (from Vivek):** `sf project deploy start` works for
+deploying an AAB to an org that has no prior Bot infrastructure. This
+is how the pro-code/low-code collaboration model works — you deploy
+the AAB to get it into Builder, then optionally publish later.
+
+**3d. Two validation layers exist: compile validation and API validation.**
+**(From Vivek — 2026-02-19)**
+
+The CLI `sf agent validate authoring-bundle` only performs compile-level
+checks (Agent Script syntax/structure). A separate "API Validation"
+layer exists that checks:
+- `default_agent_user` validity (license type, immutability)
+- Backing logic references (do referenced Apex/Flow components exist?)
+
+API Validation runs during `sf agent publish` but NOT during
+`sf agent validate`. NGA Web (Agent Builder) labels these as
+"API validation failed" errors. The AFDX team has an open TD with
+the Agentforce team to integrate the API validation into the CLI
+`validate` command alongside the compile API. Until that work ships,
+developers will see validation pass but publish fail for these classes
+of errors.
 
 **4. Deploy validates backing logic existence.**
 
@@ -634,15 +695,9 @@ These questions CANNOT be answered from documentation. They require
 experimental validation against a live org.
 
 **RQ1: Which license types qualify for `default_agent_user`?**
-Can a SysAdmin user with a standard Salesforce license be used as
-the agent user? Or does this require a user with the Agentforce
-Agent license type (exact license name may differ)?
-- **Why it matters**: If only special license types work, the skill
-  must guide the developer to check license requirements before
-  deploying.
-- **Test approach**: Try deploying an AAB with `default_agent_user`
-  set to (a) a SysAdmin with Salesforce license, (b) a user with
-  an Agentforce-specific license. Record which succeeds/fails.
+**RESOLVED — Outcome A.** Only "Einstein Agent" license works.
+See Confirmed Facts 3, 3a, 3b, 3c above. Full experiment results
+in `rf4-experiments/RQ1-agent-user-license.md`.
 
 **RQ2: How deep is deploy validation of backing logic?**
 Does deployment validation only check referential integrity (does
