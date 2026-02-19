@@ -396,7 +396,7 @@ sf generate apex class --name InvoiceFetcher --output-dir <PACKAGE_DIR>/main/def
 
 This creates both the `.cls` and `.cls-meta.xml` files. Do not create test classes for stubs — the goal is to get the class into the org so the action can wire to it, not to test placeholder logic.
 
-Replace the generated class body with the correct invocable structure:
+Fourth, replace the generated class body with the correct invocable structure:
 
 ```apex
 public class InvoiceFetcher {
@@ -419,7 +419,7 @@ public class InvoiceFetcher {
 }
 ```
 
-Deploy each stub individually using `sf project deploy start --metadata ApexClass:<ClassName> --json`. Deploying one class at a time lets you catch and fix compile errors in isolation. Stub classes must compile — deployment will fail if the Apex has syntax errors, and this catches structural mistakes early.
+Finally, deploy each stub individually using `sf project deploy start --metadata ApexClass:<ClassName> --json`. Deploying one class at a time lets you catch and fix compile errors in isolation. Stub classes must compile — deployment will fail if the Apex has syntax errors, and this catches structural mistakes early.
 
 ---
 
