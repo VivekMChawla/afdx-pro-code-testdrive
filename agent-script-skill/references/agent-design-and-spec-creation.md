@@ -386,7 +386,17 @@ fetch_invoice action:
                 queries Invoice records, returns amount/dueDate/status
 ```
 
-Then create the stub Apex class with the correct invocable structure:
+Second, find the default package directory by reading `sfdx-project.json` at the project root and locating the `packageDirectories` entry where `"default": true`. The `path` value in that entry is the package root (commonly `force-app`, but not guaranteed).
+
+Third, generate an empty Apex class using the following command:
+
+```bash
+sf generate apex class --name InvoiceFetcher --output-dir <PACKAGE_DIR>/main/default/classes
+```
+
+This creates both the `.cls` and `.cls-meta.xml` files. Do not create test classes for stubs — the goal is to get the class into the org so the action can wire to it, not to test placeholder logic.
+
+Replace the generated class body with the correct invocable structure:
 
 ```apex
 public class InvoiceFetcher {
@@ -409,7 +419,7 @@ public class InvoiceFetcher {
 }
 ```
 
-Deploy the stub to the org using `sf project deploy start --source-dir <path> --json`. You do not need test classes for stubs — the goal is to get the class into the org so the action can wire to it. Stub classes must compile. Verify compilation before deploying — deployment will fail if the Apex has syntax errors, and this catches structural mistakes early.
+Deploy each stub individually using `sf project deploy start --metadata ApexClass:<ClassName> --json`. Deploying one class at a time lets you catch and fix compile errors in isolation. Stub classes must compile — deployment will fail if the Apex has syntax errors, and this catches structural mistakes early.
 
 ---
 
