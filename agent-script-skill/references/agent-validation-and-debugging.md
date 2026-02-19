@@ -33,13 +33,23 @@ sf agent validate authoring-bundle --api-name Local_Info_Agent --json
 
 ### Interpreting Output
 
-The `--json` output includes an array of validation issues. Each issue has:
+When validation succeeds, the JSON output contains `result.success` set to `true`:
 
-- `type` — the error category (syntax, missing declaration, type mismatch, etc.)
-- `message` — human-readable explanation
-- `path` — the location in the file (block name, line number, or field name)
+```json
+{
+  "status": 0,
+  "result": {
+    "success": true
+  },
+  "warnings": []
+}
+```
 
-If validation passes, the issue array is empty. If validation fails, fix the errors and re-run the command. Do not attempt to preview or deploy until validation passes. [SOURCE: agent-preview-rules (line 9)]
+When validation fails, the CLI treats it as an error. The output uses the CLI error format, not a structured validation result. All useful information is in the `message` field. Ignore `stack`, `cause`, `code`, and `commandName` — these are CLI internals, not diagnostic content.
+
+The `message` field contains the compilation errors. These errors may include ANSI terminal color codes (`\u001b[31m`, `\u001b[39m`, etc.) — strip these before interpreting the message. Errors typically include line and column references (e.g., `[Ln 92, Col 13]`) that map to the `.agent` file, but do not assume a fixed error format. Read the `message` content naturally and reason about what it tells you.
+
+Do not attempt to preview or deploy until validation passes. [SOURCE: agent-preview-rules (line 9)]
 
 ### Validation Checklist (Pre-Validate Mental Model)
 
