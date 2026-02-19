@@ -332,3 +332,94 @@ Ordering was debated and resolved through structured discussion with Vivek.
   because grounding is instruction-writing guidance and instruction
   ordering is implementation of the deterministic/subjective
   classification.
+
+---
+
+## Review Findings (Sessions 7-8)
+
+Collaborative section-by-section review completed across Sessions 7-8,
+followed by adversarial sub-agent review (v2). Key decisions and changes:
+
+### Section-by-Section Review Decisions
+
+1. **Section 6/7 separation principle.** Section 6 = classification
+   decision (WHEN to use deterministic vs. subjective). Section 7 =
+   implementation mechanisms (HOW). No back-references from 7→6. The
+   consuming agent doesn't need to know where it learned the decision
+   framework — Section 7 stands alone.
+
+2. **Section 7 opening accuracy.** Changed from "These mechanisms
+   enforce requirements the LLM must not be allowed to bypass" (inaccurate
+   — conditional instructions are LLM-processed, not runtime-enforced) to
+   "These mechanisms control what the agent can see and do — some enforced
+   by the runtime, others by shaping the LLM's prompt."
+
+3. **Action reference tagging (`{!@actions.X}`).** Actions referenced by
+   name in instructions blocks must use tagged syntax per RF1 convention.
+   Fixed 1 violation in RF2 Section 7, 3 violations in RF1 anti-patterns
+   section.
+
+4. **Inner-block ordering.** `instructions:` before `actions:` within
+   `reasoning:` blocks per RF1 convention. Fixed 1 violation in RF2
+   Section 7 WRONG example. Routing-only topics with no instructions are
+   acceptable exceptions.
+
+5. **Section 8 rewrite.** Collapsed abstract "two conditions cause loops"
+   + separate "What Triggers Loops" subsection into unified three-bullet
+   explanation. Made mechanism explicit: no `available when` gate means
+   action stays visible (absence of gate, not an abstract state). Labeled
+   previously-unlabeled anti-pattern code as WRONG.
+
+6. **Section 5 bidirectional opening.** Added comprehension direction:
+   "When analyzing an existing agent, classify each transition to determine
+   whether context flow matches the design intent."
+
+7. **Stub flow refined (Section 4).** Five sequential steps: First (record
+   in Agent Spec) → Second (find default package directory via
+   `sfdx-project.json`) → Third (generate empty class via `sf generate
+   apex class`) → Fourth (replace body with invocable structure) → Finally
+   (deploy individually via `--metadata ApexClass:<ClassName>`). Key
+   decisions: don't hardcode `force-app`; use CLI to generate both `.cls`
+   and `.cls-meta.xml`; deploy one class at a time; no test classes for
+   stubs.
+
+8. **Verbosity principle.** Tighter is better. Dash clauses like "— it
+   doesn't even know the action exists" dilute rather than strengthen.
+   If the core statement is accurate, don't add explanatory appendages.
+
+### Adversarial Sub-Agent Review (v2)
+
+Ran two sub-agent review passes. v1 was discarded for being too
+agreeable (cited collaboration-context.md for technical accuracy, zero
+inaccuracies found, token math wrong). v2 used adversarial prompt with
+banned sources and produced actionable findings.
+
+**Acted on from v2:**
+- Stub compilation requirement made directive (was consequence-oriented)
+- Section 5 bidirectional opening gap addressed
+
+**Dismissed from v2:**
+- Boolean capitalization: valid observation but RF1's responsibility (RF1
+  is always in context as prerequisite per SKILL.md)
+- `before_reasoning`/`after_reasoning` undefined: RF1 introduces these;
+  consuming agent always has RF1 loaded
+- "Topic used before introduced": same — RF1 introduces topics
+- Instruction ordering in Section 6 called "scope bleed": deliberate
+  placement for "writing effective subjective control"
+- Grounding validation claim: report said RF2 doesn't explain live mode
+  requirement, but line 561 already explicitly covers this
+
+**Process artifacts created:**
+- `rf-review-prompt.md` — generic 4-dimension review framework reusable
+  by other PMs
+- `rf2-review-prompt.md` — self-contained adversarial prompt with RF2
+  custom evaluations
+- `rf2-analysis-report.md` — v2 adversarial report (modified by Vivek)
+- `rf2-analysis-report-v1-soft.md` — backup of discarded v1 report
+
+### Sample Assets Decision
+
+Decided to defer sample file asset creation (Apex stubs, sample Agent
+Spec, etc.) until after all 5 RFs are complete. Rationale: RF3-5 will
+introduce their own asset needs; building a coherent set at the end
+avoids rework.
