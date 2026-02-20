@@ -1315,7 +1315,7 @@ Sessions should consult this section to determine what to work on.
        reference, existing test spec example
        (`specs/Local_Info_Agent-testSpec.yaml`), Jag's testing-guide.md
 
-3. **[IN PROGRESS — File 4 outline finalized, writing prompt created, AAB brain dump next]** Write reference files —
+3. **[IN PROGRESS — RF1-RF4 DONE, RF5 NOT STARTED]** Write reference files —
    one at a time, sequentially, with Vivek review between each.
    - **Order:** File 1 (Core Language) → File 2 (Design & Agent Spec)
      → File 3 (Validation & Debugging) → File 4 (Metadata & Lifecycle)
@@ -1334,6 +1334,19 @@ Sessions should consult this section to determine what to work on.
      fabricated, behavioral loops rewritten with real scenario,
      grounding guidance corrected (checker runs in both preview modes).
      Source citations stripped. Review findings in rf3-context.md.
+   - **File 4 (Metadata & Lifecycle):** DONE. 649 lines (down from
+     737 first draft). Sub-agent first draft, collaborative section-by-
+     section review (Sessions 12-13), full editorial pass, adversarial
+     sub-agent review with 9 custom evaluations. Key corrections:
+     genAiPlannerBundles directory structure corrected from real project,
+     test lifecycle completely rewritten from Vivek's domain knowledge,
+     deploy safety guidance added, Agent pseudo-type reframed positively,
+     DRAFT capitalization standardized, all editorializing removed.
+     Review findings in rf4-analysis-report.md.
+   - **File 5 (Test Authoring):** NOT STARTED. Domain reads not done.
+     Note: RF4 Test Lifecycle subsection (Section 7) covers the CLI
+     workflow; RF5 would cover test case design, expected outcomes,
+     metric selection, and conversation history patterns.
    - **Per-file acceptance criteria:** (a) Content matches the scope
      defined in the File Inventory (Section 10). (b) TOC at top.
      (c) Target 300 lines; if exceeding, justify the overage.
@@ -1383,11 +1396,11 @@ Sessions should consult this section to determine what to work on.
     references should state the rule directly without citing the
     source file name. SOURCE attribution lines are fine as-is.
 
-11. **[PENDING — before final RF4 signoff]** Full-pass editorial
-    prose check across entire RF4. Remove conversational tone,
-    hand-holding, unnecessary qualifiers ("just know that", "this
-    is the happy path", "you never have to worry"), and
-    parenthetical asides that editorialize rather than inform.
+11. **[DONE — Session 13]** Full-pass editorial prose check across
+    RF4. Completed: removed conversational tone, hand-holding,
+    unnecessary qualifiers, and parenthetical asides. Standardized
+    DRAFT capitalization throughout. Removed "End of Reference File"
+    marker.
 
 12. **[PENDING — after RF4 review]** Flesh out
     `agent-script-skill/assets/template-testSpec.yaml` — currently a
@@ -1982,4 +1995,53 @@ RQ5) before sub-agent can write RF4.
 `claude-collaboration/rf4-experiments/RQ3-post-publish-draft-behavior.md`,
 `claude-collaboration/rf4-experiments/RQ4-publish-without-prior-deploy.md`,
 `claude-collaboration/rf4-experiments/RQ5-versioned-aab-deploy.md`,
+`claude-collaboration/collaboration-context.md`
+
+### Session 13 — February 20, 2026
+
+**Outputs**:
+- RF4 (Metadata & Lifecycle) collaborative section-by-section review
+  completed across all 7 sections — 649 lines (down from 737 first draft)
+- Full-pass editorial check completed (8 items fixed)
+- rf4-review-prompt.md created (4 dimensions + 9 custom evaluations)
+- rf4-analysis-report.md produced by adversarial sub-agent
+- Post-review fixes applied (rename directive, DRAFT standardization)
+- `agent-script-skill/assets/template-testSpec.yaml` created (stub)
+- Work items #9-13 added to collaboration context
+
+**Key decisions**:
+- genAiPlannerBundles is a separate top-level directory from bots/,
+  NOT nested inside it. Each version has localActions/ subdirectory.
+  Corrected from real project inspection.
+- Test Lifecycle completely rewritten from Vivek's domain knowledge.
+  `.a4drules/agent-testing-rules-no-edit.md` is now behind our RF4
+  on testing details — our RF is the more complete source.
+- `sf agent test create` required flags: `--json --spec --api-name
+  --force-overwrite`. `--force-overwrite` prevents interactive mode.
+- `sf agent test run` required flags: `--json --api-name --wait 5`.
+  `--api-name` refers to AiEvaluationDefinition, NOT Bot.
+- `sf agent generate test-spec` is interactive-only for new tests —
+  agent must NOT use it. Can reverse-engineer from existing
+  AiEvaluationDefinition with `--from-definition`.
+- Test specs are NOT Salesforce metadata. Live in `specs/` at project
+  root. Template available at skill's `assets/template-testSpec.yaml`.
+- `sf org open` commands should NOT use `--json` (outputs URL but
+  doesn't open browser).
+- DRAFT (uppercase) is the standard capitalization throughout RF4.
+- "Do not attempt an in-place rename" — authoritative directive,
+  not hedging language.
+- `sf agent test resume` confirmed as valid command for re-entering
+  synchronous test run state.
+- Adversarial review false positives: 3 test-related "critical" items
+  were false positives because .a4drules is behind our RF on testing.
+
+**What's unresolved**: RF5 (Test Authoring) not started. Work items
+#9, #10 (retroactive fixes across RF1-RF3) pending. Work item #12
+(template-testSpec.yaml generalization) pending. Big-picture skill
+publish readiness assessment next.
+
+**Files modified**: `agent-script-skill/references/agent-metadata-and-lifecycle.md`,
+`agent-script-skill/assets/template-testSpec.yaml`,
+`claude-collaboration/rf4-review-prompt.md`,
+`claude-collaboration/rf4-analysis-report.md`,
 `claude-collaboration/collaboration-context.md`
