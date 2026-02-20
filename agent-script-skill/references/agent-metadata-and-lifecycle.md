@@ -97,15 +97,16 @@ When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers t
 
 ### Recommended Pipeline
 
-The simplest end-to-end pipeline for creating and activating an agent:
+The end-to-end pipeline for creating and activating an agent:
 
-1. `sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name>`
+1. `sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name> --json`
 2. Edit the `.agent` file locally
-3. `sf agent validate authoring-bundle --api-name <Developer_Name>`
-4. `sf agent publish authoring-bundle --api-name <Developer_Name>`
-5. `sf agent activate --api-name <Bot_API_Name>`
+3. `sf project deploy start --metadata AiAuthoringBundle:<Developer_Name> --json`
+4. `sf agent validate authoring-bundle --api-name <Developer_Name> --json`
+5. `sf agent publish authoring-bundle --api-name <Developer_Name> --json`
+6. `sf agent activate --api-name <Bot_API_Name> --json`
 
-This skips the intermediate deploy step entirely. Deploy is only needed for pro-code/low-code collaboration (see Phase 2 below). Each phase is detailed in the sections that follow.
+Each phase is detailed in the sections that follow.
 
 [SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
 
