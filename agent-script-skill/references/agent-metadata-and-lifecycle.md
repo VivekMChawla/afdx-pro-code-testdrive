@@ -99,12 +99,12 @@ When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers t
 
 The end-to-end pipeline for creating and activating an agent:
 
-1. `sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name> --json`
+1. `sf agent generate authoring-bundle --json --no-spec --name "<Label>" --api-name <Developer_Name>`
 2. Edit the `.agent` file locally
-3. `sf project deploy start --metadata AiAuthoringBundle:<Developer_Name> --json`
-4. `sf agent validate authoring-bundle --api-name <Developer_Name> --json`
-5. `sf agent publish authoring-bundle --api-name <Developer_Name> --json`
-6. `sf agent activate --api-name <Bot_API_Name> --json`
+3. `sf project deploy start --json --metadata AiAuthoringBundle:<Developer_Name>`
+4. `sf agent validate authoring-bundle --json --api-name <Developer_Name>`
+5. `sf agent publish authoring-bundle --json --api-name <Developer_Name>`
+6. `sf agent activate --json --api-name <Bot_API_Name>`
 
 Each phase is detailed in the sections that follow.
 
@@ -149,18 +149,18 @@ Use the `sf agent generate authoring-bundle` command to create a new agent. This
 ### Command Syntax
 
 ```bash
-sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name> --json
+sf agent generate authoring-bundle --json --no-spec --name "<Label>" --api-name <Developer_Name>
 ```
 
 **Required flags:**
 
+- `--json` — Always set first. Produces machine-readable output.
+
 - `--no-spec` — This flag must be present, or the command hangs waiting for input.
 
-- `--name "<Label>"` — The human-readable display name. This becomes `agent_label` in the Agent Script `config` block. Example: `"Coral Cloud Resort"`. Wrap in quotes if the label contains spaces.
+- `--name "<Label>"` — The human-readable display name. This becomes `agent_label` in the Agent Script `config` block. Example: `"Local Info Agent"`. Wrap in quotes if the label contains spaces.
 
 - `--api-name <Developer_Name>` — The unique API identifier (no spaces, letters/numbers/underscores only). This becomes `developer_name` in the `config` block. Example: `Local_Info_Agent`.
-
-Always include `--json` for machine-readable output.
 
 [SOURCE: rf4-context-refined Fact 5 — Generation command syntax]
 
@@ -187,10 +187,10 @@ The `.bundle-meta.xml` file is initially minimal (bundleType only, no `<target>`
 
 ```bash
 # WRONG — CLI waits for spec file (hangs)
-sf agent generate authoring-bundle --name "Local Info Agent" --api-name Local_Info_Agent
+sf agent generate authoring-bundle --json --name "Local Info Agent" --api-name Local_Info_Agent
 
 # CORRECT — explicit --no-spec
-sf agent generate authoring-bundle --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
+sf agent generate authoring-bundle --json --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
 ```
 
 Without `--no-spec`, the CLI expects interactive input. Always include `--no-spec`.
@@ -201,12 +201,12 @@ Without `--no-spec`, the CLI expects interactive input. Always include `--no-spe
 
 ```bash
 # WRONG — swapped; produces invalid developer_name
-sf agent generate authoring-bundle --no-spec \
+sf agent generate authoring-bundle --json --no-spec \
     --name Local_Info_Agent \
     --api-name "Local Info Agent"
 
 # CORRECT — name is human-readable (spaces OK), api-name is identifier
-sf agent generate authoring-bundle --no-spec \
+sf agent generate authoring-bundle --json --no-spec \
     --name "Local Info Agent" \
     --api-name Local_Info_Agent
 ```
@@ -367,9 +367,9 @@ Publishing compiles the `AiAuthoringBundle` to Agent DSL and creates Bot, BotVer
 You do NOT need to deploy first. A brand-new authoring bundle can be published directly:
 
 ```bash
-sf agent generate authoring-bundle --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
+sf agent generate authoring-bundle --json --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
 # Edit Local_Info_Agent.agent ...
-sf agent publish authoring-bundle --api-name Local_Info_Agent
+sf agent publish authoring-bundle --json --api-name Local_Info_Agent
 ```
 
 Publish handles the initial deploy, compilation, and entity creation in one step. The simplest pipeline is: generate → edit → validate → publish → activate.
@@ -379,10 +379,10 @@ Publish handles the initial deploy, compilation, and entity creation in one step
 ### Command Syntax
 
 ```bash
-sf agent publish authoring-bundle --api-name <Developer_Name> --json
+sf agent publish authoring-bundle --json --api-name <Developer_Name>
 ```
 
-The `--api-name` is the directory name under `aiAuthoringBundles/` (the `developer_name` from your config block). Always include `--json` for machine-readable output.
+The `--api-name` is the directory name under `aiAuthoringBundles/` (the `developer_name` from your config block).
 
 [SOURCE: agent-dx-nga-publish.md]
 
@@ -443,7 +443,7 @@ This is version inflation — versions accumulate whether content changed or not
 The `sf agent publish authoring-bundle` response does NOT tell you which version number was created. You must retrieve with `AiAuthoringBundle:` (NOT `Agent:`) to see what version was published:
 
 ```bash
-sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 Examine the returned `bundle-meta.xml` to see the `<target>` version (e.g., `Local_Info_Agent.v2`).
@@ -455,7 +455,7 @@ Examine the returned `bundle-meta.xml` to see the `<target>` version (e.g., `Loc
 When you want to see the authoring bundle and its `<target>` element after publish, retrieve with:
 
 ```bash
-sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 Do NOT use `Agent:Local_Info_Agent` — this retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin but omits AiAuthoringBundle.
@@ -472,10 +472,10 @@ After publishing, an agent is created but inactive. Activation makes a published
 
 ```bash
 # Activate a specific published version
-sf agent activate --api-name <Bot_API_Name> --json
+sf agent activate --json --api-name <Bot_API_Name>
 
 # Deactivate (take a version offline without deleting it)
-sf agent deactivate --api-name <Bot_API_Name> --json
+sf agent deactivate --json --api-name <Bot_API_Name>
 ```
 
 The `--api-name` is the Bot's API name (from your Agent Script `config` block's `developer_name`).
@@ -521,7 +521,7 @@ By default, this deploys backing code (Apex, Flows, etc.) but excludes agent met
 **Deliberate agent metadata deploy (pro-code/low-code collaboration):**
 
 ```bash
-sf project deploy start --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project deploy start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 Explicitly include agent metadata only when collaborating with low-code users in Agentforce Studio. This is NOT the default pipeline.
@@ -536,10 +536,10 @@ sf project deploy start --json
 # CORRECT — explicit exclusion or deliberate inclusion
 # For routine backing-code only:
 # Update .forceignore to exclude agent metadata, OR
-sf project deploy start --metadata ApexClass:*,Flow:* --json
+sf project deploy start --json --metadata ApexClass:*,Flow:*
 
 # For deliberate agent update:
-sf project deploy start --metadata ApexClass:*,AiAuthoringBundle:* --json
+sf project deploy start --json --metadata ApexClass:*,AiAuthoringBundle:*
 ```
 
 Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
@@ -553,7 +553,7 @@ Retrieve pulls metadata from the org to your local project.
 **Retrieve published agent (runtime domain):**
 
 ```bash
-sf project retrieve start --metadata Agent:Local_Info_Agent --json
+sf project retrieve start --json --metadata Agent:Local_Info_Agent
 ```
 
 This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT include AiAuthoringBundle.
@@ -561,7 +561,7 @@ This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT
 **Retrieve authoring bundle (source):**
 
 ```bash
-sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 This retrieves the authoring bundle source files (`.agent` and `.bundle-meta.xml`). Use this to see the `<target>` element or to get the latest source from the org.
@@ -569,7 +569,7 @@ This retrieves the authoring bundle source files (`.agent` and `.bundle-meta.xml
 **Retrieve version history (all published snapshots):**
 
 ```bash
-sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent_* --json
+sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent_*
 ```
 
 The wildcard `*` retrieves all version-suffixed authoring bundles (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked `AiAuthoringBundle` is returned.
@@ -582,10 +582,10 @@ Use this pattern for version history inspection and diffing.
 
 ```bash
 # WRONG — does not include authoring bundle source
-sf project retrieve start --metadata Agent:Local_Info_Agent --json
+sf project retrieve start --json --metadata Agent:Local_Info_Agent
 
 # CORRECT — includes authoring bundle source
-sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 If you need to see the authoring bundle (to inspect `<target>` or work with source), use `AiAuthoringBundle:` explicitly.
@@ -599,7 +599,7 @@ Deletion behavior differs based on whether the agent has been published.
 **Delete unpublished authoring bundle:**
 
 ```bash
-sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project delete source --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
 This works for draft-only agents that have never been published.
@@ -616,7 +616,7 @@ This has implications for test hygiene and scratch org management. Use unique na
 
 ```bash
 # WRONG — deletes both org metadata AND local source files
-sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
+sf project delete source --json --metadata AiAuthoringBundle:Local_Info_Agent
 
 # CORRECT — understand that local files are also deleted
 # Back up local files if you need them
@@ -651,7 +651,7 @@ The Salesforce ecosystem does not provide robust agent rename tooling. Treat ren
 **Create a test spec:**
 
 ```bash
-sf agent test create --spec <PATH_TO_YAML> --json
+sf agent test create --json --spec <PATH_TO_YAML>
 ```
 
 The `<PATH_TO_YAML>` is the path to your test spec file in YAML format (not to be confused with `sf agent generate test-spec`, which is an interactive command for humans).
@@ -661,7 +661,7 @@ This command creates `AiEvaluationDefinition` metadata in the org.
 **Run tests:**
 
 ```bash
-sf agent test run --name <AiEvalDef_Name> --api-name <Bot_API_Name> --json
+sf agent test run --json --name <AiEvalDef_Name> --api-name <Bot_API_Name>
 ```
 
 The `--name` is the AiEvaluationDefinition name. The `--api-name` is the Bot's API name.
@@ -671,7 +671,7 @@ Tests run against ACTIVATED published agents only. If the agent is not activated
 **Check test results:**
 
 ```bash
-sf agent test resume --job-id <JOB_ID> --json
+sf agent test resume --json --job-id <JOB_ID>
 ```
 
 Use this to check results if a test run is still in progress.
@@ -680,14 +680,14 @@ Use this to check results if a test run is still in progress.
 
 ```bash
 # WRONG — tests require activated published agent
-sf agent test run --name Local_Info_Agent_Test --api-name Local_Info_Agent --json
+sf agent test run --json --name Local_Info_Agent_Test --api-name Local_Info_Agent
 # (fails if Local_Info_Agent is not published and activated)
 
 # CORRECT — publish and activate first
-sf agent publish authoring-bundle --api-name Local_Info_Agent
-sf agent activate --api-name Local_Info_Agent
+sf agent publish authoring-bundle --json --api-name Local_Info_Agent
+sf agent activate --json --api-name Local_Info_Agent
 # Then run tests
-sf agent test run --name Local_Info_Agent_Test --api-name Local_Info_Agent --json
+sf agent test run --json --name Local_Info_Agent_Test --api-name Local_Info_Agent
 ```
 
 Tests CANNOT run against draft authoring bundles. Publish and activate first.
