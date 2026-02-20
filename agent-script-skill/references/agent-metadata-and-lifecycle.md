@@ -95,41 +95,9 @@ When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers t
 
 ## 2. Agent Metadata Lifecycle Overview
 
-The agent lifecycle progresses through distinct phases, each populating a different domain and using different CLI commands.
-
-**Phase 1: Generate** — Create a boilerlate AAB in your local project with `sf agent generate authoring-bundle`. The AAB exists locally only; the org is unaffected.
-
-**Phase 2: Deploy** — Push the AAB to the org using `sf project deploy start`. This populates the authoring domain only — the AAB becomes visible in Agent Builder (part of Agentforce Studio) for low-code authoring and preview. No `Bot` or `GenAi*` metadata entities are created yet.
-
-**Phase 3: Publish** — Compile the AAB and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: `Bot`, `BotVersion`, and `GenAiPlannerBundle` are created.
-
-**Phase 4: Activate** — Make a published version live with `sf agent activate`. Only one version can be active at a time. Published agents must be activated before developers or end users can interact with them.
-
-[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
-
-**Phase 5: Test** — Create test specs and run tests against the activated agent.
-
-### Deploy vs. Publish: The Critical Distinction
-
-This is the most important concept in this reference file. These are two different operations that populate different domains.
-
-**Deploy** (`sf project deploy start`): Metadata operation only. Puts the AAB source file into the org. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The agent is not usable for preview (`--api-name` will fail) or runtime. However, the AAB IS visible in Agentforce Studio for low-code users to edit.
-
-Deploy is a staging step — useful for pro-code/low-code collaboration where pro-code developers author locally and deploy to get the AAB into Builder for low-code refinement.
-
-[SOURCE: rf4-context-refined Fact 15a — Deploy vs. publish distinction]
-
-**Publish** (`sf agent publish authoring-bundle`): Full entity creation. Deploys the AAB, compiles Agent Script to Agent DSL, and creates the entire runtime entity graph (Bot + BotVersion + GenAiPlannerBundle + GenAiPlugins). The agent becomes usable and visible for preview and runtime.
-
-Publish is self-contained — a brand-new `AiAuthoringBundle` can be published directly with no prior deploy or org state.
-
-Mental model: the `AiAuthoringBundle` is the recipe; the runtime domain entities are the cooked dish; publish is the act of cooking. Deploy stages the recipe in the org's kitchen — publish actually cooks it.
-
-[SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
-
 ### Recommended Pipeline
 
-The simplest, most straightforward pipeline is:
+The simplest end-to-end pipeline for creating and activating an agent:
 
 1. `sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name>`
 2. Edit the `.agent` file locally
@@ -137,9 +105,39 @@ The simplest, most straightforward pipeline is:
 4. `sf agent publish authoring-bundle --api-name <Developer_Name>`
 5. `sf agent activate --api-name <Bot_API_Name>`
 
-This skips the intermediate deploy step entirely. Deploy is only needed if you're doing pro-code/low-code collaboration.
+This skips the intermediate deploy step entirely. Deploy is only needed for pro-code/low-code collaboration (see Phase 2 below). Each phase is detailed in the sections that follow.
 
-[SOURCE: rf4-context-refined Fact 13 — Publish self-contained]
+[SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
+
+### Lifecycle Phases
+
+**Phase 1: Generate** — Create a boilerplate `AiAuthoringBundle` in your local project with `sf agent generate authoring-bundle`. The authoring bundle exists locally only; the org is unaffected. See Section 3.
+
+**Phase 2: Deploy** — Push the `AiAuthoringBundle` to the org using `sf project deploy start`. This populates the authoring domain only — the authoring bundle becomes visible in Agent Builder (part of Agentforce Studio) for low-code authoring and preview. No `Bot` or `GenAi*` metadata entities are created yet. Deploy is optional in the recommended pipeline. See Section 4.
+
+**Phase 3: Publish** — Compile the `AiAuthoringBundle` and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: `Bot`, `BotVersion`, and `GenAiPlannerBundle` are created. See Section 5.
+
+**Phase 4: Activate** — Make a published version live with `sf agent activate`. Only one version can be active at a time. Published agents must be activated before they can be previewed with `--api-name` or used in production. See Section 6.
+
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
+
+**Phase 5: Test** — Create test specs (`sf agent test create`), run tests against the activated agent (`sf agent test run`), and check results (`sf agent test resume`). Tests run against activated published agents only — draft authoring bundles cannot be tested. The `sf agent test create` command compiles an Agent Test Spec (YAML) into `AiEvaluationDefinition` metadata in the org. See Section 7 (Test Lifecycle).
+
+[SOURCE: agent-testing-rules-no-edit.md, rf4-context-refined Fact 1]
+
+### Deploy vs. Publish: The Critical Distinction
+
+These are two different operations that populate different domains.
+
+**Deploy** (`sf project deploy start`): Metadata operation only. Puts the `AiAuthoringBundle` source file into the org's authoring domain. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The authoring bundle IS visible in Agentforce Studio for low-code users to edit and preview as a draft. Deploy is a staging step — useful for pro-code/low-code collaboration where pro-code developers author locally and deploy to get the authoring bundle into Builder for low-code refinement.
+
+[SOURCE: rf4-context-refined Fact 15a — Deploy vs. publish distinction]
+
+**Publish** (`sf agent publish authoring-bundle`): Full entity creation. Deploys the `AiAuthoringBundle`, compiles Agent Script to Agent DSL, and creates the entire runtime entity graph (Bot + BotVersion + GenAiPlannerBundle + GenAiPlugins). Publish is self-contained — a brand-new `AiAuthoringBundle` can be published directly with no prior deploy or org state.
+
+Mental model: the `AiAuthoringBundle` is the recipe; the runtime domain entities are the cooked dish; publish is the act of cooking. Deploy stages the recipe in the org's kitchen — publish actually cooks it.
+
+[SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
 
 ---
 
@@ -232,19 +230,19 @@ When running from automation (not interactive REPL), always provide all flags ex
 
 ## 4. Working With Authoring Bundles
 
-This section covers the non-obvious behaviors and hidden constraints that make AABs tricky to work with. These are the lessons learned from experimentation.
+This section covers the non-obvious behaviors and hidden constraints that make authoring bundles tricky to work with. These are the lessons learned from experimentation.
 
-### The "Naked" AAB Always Points to the Highest DRAFT
+### The "Naked" AiAuthoringBundle Always Points to the Highest DRAFT
 
-Your local agent directory (without a version suffix) represents the editable working copy in the org. In the org, this "naked" AAB is always linked to the highest DRAFT version. When you deploy, you update this DRAFT. When you publish, a new DRAFT version is created for the next round of edits.
+Your local agent directory (without a version suffix) represents the editable working copy in the org. In the org, this "naked" `AiAuthoringBundle` is always linked to the highest DRAFT version. When you deploy, you update this DRAFT. When you publish, a new DRAFT version is created for the next round of edits.
 
 This means: No matter how many times you publish, your local `Local_Info_Agent/` directory always floats to the highest draft. You never have to worry about "which version am I editing?" — it's always the latest draft.
 
-[SOURCE: rf4-context-refined Fact 18 — Naked AAB always points to highest DRAFT]
+[SOURCE: rf4-context-refined Fact 18 — Naked AiAuthoringBundle always points to highest DRAFT]
 
-### Version-Suffixed AABs Are Frozen Snapshots
+### Version-Suffixed AiAuthoringBundles Are Frozen Snapshots
 
-After you publish, version-suffixed AABs appear in your local project (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). These are org-generated snapshots locked by a `<target>` element in their `bundle-meta.xml`:
+After you publish, version-suffixed authoring bundles appear in your local project (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). These are org-generated snapshots locked by a `<target>` element in their `bundle-meta.xml`:
 
 ```xml
 <AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -253,15 +251,15 @@ After you publish, version-suffixed AABs appear in your local project (e.g., `Lo
 </AiAuthoringBundle>
 ```
 
-The presence of `<target>` locks this AAB to that specific published version. It is read-only. Modified deploys fail with an error like "content cannot be changed on a locked version." Unmodified deploys succeed as meaningless no-ops.
+The presence of `<target>` locks this authoring bundle to that specific published version. It is read-only. Modified deploys fail with an error like "content cannot be changed on a locked version." Unmodified deploys succeed as meaningless no-ops.
 
-Use version-suffixed AABs for auditing and diffing version history, NOT for editing. All edits must go through the naked AAB.
+Use version-suffixed authoring bundles for auditing and diffing version history, NOT for editing. All edits must go through the naked `AiAuthoringBundle`.
 
-[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AABs are immutable snapshots]
+[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AiAuthoringBundles are immutable snapshots]
 
 ### First Deploy Creates DRAFT V1
 
-When you deploy an AAB to an org for the first time (if it has never been published), the org creates DRAFT V1. This is your starting state. Subsequent deploys update this DRAFT. When you publish, V1 becomes locked and a new DRAFT is created for future edits.
+When you deploy an `AiAuthoringBundle` to an org for the first time (if it has never been published), the org creates DRAFT V1. This is your starting state. Subsequent deploys update this DRAFT. When you publish, V1 becomes locked and a new DRAFT is created for future edits.
 
 [SOURCE: rf4-context-refined Fact 11 — First deploy creates DRAFT V1]
 
@@ -278,10 +276,10 @@ For pro-code workflows, this is not a limitation — you have one DRAFT per agen
 Deploying without publishing is not a failed workflow. It is the foundation for pro-code/low-code collaboration:
 
 1. Pro-code developer authors Agent Script locally
-2. Pro-code developer deploys the AAB (no publish step)
-3. Low-code user opens the AAB in Agentforce Studio and refines it
+2. Pro-code developer deploys the authoring bundle (no publish step)
+3. Low-code user opens the authoring bundle in Agentforce Studio and refines it
 4. Low-code user saves changes
-5. Pro-code developer retrieves the updated AAB and continues
+5. Pro-code developer retrieves the updated authoring bundle and continues
 
 Deploy/retrieve are one-way overwrites with no sync warnings. This is by design for cross-tool collaboration.
 
@@ -289,11 +287,11 @@ However, deploy should be a deliberate choice, not the default. The simpler pipe
 
 [SOURCE: rf4-context-refined Fact 8 — Deploy-before-publish is legitimate for pro-code/low-code collaboration]
 
-### NEVER Deploy AAB in Routine Backing-Code Operations
+### NEVER Deploy `AiAuthoringBundle` in Routine Backing-Code Operations
 
 The `.a4drules` caution: When deploying backing code (Apex, Flows, Prompt Templates), NEVER include agent metadata (`.agent` files or `AiAuthoringBundle` metadata) in routine deploys unless you explicitly intend to update the agent.
 
-Accidental deployment of an outdated AAB will overwrite in-progress work in the org.
+Accidental deployment of an outdated authoring bundle will overwrite in-progress work in the org.
 
 [SOURCE: .a4drules/agent-script-rules-no-edit.md line 64]
 
@@ -321,29 +319,29 @@ The result: A developer can validate successfully and still fail at publish due 
 
 ### Deploy Validates Backing Logic via Invocable Action Registry Lookup
 
-When you deploy an AAB, the deployment process validates that every backing logic reference (Apex class, Flow, Prompt Template) resolves to a registered Invocable Action in the org. The referenced class or flow or prompt must exist.
+When you deploy an `AiAuthoringBundle`, the deployment process validates that every backing logic reference (Apex class, Flow, Prompt Template) resolves to a registered Invocable Action in the org. The referenced class or flow or prompt must exist.
 
 For Apex classes, the class must have an `@InvocableMethod`-annotated method.
 
 **Critical gap:** Deploy validation does NOT check parameter names, types, return types, or whether the method has the correct number of parameters. Stub classes with `@InvocableMethod` are sufficient to unblock deployment.
 
-This means you can deploy an AAB with completely wrong I/O definitions and not discover the problem until conversation or preview. Parameter mismatches are caught only at runtime.
+This means you can deploy an authoring bundle with completely wrong I/O definitions and not discover the problem until conversation or preview. Parameter mismatches are caught only at runtime.
 
 Stub classes are a real workflow tool (not a workaround). A minimal class with `@InvocableMethod` unblocks pro-code/low-code collaboration. Just know that you're deferring type validation to runtime.
 
 [SOURCE: rf4-context-refined Fact 4 — Deploy validates backing logic via Invocable Action registry lookup]
 
-### Server-Side AAB Filename Versioning
+### Server-Side `AiAuthoringBundle` Filename Versioning
 
-When deploying a local AAB (`Local_Info_Agent.agent`), the server uses a version-suffixed filename (`Local_Info_Agent_4.agent`), triggering a CLI warning:
+When deploying a local authoring bundle (`Local_Info_Agent.agent`), the server uses a version-suffixed filename (`Local_Info_Agent_4.agent`), triggering a CLI warning:
 
 ```
 "AiAuthoringBundle, Local_Info_Agent_4.agent, returned from org, but not found in the local project"
 ```
 
-This is not an error — it's normal behavior. It reflects the "naked AAB = highest draft" behavior. The warning is misleading but harmless.
+This is not an error — it's normal behavior. It reflects the "naked `AiAuthoringBundle` = highest draft" behavior. The warning is misleading but harmless.
 
-[SOURCE: rf4-context-refined Fact 10 — Server-side AAB filename versioning]
+[SOURCE: rf4-context-refined Fact 10 — Server-side AiAuthoringBundle filename versioning]
 
 ### Post-Publish Workflow Is Seamless (Happy Path)
 
@@ -353,15 +351,15 @@ The intended workflow is: publish → keep editing → deploy (auto-creates new 
 
 [SOURCE: rf4-context-refined Fact 19 — Post-publish workflow is seamless]
 
-### Edge Case: Retrieve After Publish Locks AAB
+### Edge Case: Retrieve After Publish Locks the Authoring Bundle
 
-If you explicitly retrieve the AAB after publishing (e.g., `sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent`), the retrieved `bundle-meta.xml` WILL have `<target>` set, locking the AAB to that published version. Subsequent deploys with content changes fail.
+If you explicitly retrieve the authoring bundle after publishing (e.g., `sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent`), the retrieved `bundle-meta.xml` WILL have `<target>` set, locking the authoring bundle to that published version. Subsequent deploys with content changes fail.
 
-Recovery: Remove `<target>` from `bundle-meta.xml` and deploy. This unlocks the AAB and allows new edits.
+Recovery: Remove `<target>` from `bundle-meta.xml` and deploy. This unlocks the authoring bundle and allows new edits.
 
 This edge case only happens if you retrieve after publish. Normal post-publish workflows (just keep editing and deploying) never trigger this behavior.
 
-[SOURCE: rf4-context-refined Fact 19-edge — Retrieve after publish locks AAB]
+[SOURCE: rf4-context-refined Fact 19-edge — Retrieve after publish locks authoring bundle]
 
 ---
 
@@ -371,15 +369,15 @@ Publishing is how you transition from draft to production. It is self-contained 
 
 ### Why Publishing Is Needed
 
-Deploy alone puts the AAB source into the org but does NOT create the runtime entity graph. The agent cannot be previewed with `--api-name` or run in conversation.
+Deploy alone puts the authoring bundle source into the org but does NOT create the runtime entity graph. A published agent cannot be previewed with `--api-name` until it is activated.
 
-Publishing compiles the AAB to Agent DSL and creates Bot, BotVersion, and GenAiPlannerBundle. This makes the agent usable for preview and runtime.
+Publishing compiles the `AiAuthoringBundle` to Agent DSL and creates Bot, BotVersion, and GenAiPlannerBundle. After activation, the agent becomes usable for preview and runtime.
 
 [SOURCE: rf4-context-refined Fact 15a, 15b — Deploy vs. publish distinction]
 
 ### Publish Is Self-Contained
 
-You do NOT need to deploy first. A brand-new AAB can be published directly:
+You do NOT need to deploy first. A brand-new authoring bundle can be published directly:
 
 ```bash
 sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
@@ -429,7 +427,7 @@ Each version has its own GenAiPlannerBundle. These are org-generated and read-on
 
 ### The `<target>` Element After Publish
 
-After publish, you can (but do NOT need to) retrieve the updated AAB. If you do, the `bundle-meta.xml` will contain a `<target>` element mapping to the published version:
+After publish, you can (but do NOT need to) retrieve the updated authoring bundle. If you do, the `bundle-meta.xml` will contain a `<target>` element mapping to the published version:
 
 ```xml
 <AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
@@ -467,7 +465,7 @@ Examine the returned `bundle-meta.xml` to see the `<target>` version (e.g., `Loc
 
 ### Retrieve with AiAuthoringBundle, NOT Agent
 
-When you want to see the AAB and its `<target>` element after publish, retrieve with:
+When you want to see the authoring bundle and its `<target>` element after publish, retrieve with:
 
 ```bash
 sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
@@ -505,9 +503,7 @@ Only one published version of an agent can be active at any given moment. When y
 
 ### Published Agents REQUIRE Activation for Preview
 
-This is critical: After publishing, a published agent can ONLY be previewed if it has been activated. If you try to preview with `--api-name <Bot_API_Name>` and the agent is not activated, preview fails.
-
-Draft agents (authoring bundles) can be previewed with `--authoring-bundle` regardless of activation state. Only published agents have this activation requirement.
+After publishing, a published agent can ONLY be previewed with `--api-name <Bot_API_Name>` if the `Bot` has an activated version. If no version is activated, preview with `--api-name` fails.
 
 [SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
@@ -525,7 +521,7 @@ This section consolidates CLI commands for deploy, retrieve, delete, rename, tes
 
 ### Deploy
 
-Deploy puts the AAB into the org as metadata. It does NOT create runtime entities.
+Deploy puts the `AiAuthoringBundle` into the org as metadata. It does NOT create runtime entities.
 
 **Routine deploy (backing code only):**
 
@@ -543,7 +539,7 @@ sf project deploy start --metadata AiAuthoringBundle:Local_Info_Agent --json
 
 Explicitly include agent metadata only when collaborating with low-code users in Agentforce Studio. This is NOT the default pipeline.
 
-**Gotcha: Accidental AAB Deploy in Routine Operations**
+**Gotcha: Accidental `AiAuthoringBundle` Deploy in Routine Operations**
 
 ```bash
 # WRONG — backing code deploy that accidentally includes agent metadata
@@ -561,7 +557,7 @@ sf project deploy start --metadata ApexClass:*,AiAuthoringBundle:* --json
 
 Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
 
-[SOURCE: rf4-context-refined Fact 8b — Never deploy AAB in routine backing-code operations]
+[SOURCE: rf4-context-refined Fact 8b — Never deploy AiAuthoringBundle in routine backing-code operations]
 
 ### Retrieve
 
@@ -581,7 +577,7 @@ This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT
 sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
 ```
 
-This retrieves the AAB source files (`.agent` and `.bundle-meta.xml`). Use this to see the `<target>` element or to get the latest AAB source from the org.
+This retrieves the authoring bundle source files (`.agent` and `.bundle-meta.xml`). Use this to see the `<target>` element or to get the latest source from the org.
 
 **Retrieve version history (all published snapshots):**
 
@@ -589,23 +585,23 @@ This retrieves the AAB source files (`.agent` and `.bundle-meta.xml`). Use this 
 sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent_* --json
 ```
 
-The wildcard `*` retrieves all version-suffixed AABs (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked AAB is returned.
+The wildcard `*` retrieves all version-suffixed authoring bundles (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked `AiAuthoringBundle` is returned.
 
 Use this pattern for version history inspection and diffing.
 
-[SOURCE: rf4-context-refined Fact 21 — Wildcard retrieve returns all version-suffixed AABs]
+[SOURCE: rf4-context-refined Fact 21 — Wildcard retrieve returns all version-suffixed AiAuthoringBundles]
 
 **Gotcha: Agent: Does NOT Include AiAuthoringBundle**
 
 ```bash
-# WRONG — does not include AAB source
+# WRONG — does not include authoring bundle source
 sf project retrieve start --metadata Agent:Local_Info_Agent --json
 
-# CORRECT — includes AAB source
+# CORRECT — includes authoring bundle source
 sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
 ```
 
-If you need to see the AAB (to inspect `<target>` or work with source), use `AiAuthoringBundle:` explicitly.
+If you need to see the authoring bundle (to inspect `<target>` or work with source), use `AiAuthoringBundle:` explicitly.
 
 [SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
 
@@ -613,7 +609,7 @@ If you need to see the AAB (to inspect `<target>` or work with source), use `AiA
 
 Deletion behavior differs based on whether the agent has been published.
 
-**Delete unpublished AAB:**
+**Delete unpublished authoring bundle:**
 
 ```bash
 sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
@@ -645,19 +641,19 @@ sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
 
 **Backing Code Deletion Enforcement:**
 
-The org tracks dependencies between AAB versions and their backing Apex classes. Attempting to delete a backing class while any AAB version references it fails with a dependency error.
+The org tracks dependencies between `AiAuthoringBundle` versions and their backing Apex classes. Attempting to delete a backing class while any version references it fails with a dependency error.
 
 To delete a backing class:
 
-1. Update the AAB to remove the reference
-2. Deploy the updated AAB
+1. Update the authoring bundle to remove the reference
+2. Deploy the updated authoring bundle
 3. Delete the backing class
 
 [SOURCE: rf4-context-refined Fact 9 — Backing code deletion enforcement]
 
 ### Rename
 
-Renaming is hazardous due to the metadata hierarchy. The platform creates dependencies between AAB names and published versions.
+Renaming is hazardous due to the metadata hierarchy. The platform creates dependencies between `AiAuthoringBundle` names and published versions.
 
 Recommended approach: Create a new agent with the desired name and migrate content. Document the old agent as deprecated and schedule deletion after a grace period.
 
@@ -719,7 +715,7 @@ Tests CANNOT run against draft authoring bundles. Publish and activate first.
 sf org open authoring-bundle
 ```
 
-This opens Agentforce Studio showing a list of all AABs in the org.
+This opens Agentforce Studio showing a list of all authoring bundles in the org.
 
 **View a specific published agent:**
 
@@ -727,7 +723,7 @@ This opens Agentforce Studio showing a list of all AABs in the org.
 sf org open agent --api-name <Bot_API_Name>
 ```
 
-This opens the published agent in Agentforce Studio. Note: This only works for published agents. Unpublished (draft-only) AABs must be opened via the authoring bundle command above.
+This opens the published agent in Agentforce Studio. Note: This only works for published agents. Unpublished (draft-only) authoring bundles must be opened via the `sf org open authoring-bundle` command above.
 
 ---
 
