@@ -390,8 +390,7 @@ When you publish, the org creates:
 
 - **Bot** — Top-level container (one per agent)
 - **BotVersion** — Versioned instance (e.g., `v1`, `v2`, `v3`)
-- **GenAiPlannerBundle** — Compiled agent definition for this version
-- **GenAiPlugin/GenAiFunction** — Local copies of actions scoped to this version
+- **GenAiPlannerBundle** — Compiled agent definition for this version of the agent, with a `localActions/` directory containing topic-scoped action definitions.
 
 Example directory structure after publishing:
 
@@ -405,10 +404,13 @@ bots/
 
 genAiPlannerBundles/
   ├── Local_Info_Agent_v1/
+  │   ├── localActions/
   │   └── Local_Info_Agent_v1.genAiPlannerBundle
   ├── Local_Info_Agent_v2/
+  │   ├── localActions/
   │   └── Local_Info_Agent_v2.genAiPlannerBundle
   └── Local_Info_Agent_v3/
+      ├── localActions/
       └── Local_Info_Agent_v3.genAiPlannerBundle
 ```
 
