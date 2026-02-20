@@ -34,18 +34,25 @@ Deploy alone does NOT cook — it only puts the source in the org. Publish cooks
 
 ### 4. The Metadata Entity Graph
 
-When an agent is published, the org creates a hierarchy:
+Agent metadata spans two domains that are independent until publish connects them:
 
 ```
-Bot (top-level container)
-  ├── BotVersion (one per published version; minimal files, just <fullName>vN</fullName>)
-  ├── GenAiPlannerBundle (version-suffixed directory; contains full expanded definition)
-  │    └── GenAiPlugin (one per topic, org-generated IDs with suffixes like _16jDL000000Cb11)
-  │         └── GenAiFunction (one per action within topic)
-  └── AiAuthoringBundle (the developer's source; "naked" points to highest draft)
+AUTHORING DOMAIN (developer-owned, exists before any publish)
+  AiAuthoringBundle
+    ├── .agent (Agent Script source — editable text file)
+    └── .bundle-meta.xml (metadata; optional <target> links to published version)
+
+RUNTIME DOMAIN (created by publish)
+  Bot (top-level container, one per agent)
+    └── BotVersion (one per published version)
+          └── GenAiPlannerBundle (versioned bundle, contains compiled agent definition)
+                ├── .genAiPlannerBundle (XML: local topics, references to local actions)
+                └── local action files (scoped to this version only)
 ```
 
-The `<target>` element in `bundle-meta.xml` specifies which published version the AAB maps to (format: `Bot_API_Name.vN`). Absent `<target>` = draft (editable). Present `<target>` = locked to that published version.
+`GenAiPlannerBundle` is a "bundle" metadata type — it decomposes in local source into multiple files representing topics and actions. These local components are scoped to that version of the agent only. `GenAiPlugin` and `GenAiFunction` also exist as standalone global metadata types, but the versions inside a `GenAiPlannerBundle` are local copies, not independently addressable global metadata.
+
+Publishing an AAB version creates the corresponding runtime entities and establishes the version-level connection between the two domains (AAB version → GenAiPlannerBundle version). The `<target>` element in `bundle-meta.xml` is the AAB-side pointer into this connection (format: `Bot_API_Name.vN`). It also controls AAB state: absent = draft (editable), present = locked to that published version.
 
 ### 5. The "Naked" AAB vs. Version-Suffixed AABs
 
