@@ -24,9 +24,11 @@ on the previous.
    this file:
    `afdx-pro-code-testdrive/agent-script-skill/SKILL.md`
 
-3. **Working context for this file** — contains the finalized outline, all
-   conflict resolutions, content scope, and ordering rationale:
-   `afdx-pro-code-testdrive/claude-collaboration/rf4-context.md`
+3. **Refined working context for this file** — contains the finalized
+   outline, all confirmed facts (26 total from 5 experiments), writing
+   insights, error inventory, and the conceptual foundation. This is the
+   single source of truth for RF4 content:
+   `afdx-pro-code-testdrive/claude-collaboration/rf4-context-refined.md`
 
 4. **Reference File 1 (Core Language)** — understand what the reader
    already knows. RF4 must not re-teach syntax or execution model:
@@ -52,8 +54,9 @@ on the previous.
 ## Step 1: Domain Reads
 
 Read these source files to extract content. The AUTHORITATIVE sources are
-listed first. When conflicts arise between sources, follow the conflict
-resolutions documented in `rf4-context.md`.
+listed first. The refined context file (`rf4-context-refined.md`) contains
+26 confirmed facts validated through live experiments. When conflicts arise
+between source docs and confirmed facts, the confirmed facts take precedence.
 
 ### Source Priority
 
@@ -70,177 +73,153 @@ resolutions documented in `rf4-context.md`.
    `sf agent test resume --job-id <id>`. `AiEvaluationDefinition`
    metadata. Common test mistakes with WRONG/RIGHT pairs.
 
+**EXPERIMENT-CONFIRMED FACTS** (override source docs when they conflict):
+
+3. `rf4-context-refined.md` Section D — 26 confirmed facts from live
+   experiments (RQ1-RQ5) and domain expert (Vivek) clarifications.
+   These facts were validated against a real Salesforce scratch org and
+   represent ground truth for RF4. Key experiment-sourced facts:
+   - Deploy validation depth (Fact 4, RQ2)
+   - Post-publish seamless workflow (Fact 19, RQ3 + Vivek)
+   - Deploy vs. publish distinction (Facts 15a/15b, RQ4)
+   - Publish self-containment (Fact 13, RQ4)
+   - Version-suffixed AAB immutability (Fact 20, RQ5)
+   - Wildcard retrieve for version history (Fact 21, RQ5)
+   - Published agent deletion impossibility (Fact 24, RQ4)
+
 **OFFICIAL DOCUMENTATION** (grounding for authoritative claims):
 
-3. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-metadata.md` (47 lines)
-   — Agent metadata hierarchy (Bot → BotVersion → GenAiPlannerBundle →
-   GenAiPlugin → GenAiFunction). `AiAuthoringBundle` structure.
+4. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-metadata.md` (47 lines)
+   — Agent metadata hierarchy. `AiAuthoringBundle` structure.
 
-4. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-nga-authbundle.md` (79 lines)
+5. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-nga-authbundle.md` (79 lines)
    — `sf agent generate authoring-bundle` command. What it creates.
 
-5. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-nga-publish.md` (83 lines)
+6. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-nga-publish.md` (83 lines)
    — Publishing workflow. Validates → commits version → hydrates
    Bot/GenAi* metadata → retrieves to local. `<target>` element.
 
-6. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-manage.md` (69 lines)
+7. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-manage.md` (69 lines)
    — `sf agent activate`, `sf agent deactivate`, `sf org open agent`.
 
-7. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-synch.md` (118 lines)
+8. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-synch.md` (118 lines)
    — Deploy/retrieve/delete commands. `Agent` pseudo metadata type.
    Delete behavior details.
 
-8. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-test.md` (22 lines)
+9. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-test.md` (22 lines)
    — Testing overview. Tests run against activated published agents.
 
-9. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-reference.md` (43 lines)
-   — Agent spec and test spec YAML property references.
+10. `salesforcedocs/.../guides/agentforce/agent-dx/agent-dx-reference.md` (43 lines)
+    — Agent spec and test spec YAML property references.
 
 **REAL PUBLISHED METADATA** (use for concrete examples):
 
-10. `force-app/main/default/bots/Local_Info_Agent/Local_Info_Agent.bot-meta.xml`
+11. `force-app/main/default/bots/Local_Info_Agent/Local_Info_Agent.bot-meta.xml`
     — Real Bot container metadata.
 
-11. `force-app/main/default/bots/Local_Info_Agent/v1.botVersion-meta.xml`
+12. `force-app/main/default/bots/Local_Info_Agent/v1.botVersion-meta.xml`
     and `v2.botVersion-meta.xml` — Real BotVersion files.
 
-12. `force-app/main/default/genAiPlannerBundles/Local_Info_Agent_v1/Local_Info_Agent_v1.genAiPlannerBundle`
+13. `force-app/main/default/genAiPlannerBundles/Local_Info_Agent_v1/Local_Info_Agent_v1.genAiPlannerBundle`
     and `Local_Info_Agent_v2/Local_Info_Agent_v2.genAiPlannerBundle`
     — Real GenAiPlannerBundle files showing version-suffixed naming and
-    org-generated ID suffixes.
+    locally-scoped topic/action components.
 
-13. `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.bundle-meta.xml`
+14. `force-app/main/default/aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.bundle-meta.xml`
     — Real bundle-meta.xml showing `<target>Local_Info_Agent.v2</target>`.
 
-14. `sfdx-project.json` — Real project configuration showing package
+15. `sfdx-project.json` — Real project configuration showing package
     directory path.
 
 ---
 
 ## Step 2: Write the File
 
-### Finalized Outline (8 Sections)
+### Finalized Outline (7 Sections)
 
 Follow this outline exactly. The ordering was debated and finalized with
-the skill author. See `rf4-context.md` for the rationale behind each
-positioning decision.
+the skill author. The refined context file contains the full outline with
+cross-references to confirmed facts — use Section C of
+`rf4-context-refined.md` as your checklist.
 
-1. **Agent Metadata Structure** — `AiAuthoringBundle` directory layout:
-   `.agent` file (Agent Script source) + `.bundle-meta.xml` (metadata).
-   Located under `aiAuthoringBundles/<API_Name>/` within the package
-   directory from `sfdx-project.json`. Full agent metadata hierarchy
-   (Bot → BotVersion → GenAiPlannerBundle → GenAiPlugin → GenAiFunction)
-   — explain this is the PUBLISHED structure, not the authoring structure.
-   How to locate agents in a project: read `sfdx-project.json` for the
-   `packageDirectories[].path` value, then look under
-   `<path>/main/default/aiAuthoringBundles/` for authoring bundles.
+1. **Agent Metadata Structure** — Start with the two-domain entity graph
+   (authoring domain vs. runtime domain) from Section B of the refined
+   context. Then cover: `AiAuthoringBundle` directory layout (`.agent` +
+   `.bundle-meta.xml`), the `<target>` element, `AiEvaluationDefinition`
+   for tests, `Agent` pseudo metadata type, how to locate agents in a
+   project by reading `sfdx-project.json`. Use real metadata snippets.
+   Facts: 5, 6, 10, 18.
 
-2. **Generating an Agent** — `sf agent generate authoring-bundle`
-   command. What it creates (two files: `.agent` and `.bundle-meta.xml`).
-   The `.agent` file is where Agent Script code goes. Keep this short —
-   one command, two outputs.
+2. **Agent Metadata Lifecycle: Generate → Deploy → Publish → Activate → Test** — Conceptual overview of the full lifecycle chain. Each step's
+   purpose in 1-2 sentences. Key distinction: authoring domain (AAB =
+   developer's source) vs. runtime domain (Bot/GenAi* = org's
+   representation). Deploy populates the authoring domain; publish
+   populates the runtime domain. This section is the "execution model"
+   equivalent for lifecycle operations. Facts: 14, 15a, 15b.
 
-3. **Deploy → Publish → Activate Pipeline** — The core lifecycle
-   operation. Three steps, each with distinct purpose:
-   - **Deploy backing code**: `sf project deploy start --source-dir <path>`
-     to deploy Apex, Flow, Prompt Template dependencies. This is routine
-     and frequent. CRITICAL: Do NOT include `.agent` or `AiAuthoringBundle`
-     metadata in routine deploys unless the developer explicitly asks.
-     Show this as a WRONG/RIGHT pair.
-   - **Deploy agent metadata** (when explicitly publishing): deploy the
-     `AiAuthoringBundle` to the org as part of the publish workflow.
-   - **Publish**: `sf agent publish authoring-bundle --api-name <NAME>`.
-     What happens: validates → commits version → creates Bot/GenAi*
-     metadata → auto-retrieves hydrated metadata to local project.
-     After publish, new files appear in the local project (Bot,
-     BotVersion, GenAiPlannerBundle directories).
-   - **Activate**: `sf agent activate --api-name <Bot_API_Name>`. Makes
-     a published version live for runtime and preview. Only one version
-     active at a time. `sf agent deactivate --api-name <Bot_API_Name>`
-     to take offline.
+3. **Creating an Agent** — `sf agent generate authoring-bundle` with
+   REQUIRED flags: `--no-spec`, `--name "<Label>"`, `--api-name
+   <Developer_Name>`. What the command creates (two files). What the
+   generated boilerplate contains. Failure modes: omitting `--no-spec`
+   (waits for spec file), confusing `--name`/`--api-name`, omitting
+   flags (interactive prompts). WRONG/RIGHT pairs for each.
+   Facts: 5, 6, 7.
 
-4. **Published Agent Metadata** — What publish creates and what it means.
-   Explain each component:
-   - `Bot` container: `bots/<API_Name>/<API_Name>.bot-meta.xml` — top-level
-     agent definition with `agentDSLEnabled: true`
-   - `BotVersion`: `bots/<API_Name>/vN.botVersion-meta.xml` — minimal
-     version files (just `<fullName>vN</fullName>`)
-   - `GenAiPlannerBundle`: `genAiPlannerBundles/<API_Name>_vN/` — full
-     expanded agent definition with org-generated ID suffixes on topics
-     and actions. Version-suffixed directory names.
-   - `bundle-meta.xml` `<target>` element: Maps authoring bundle to most
-     recently published version (format: `Bot_API_Name.vN`). Only appears
-     after publish + retrieve.
-   Use the real metadata from the reference project to illustrate.
-   State clearly: these files are org-generated. The consuming agent
-   does NOT edit them directly. Edit the `.agent` file, republish.
+4. **Working With Authoring Bundles** — This is the highest-value
+   section in RF4. The hidden behaviors and non-obvious oddities that no
+   source documentation covers. Must include:
+   - "Naked" AAB always points to highest DRAFT (Fact 18)
+   - Version-suffixed AABs are frozen published snapshots (Fact 20)
+   - First deploy creates DRAFT V1 (Fact 11)
+   - No pro-code way to create new draft versions (Fact 12)
+   - Deploy-before-publish for pro-code/low-code collaboration (Fact 8)
+   - `.a4drules` caution: NEVER deploy AAB in routine ops (Fact 8b)
+   - `default_agent_user` requires Einstein Agent license (Fact 3);
+     immutable after first publish (Fact 3a); misleading error if wrong
+   - Two validation layers: compile vs. API (Fact 3c)
+   - Deploy validates via Invocable Action lookup only — parameter
+     types NOT checked (Fact 4). Stub classes sufficient but risky.
+   - Post-publish workflow is seamless (Fact 19, happy path)
+   - `<target>` edge case: retrieve after publish locks AAB (Fact 19-edge)
+   - Server-side filename versioning triggers CLI warning (Fact 10)
+   WRONG/RIGHT pairs: non-Einstein-Agent user, editing version-suffixed
+   AAB, retrieving published AAB and deploying with changes, assuming
+   deploy validates parameter types.
 
-5. **Retrieve and Sync** — `sf project retrieve start` with
-   `--metadata Agent:<API_Name>` to pull all agent components from the
-   org. The `Agent` pseudo metadata type is shorthand for all agent
-   components (Bot, BotVersion, GenAiPlannerBundle, etc.). When to
-   retrieve: after publishing (to get hydrated metadata), when starting
-   from an org-built agent (to get local copies), when syncing team
-   changes. Also mention: `sf project retrieve start
-   --metadata AiAuthoringBundle:<API_Name>` to retrieve just the
-   authoring bundle.
+5. **Publishing Authoring Bundles** — Why publish is needed (creates
+   runtime domain entities). Publish is SELF-CONTAINED — no prior deploy
+   needed (Fact 13). Simplest pipeline: generate → edit → validate →
+   publish → activate. What metadata gets created (Bot, BotVersion,
+   GenAiPlannerBundle with locally-scoped topics/actions). Post-publish
+   behavior: local source unchanged, developer continues editing (Fact
+   19). Version inflation when no DRAFT exists (Fact 26). Publish
+   response lacks version number — must retrieve to discover it (Fact
+   17). Retrieve with `AiAuthoringBundle:` NOT `Agent:` (Fact 16).
+   Use real metadata to illustrate version accumulation.
 
-6. **Agent Management** — `sf org open agent --api-name <Name>` to
-   open in Agent Builder (web UI). Useful for visual inspection,
-   not the consuming agent's primary workflow. Checking agent status:
-   how to determine if an agent is active (look for BotVersion files
-   in the local project, or use Builder).
+6. **Activating Published Agents** — `sf agent activate --api-name
+   <Bot_API_Name>` and `sf agent deactivate`. Only one version active
+   at a time. Published agents can ONLY be previewed if activated
+   (Fact 1). Required for test execution. Facts: 1, 2.
 
-7. **Delete and Rename** — Delete workflow: deactivate →
-   `sf project delete source --metadata AiAuthoringBundle:<API_Name>`
-   (deletes agent metadata, preserves backing code). Alternative:
-   `sf project delete source --metadata Agent:<API_Name>` to delete
-   all agent components. Rename: advise against renaming published
-   agents — the API name appears in Bot, BotVersion directories,
-   GenAiPlannerBundle directories, and AiAuthoringBundle directory.
-   Recommended approach: create a new agent with the desired name,
-   migrate the Agent Script source, publish, activate the new version,
-   then delete the old agent. Be honest that rename tooling may evolve.
-
-8. **Test Lifecycle** — CLI commands for test metadata operations:
-   - `sf agent test create --spec <path>` — creates
-     `AiEvaluationDefinition` metadata in the org from a test spec YAML.
-     The test spec is NOT deployable metadata — it's an intermediate
-     artifact.
-   - `sf agent test run --name <AiEvalDef_Name> --api-name <Bot_API_Name>`
-     — executes tests against an ACTIVATED published agent. Tests
-     CANNOT run against AiAuthoringBundle agents — must publish and
-     activate first. Show this as a WRONG/RIGHT pair.
-   - `sf agent test resume --job-id <id>` — for long-running test jobs.
-   Test spec authoring and result interpretation are in RF5. This
-   section covers only the lifecycle commands.
-
----
-
-## Conflict Resolutions (Already Decided)
-
-These were resolved through discussion with the skill author. Do NOT
-revisit or present alternatives. Apply them as stated.
-
-1. **Published agent preview requires activation.** Vivek confirmed:
-   once published, an agent can ONLY be previewed if it has been
-   ACTIVATED. Only one published version can be active at a time.
-   Preview uses the `Bot` API name, not the planner bundle name.
-
-2. **"NEVER deploy AiAuthoringBundle" vs. deploy pipeline.** These are
-   complementary. Routine backing-code deploys should NEVER include
-   AiAuthoringBundle metadata. The deploy → publish pipeline is a
-   deliberate, developer-initiated sequence that includes agent
-   metadata intentionally. Frame these as two distinct workflows.
-
-3. **Version naming across metadata types.** BotVersion files use
-   `vN`, GenAiPlannerBundle directories use `API_Name_vN`, and
-   bundle-meta.xml target uses `Bot_API_Name.vN`. These are consistent
-   but serve different purposes. Explain the three-way relationship.
-
-4. **Test CLI commands in RF4 and RF5.** Intentional duplication per
-   Design Principle 3. RF4 covers the commands as lifecycle procedures.
-   RF5 covers them in the context of test authoring and execution.
+7. **Lifecycle Operations** — Consolidated CLI reference. This section
+   is intentional reinforcement — the consuming agent may arrive here
+   directly for a specific operation without reading sections 3-6.
+   Subsections:
+   - **Deploy**: backing code (routine, excludes agent metadata) vs.
+     agent metadata (deliberate). Deploy does NOT create Bot entity
+     (Fact 15a). WRONG/RIGHT for accidental AAB deploy.
+   - **Retrieve**: `Agent:` pseudo-type. GOTCHA: `Agent:` omits AAB
+     (Fact 16). Wildcard for version history:
+     `AiAuthoringBundle:Name_*` (Fact 21). Source tracking gap (Fact 22).
+   - **Delete**: unpublished AABs (works, but WARNING: also deletes
+     local files — Fact 25). Published agents CANNOT be deleted via
+     Metadata API (Fact 24). Backing code deletion dependency (Fact 9).
+   - **Rename**: advise against. Create-new-and-migrate. Be honest.
+   - **Test lifecycle**: `sf agent test create`, `run`, `resume`. Tests
+     run against ACTIVATED agents only. WRONG/RIGHT for unpublished.
+   - **Open in Builder**: `sf org open authoring-bundle`,
+     `sf org open agent --api-name`.
 
 ---
 
@@ -275,18 +254,16 @@ a clear sequence of steps. No hedging.
 - **Prose over tables.** LLMs process prose more reliably than tabular
   data. Use bullet lists for sequences of steps.
 - **WRONG/RIGHT pairs inline.** Place anti-patterns within the section
-  where they occur. Minimum two: the deploy caution (deploying AAB
-  accidentally) and the test target mistake (running tests against
-  unpublished agent).
+  where they occur. Minimum: deploy caution (deploying AAB accidentally),
+  test target mistake (running tests against unpublished agent), editing
+  version-suffixed AAB, using wrong license for `default_agent_user`.
 - **All CLI commands use `--json` where applicable.** The consuming
   agent is programmatic. Note: not all lifecycle commands support
   `--json` — use it where available.
 - **No analogies to other languages.** Agent Script metadata is unique.
-- **Use real metadata from the reference project.** The inspected Bot,
-  BotVersion, GenAiPlannerBundle, and bundle-meta.xml files provide
-  concrete examples. Show actual XML snippets to illustrate structure.
-  Keep snippets minimal — enough to show the key elements, not the
-  full file content.
+- **Use real metadata from the reference project.** Show actual XML
+  snippets to illustrate structure. Keep snippets minimal — enough to
+  show key elements, not full file content.
 
 ### Source Attribution
 
@@ -308,8 +285,16 @@ When a claim is grounded by multiple sources, list them:
 For claims from Vivek's direct clarifications (not in any source doc):
 - `[SOURCE: Vivek clarification — published agent preview requires activation]`
 
+For claims validated by live experiments:
+- `[SOURCE: RQ2 experiment — deploy validates Invocable Action registry only]`
+- `[SOURCE: RQ4 experiment — publish is self-contained]`
+
+For confirmed facts from the refined context:
+- `[SOURCE: rf4-context-refined Fact 19 — post-publish workflow is seamless]`
+
 These citations make the file auditable. They will be regex-stripped
-(`\[SOURCE:.*?\]`) after review. Do NOT omit them.
+(`\[SOURCE:.*?\]`) after review. Do NOT omit them — a claim without a
+source citation is an unverifiable claim.
 
 ### RF1/RF2/RF3 Conventions (Carry Forward)
 
@@ -342,11 +327,11 @@ operational step and trust the reader to know the concept.
 
 ### Target Length
 
-~300 lines. RF4 is procedural — each section is a recipe, not a
-conceptual explanation. If exceeding, check for verbose preambles or
-unnecessary metadata XML that could be trimmed. The published agent
-metadata section (Section 4) is the most likely to run long — keep
-XML snippets minimal.
+~350 lines. RF4 has 7 sections covering more ground than RF3's 6
+sections, and Section 4 (Working With Authoring Bundles) is
+information-dense with behaviors undocumented anywhere else. Moderate
+overage is expected. If exceeding 400 lines, check for verbose
+preambles or unnecessary XML that could be trimmed.
 
 ---
 
@@ -354,25 +339,31 @@ XML snippets minimal.
 
 After writing, verify the file against these criteria:
 
-1. Do all 8 sections appear in the correct order per the outline?
-2. Is the deploy caution ("NEVER deploy AiAuthoringBundle unless
+1. Do all 7 sections appear in the correct order per the outline?
+2. Does Section 1 present the two-domain entity graph (authoring domain
+   vs. runtime domain) clearly?
+3. Does Section 2 establish the deploy vs. publish distinction as
+   "which domain does this populate?"
+4. Is the deploy caution ("NEVER deploy AiAuthoringBundle unless
    explicitly asked") prominent with a WRONG/RIGHT pair?
-3. Is the deploy → publish → activate pipeline clearly presented as
-   three distinct steps with different commands and purposes?
-4. Does the published agent metadata section use real XML snippets
+5. Is publish presented as self-contained (no prior deploy needed)?
+6. Is the post-publish workflow presented as seamless (happy path) with
+   the `<target>` edge case clearly marked as "only if you retrieve"?
+7. Does Section 4 cover all confirmed facts about AAB oddities
+   (Facts 3, 4, 8, 10, 11, 12, 18, 19, 20)?
+8. Does the published agent metadata section use real XML snippets
    from the reference project (not fabricated examples)?
-5. Is it clear that published metadata files are org-generated and
+9. Is it clear that published metadata files are org-generated and
    NOT to be edited directly?
-6. Is the `Agent` pseudo metadata type explained as a convenient
-   shorthand for deploy/retrieve/delete?
-7. Does the test lifecycle section clearly state that tests run
-   against ACTIVATED published agents only?
-8. Does every technical claim have a `[SOURCE: ...]` citation?
-9. Do all code examples follow RF1/RF2/RF3 conventions?
-10. Does the file avoid re-teaching RF1 content (syntax), RF2
+10. Is the `Agent` pseudo metadata type explained as convenient
+    shorthand, with the GOTCHA that it omits AiAuthoringBundle?
+11. Does the test lifecycle subsection clearly state that tests run
+    against ACTIVATED published agents only?
+12. Does every technical claim have a `[SOURCE: ...]` citation?
+13. Do all code examples follow RF1/RF2/RF3 conventions?
+14. Does the file avoid re-teaching RF1 content (syntax), RF2
     content (design), and RF3 content (validation/debugging)?
-11. Could a consuming agent with zero prior Salesforce metadata
+15. Could a consuming agent with zero prior Salesforce metadata
     experience use this file to deploy, publish, activate, and
     manage an agent end-to-end?
-12. Is every section under the 300-line target pulling its weight —
-    no filler, no redundancy, no padding?
+16. Is every section pulling its weight — no filler, no redundancy?
