@@ -544,17 +544,13 @@ Use this pattern to inspect/compare different versions of an authoring bundle.
 
 [SOURCE: rf4-context-refined Fact 21 — Wildcard retrieve returns all version-suffixed AiAuthoringBundles]
 
-**Gotcha: Agent: Does NOT Include AiAuthoringBundle**
+**Retrieve runtime metadata with the `Agent` pseudo-type:**
 
 ```bash
-# WRONG — does not include authoring bundle source
 sf project retrieve start --json --metadata Agent:Local_Info_Agent
-
-# CORRECT — includes authoring bundle source
-sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
-If you need to see the authoring bundle (to inspect `<target>` or work with source), use `AiAuthoringBundle:` explicitly.
+The `Agent` pseudo-type retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin — the full runtime entity graph. It does not include `AiAuthoringBundle`. Use the `AiAuthoringBundle` metadata type directly when you need source files.
 
 [SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
 
