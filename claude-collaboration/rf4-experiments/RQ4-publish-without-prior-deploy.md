@@ -7,6 +7,28 @@ the org as part of the publish process. But does this work for a
 brand-new AAB that has never existed in the org, or does the org need
 to have a pre-existing draft?
 
+**Key context from RQ1/RQ2/RQ3 findings:**
+- `sf agent validate authoring-bundle` only checks Agent Script
+  syntax/compilation — it does NOT validate backing logic or agent user.
+- Deploy validates backing logic via Invocable Action registry lookup
+  (class must exist AND have `@InvocableMethod`). This test agent has
+  no actions, so backing logic validation is not exercised here — and
+  that's intentional. We're testing the deploy/publish mechanics, not
+  backing logic validation.
+- The server uses a version-suffixed filename (e.g.,
+  `Publish_Test_Agent_1.agent`) even though the local filename has no
+  suffix. This triggers a CLI warning — it is expected, not an error.
+- `default_agent_user` must have "Einstein Agent" license (NOT standard
+  Salesforce license). Wrong license → misleading "Internal Error."
+  Immutable after first publish.
+- After publishing, local source is NOT updated with `<target>`. If
+  you retrieve after publish, `<target>` will appear in `bundle-meta.xml`
+  — this is expected behavior, not an error.
+- **IMPORTANT: Steps 4 and 5 test different commands. Do NOT substitute
+  one for the other. Step 4 tests `sf project deploy start`. Step 5
+  tests `sf agent publish authoring-bundle`. They are different
+  operations with different behavior.**
+
 ## Project Location
 
 This experiment uses the project at the current working directory.
@@ -25,37 +47,26 @@ included at the end.
 sf agent generate authoring-bundle --no-spec --name "Publish Test Agent" --api-name Publish_Test_Agent
 ```
 
-Record: What files were created? Where?
+Record: What files were created? Where? Inspect the generated `.agent`
+file to see the boilerplate format — you'll modify it in Step 2.
 
 ### Step 2: Add minimal content to the agent
 
-The generated `.agent` file will have boilerplate. Make sure it has:
-- A valid `default_agent_user` (copy from `Local_Info_Agent.agent`):
-  `"afdx-agent@testdrive.org05e7916a-ce7e-4015-b412-20ce15bdc091"`
-- At least one topic with minimal content (no actions needed — we
-  just need it to be a valid Agent Script file that can pass validation)
+Edit the generated `.agent` file. Do NOT replace the entire file —
+work with the boilerplate structure that `generate` produced and fill
+in the required fields:
 
-A minimal agent might look like:
-```yaml
-system:
-    agent_label: "Publish Test Agent"
-    developer_name: "Publish_Test_Agent"
-    role: "You are a test agent."
-    company: "Test Company"
+- Set `default_agent_user` to the same value used in
+  `Local_Info_Agent.agent` (read that file to get the exact username).
+  This user MUST have the "Einstein Agent" license — do not guess or
+  use a different user.
+- Ensure there is at least one topic with minimal content (no actions
+  needed — we just need a valid Agent Script file that passes
+  validation).
+- Set `role`, `company`, and `instructions` to simple placeholder text.
 
-config:
-    default_agent_user: "afdx-agent@testdrive.org05e7916a-ce7e-4015-b412-20ce15bdc091"
-
-start_agent:
-    instructions: ->
-        | Greet the user.
-
-topics:
-    greeting:
-        description: "Handles greetings"
-        instructions: ->
-            | Say hello to the user.
-```
+Use the structure from `Local_Info_Agent.agent` as a reference for
+the correct field format if needed.
 
 ### Step 3: Validate the agent locally
 
@@ -63,13 +74,15 @@ topics:
 sf agent validate authoring-bundle --api-name Publish_Test_Agent --json
 ```
 
-Record: Does validation pass? If not, fix issues and retry.
+Record: Does validation pass? If not, fix issues and retry. Remember
+that validate only checks syntax — it won't catch agent user or
+backing logic issues.
 
 ### Step 4: Test `sf project deploy start` on a fresh AAB (no prior org state)
 
-**IMPORTANT**: This step explicitly tests whether `sf project deploy start`
-works for an AAB that has never been in the org. Do NOT skip this step
-or substitute `sf agent publish`. We need direct evidence.
+**IMPORTANT**: This step explicitly tests whether `sf project deploy
+start` works for an AAB that has never been in the org. Do NOT skip
+this step or substitute `sf agent publish`. We need direct evidence.
 
 ```
 sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/Publish_Test_Agent --json
@@ -84,13 +97,23 @@ Record: Does it succeed or fail?
   ```
 - If it **fails**: Record the EXACT error message. What does it say?
 
-### Step 5: Attempt to publish WITHOUT prior deploy (if Step 4 failed)
+### Step 5: Attempt to publish WITHOUT prior deploy
 
-If Step 4 succeeded, delete the test agent from the org first so we
-test publish from a clean slate:
+If Step 4 succeeded, we need to delete the test agent from the org
+first so we test publish from a clean slate:
 ```
 sf project delete source --metadata Agent:Publish_Test_Agent --json --no-prompt
 ```
+
+**After deleting from the org, verify the local AAB files still exist:**
+```
+ls force-app/main/default/aiAuthoringBundles/Publish_Test_Agent/
+```
+If the delete command removed local files, re-generate the AAB
+(repeat Steps 1-2) before proceeding.
+
+**IMPORTANT**: This step tests `sf agent publish authoring-bundle`
+specifically. Do NOT substitute `sf project deploy start`.
 
 Now attempt publish on a fresh AAB with no org state:
 ```
@@ -108,6 +131,10 @@ Record: Does it succeed or fail?
 ```
 sf project retrieve start --metadata Agent:Publish_Test_Agent --json
 ```
+
+Note: This retrieve will set `<target>` in `bundle-meta.xml` if
+publish created a published version. This is expected behavior
+(per RQ3 findings) — not an error.
 
 Check what was created:
 ```
@@ -152,7 +179,10 @@ For each step, capture:
 1. The exact command run
 2. The full JSON output
 3. Success/failure status
-4. Any error messages — capture the EXACT text
+4. Any error messages — capture the EXACT text. If any error message
+   is vague or misleading (e.g., "Internal Error, try again later"),
+   flag it explicitly. We are maintaining an inventory of bad error
+   messages for the engineering team.
 
 ## Expected Outcome
 
