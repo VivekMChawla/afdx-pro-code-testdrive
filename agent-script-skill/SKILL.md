@@ -1,5 +1,5 @@
 ---
-name: agent-script
+name: agent-script-skill
 description: "Use this skill when working with Salesforce Agent Script — the scripting language for authoring Agentforce agents using the Atlas Reasoning Engine. Triggers include: creating, modifying, or comprehending Agent Script agents; working with AiAuthoringBundle files or .agent files; designing topic graphs or flow control; producing or updating an Agent Spec; validating Agent Script or diagnosing compilation errors; previewing agents or debugging behavioral issues; deploying, publishing, activating, or deactivating agents; deleting or renaming agents; authoring AiEvaluationDefinition test specs or running agent tests. This skill teaches Agent Script from scratch — AI models have zero prior training data on this language. Do NOT use for Apex development, Flow building, Prompt Template authoring, Experience Cloud configuration, or general Salesforce CLI tasks unrelated to Agent Script."
 ---
 
