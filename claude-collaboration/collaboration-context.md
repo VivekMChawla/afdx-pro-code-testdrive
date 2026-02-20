@@ -1396,7 +1396,16 @@ Sessions should consult this section to determine what to work on.
     values and inline comments explaining each field. The skill's
     Test Lifecycle subsection in RF4 references this asset.
 
-13. **[FUTURE]** Mermaid diagram conventions placement — discovered
+13. **[FUTURE — after Skill published]** Revisit RF4 Section 7 Test
+    Lifecycle subsection. Current content is functional but needs
+    deeper review: verify all CLI flag combinations against latest
+    SF CLI, validate the `--wait` / async polling workflow end-to-end,
+    confirm `--force-overwrite` behavior, and ensure the
+    `sf agent generate test-spec` warnings are still accurate.
+    Also revisit the template-testSpec.yaml asset (work item #12)
+    as part of this pass.
+
+14. **[FUTURE]** Mermaid diagram conventions placement — discovered
    `agent-script-recipes/.airules/MERMAID_DIAGRAMS.md` (380 lines of
    detailed conventions for producing Topic Map diagrams). Currently
    referenced as a skill asset in RF2, but the content is more
