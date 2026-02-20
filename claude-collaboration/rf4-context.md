@@ -367,24 +367,25 @@ results. CLI commands appear in both files (intentional duplication).
      locked to published version. Pulling "naked" DRAFT versions via
      retrieve never sets `<target>`.
 
-5. **Publishing Authoring Bundles** — Why publishing is needed (locks
-   a version, creates runtime metadata). When to publish (after
-   validation passes, backing code is deployed). Key detail: publishing
-   INCLUDES deploying the AAB to the org — the developer does NOT need
-   to manually deploy the AAB before publishing. The pipeline is:
-   deploy backing code (manual) → publish (deploys AAB, validates,
-   commits version, hydrates Bot/GenAi* metadata, retrieves). The
-   `<target>` element in `bundle-meta.xml`. Multiple published versions
-   and how they accumulate. What metadata gets created (Bot container,
-   BotVersion files, GenAiPlannerBundle directories with version-suffixed
-   names and org-generated ID suffixes). Post-publish behavior: local
-   source unchanged, developer can immediately continue editing and
-   deploying (CONFIRMED via RQ3 + Vivek). Gotcha: publishing when no
-   DRAFT exists on server creates a new version even if content is
+5. **Publishing Authoring Bundles** — Why publishing is needed (creates
+   the full agent entity graph — Bot, BotVersion, GenAiPlannerBundle,
+   GenAiPlugins — from the AAB source; deploy alone does NOT do this).
+   When to publish (after validation passes, backing code is deployed).
+   Key detail: publish is SELF-CONTAINED — no prior deploy or org state
+   needed (CONFIRMED via RQ4). A brand-new AAB can be published directly.
+   The simplest pipeline: generate → edit → validate → publish →
+   activate. Deploy backing code is still needed if agent has actions.
+   The `<target>` element in `bundle-meta.xml`. Multiple published
+   versions and how they accumulate. What metadata gets created (use
+   RQ4's full inventory: Bot, BotVersion, GenAiPlannerBundle,
+   GenAiPlugins with org-generated ID suffixes). Post-publish behavior:
+   local source unchanged, developer can immediately continue editing
+   and deploying (CONFIRMED via RQ3 + Vivek). Gotcha: publishing when
+   no DRAFT exists on server creates a new version even if content is
    unchanged (version inflation — only when no existing DRAFT). Gotcha:
    publish response doesn't include the version number — must retrieve
-   and inspect `bundle-meta.xml`. Use real metadata from the reference
-   project to illustrate.
+   with `AiAuthoringBundle:` specifically (NOT `Agent:` — which omits
+   the AAB). Use real metadata from the reference project to illustrate.
 
 6. **Activating Published Agents** — `sf agent activate` /
    `sf agent deactivate`. Only one published version active at a
@@ -394,22 +395,33 @@ results. CLI commands appear in both files (intentional duplication).
 
 7. **Lifecycle Operations** — Consolidated CLI reference:
    - **Deploy**: `sf project deploy start` for backing code vs.
-     agent metadata. WRONG/RIGHT pair for accidental AAB deploy.
+     agent metadata. Deploy puts AAB source in org but does NOT create
+     a Bot entity (CONFIRMED via RQ4). WRONG/RIGHT pair for accidental
+     AAB deploy.
    - **Retrieve**: `sf project retrieve start` with `Agent` pseudo
-     metadata type. When to retrieve.
-   - **Delete**: Deactivate first → `sf project delete source` with
-     `AiAuthoringBundle` or `Agent` type. What gets deleted vs.
-     preserved. CRITICAL: org enforces deletion dependency — backing
-     code (Apex classes) cannot be deleted while any AAB version
-     references them. Must update AAB to remove reference first, then
-     delete the class.
+     metadata type. GOTCHA: `Agent:` retrieve does NOT include
+     AiAuthoringBundle (DISCOVERED via RQ4). Must use
+     `AiAuthoringBundle:` for AAB-specific retrieves.
+   - **Delete**: Two levels of complexity:
+     (a) Unpublished AABs: `sf project delete source` with
+     `AiAuthoringBundle` or `Agent` type works. WARNING: also deletes
+     local source files (DISCOVERED via RQ4).
+     (b) Published agents: CANNOT be deleted via Metadata API
+     (DISCOVERED via RQ4). Circular dependency chain prevents deletion.
+     Only Setup UI or scratch org expiration. Implications for test
+     hygiene.
+     (c) Backing code: org enforces deletion dependency — cannot delete
+     while any AAB version references it. Must update AAB reference
+     first, then delete class.
    - **Rename**: Advise against for published agents. Create-new-and-
      migrate approach. Honest about limitations.
    - **Test lifecycle**: `sf agent test create`, `sf agent test run`,
      `sf agent test resume`. Tests run against ACTIVATED published
      agents only. WRONG/RIGHT pair for running tests against
      unpublished agent.
-   - **Open in Builder**: `sf org open agent --api-name`.
+   - **Open in Builder**: `sf org open authoring-bundle` (opens
+     Agentforce Studio list view). Note: `sf org open agent --api-name`
+     queries BotDefinition and only works for published agents.
 
 ---
 
@@ -497,6 +509,28 @@ results. CLI commands appear in both files (intentional duplication).
   but should NOT be taught to fear it or routinely clear it. It only
   appears locally when a published/versioned bundle is retrieved.
   Retrieving "naked" DRAFTs never sets it.
+
+- **Deploy vs. publish is the most important distinction in RF4 (from
+  RQ4).** Deploy = metadata operation (puts AAB source in org). Publish
+  = full entity creation (Bot + BotVersion + GenAiPlannerBundle +
+  GenAiPlugins). This must be crystal clear early — Section 2 (lifecycle
+  overview) should establish this, and Sections 5 and 7 should reinforce.
+
+- **Publish is the streamlined happy path.** Generate → validate →
+  publish → activate. No intermediate deploy step. The skill should
+  present this as the default pipeline, with "deploy before publish"
+  as an optional step for specific use cases (pro-code/low-code
+  collaboration — pending Vivek clarification on how this works).
+
+- **Published agents can't be deleted via CLI — major lifecycle fact.**
+  The skill must warn about this clearly. Test agents in scratch orgs
+  accumulate until org expiration. Implications: use unique names for
+  test agents, don't over-publish in scratch orgs, consider org
+  refresh cadence.
+
+- **`sf project delete source` removes local files too.** Developers
+  will expect "delete from org only" and lose their local source.
+  WRONG/RIGHT pair needed in Section 7.
 
 - **Section 7 is reinforcement, not redundancy.** CLI commands
   introduced in detail sections (3-6) reappear in Section 7 as a
@@ -838,6 +872,83 @@ treats the AAB as a draft or a published version:
 - In the normal workflow (publish → keep editing → deploy), `<target>`
   is never set locally and never causes problems
 
+**15. Deploy and publish are fundamentally different operations.**
+**(CONFIRMED via RQ4 experiment — 2026-02-20)**
+
+- `sf project deploy start` puts the AAB source file into the org as
+  metadata. It does NOT create a Bot, BotVersion, GenAiPlannerBundle,
+  or GenAiPlugin. The agent is not usable and is not visible in Agent
+  Builder. Deploy is a metadata operation only.
+- `sf agent publish authoring-bundle` deploys the AAB, compiles Agent
+  Script to Agent DSL, and creates the full agent entity graph (Bot +
+  BotVersion + GenAiPlannerBundle + GenAiPlugins). The agent becomes
+  usable and visible.
+
+This distinction is critical for how we frame the pipeline. Deploy
+alone is not sufficient to make an agent usable — only publish does
+that.
+
+**IMPORTANT — Impact on Confirmed Fact 8:** Fact 8 says "Deploying
+an AAB to an org WITHOUT publishing is genuinely useful: it lets
+someone use the org-based Agent Builder to contribute." RQ4 found
+that deploy does NOT create a Bot entity visible in Agent Builder.
+This needs clarification from Vivek — how does the pro-code/low-code
+collaboration model work if deploy-only doesn't make the agent visible
+in Builder? Possible explanations: (a) Agentforce Studio has a
+separate view for unpublished AABs, (b) `sf org open authoring-bundle`
+opens a list that includes deployed-but-unpublished AABs, or (c) the
+collaboration requires at least one publish first. **[NEEDS VIVEK
+CLARIFICATION]**
+
+**16. Publish is self-contained — no prior deploy or org state needed.**
+**(CONFIRMED via RQ4 experiment — 2026-02-20)**
+
+A brand-new AAB that has never existed in the org can be published
+directly with `sf agent publish authoring-bundle`. The command handles
+initial deploy, compilation, and entity creation in one step. The
+developer workflow does NOT require a preceding `sf project deploy
+start`. The simplest pipeline is: generate → edit → validate →
+publish → activate.
+
+**17. Published NGA agents cannot be deleted via Metadata API.**
+**(DISCOVERED via RQ4 experiment — 2026-02-20)**
+
+A circular dependency chain between agent metadata types prevents
+deletion of any individual component:
+1. AiAuthoringBundle → "Published bundle versions cannot be deleted"
+2. Bot → "setup object in use"
+3. BotVersion → "referenced elsewhere...Authoring Bundle Definition
+   Version"
+4. GenAiPlannerBundle → "referenced elsewhere...Generative AI
+   Conversation Definition Planner"
+
+There is no Metadata API path to delete a published NGA agent. Cleanup
+requires either the Salesforce Setup UI or scratch org expiration.
+This has significant implications for testing workflows and scratch
+org hygiene — test agents accumulate and cannot be removed via CLI.
+
+**18. `Agent:` pseudo-type retrieve does not include AiAuthoringBundle.**
+**(DISCOVERED via RQ4 experiment — 2026-02-20)**
+
+`sf project retrieve start --metadata Agent:X` retrieves Bot,
+BotVersion, GenAiPlannerBundle, and GenAiPlugin metadata but does NOT
+include the AiAuthoringBundle. To see `<target>` in `bundle-meta.xml`
+after publish, a separate retrieve is required:
+`sf project retrieve start --metadata AiAuthoringBundle:X`
+
+This is a gap in the Agent pseudo-type's composite behavior. The skill
+should warn about this and advise using `AiAuthoringBundle:` for AAB-
+specific retrieves.
+
+**19. `sf project delete source` removes local files too.**
+**(DISCOVERED via RQ4 experiment — 2026-02-20)**
+
+When deleting org metadata via `sf project delete source`, the command
+also deletes the corresponding local source files. Developers who
+expect "delete from org only" will lose their local files and need to
+re-create them. The skill should warn about this behavior, especially
+for cleanup and testing workflows.
+
 ### AAB Lifecycle Model (Structured from Brain Dump)
 
 This is the conceptual model that emerges from the confirmed facts.
@@ -925,14 +1036,23 @@ response still lacks version number. See Confirmed Facts 9, 12, 13, 14.
 Full experiment results in `rf4-experiments/RQ3-post-publish-draft-behavior.md`.
 
 **RQ4: Can you publish an AAB that has never been manually deployed?**
-The publish command deploys the AAB internally. Does this work for a
-brand-new AAB that has never been in the org, or does the org need
-to have a pre-existing draft?
-- **Why it matters**: Simplifies the pipeline guidance if publish
-  handles everything.
-- **Test approach**: Generate a fresh AAB locally, ensure backing
-  code is deployed, run `sf agent publish authoring-bundle` without
-  a prior deploy. Observe whether it succeeds.
+**RESOLVED — Both A and C confirmed (2026-02-20).**
+
+Step 4 (deploy): Outcome **A** — `sf project deploy start` succeeds
+on a fresh AAB, creating AiAuthoringBundle metadata in the org. BUT
+deploy alone does NOT create a Bot entity — the agent is not usable
+or visible in Agent Builder. Deploy puts source in the org; it does
+not compile or instantiate the agent.
+
+Step 5 (publish): Outcome **C** — `sf agent publish authoring-bundle`
+succeeds on a fresh AAB with no prior org state. Publish handles
+initial deploy + compilation + full entity creation in one step.
+
+Additionally discovered: published agents cannot be deleted via
+Metadata API (circular dependency chain), `Agent:` pseudo-type
+retrieve does not include AiAuthoringBundle, and `sf project delete
+source` also removes local files. See Confirmed Facts 15-19.
+Full experiment results in `rf4-experiments/RQ4-publish-without-prior-deploy.md`.
 
 **RQ5: Can version-suffixed AABs be deployed independently?**
 If a developer retrieves `Local_Info_Agent_3` (a draft created in
