@@ -41,7 +41,7 @@ An `AiAuthoringBundle` is a Salesforce metadata source component represented as 
 
 **1. `.agent` file** —  Agent Script source code. This is the editable text file where you define topics, actions, variables, and flow control. It is human-readable and supports multiple versions.
 
-**2. `.bundle-meta.xml` file** — Metadata about the bundle. Contains a `bundleType` element set to `AGENT` and optionally a `<target>` element that controls whether the bundle is draft (editable) or locked to a published version:
+**2. `.bundle-meta.xml` file** — Metadata about the bundle. Contains a `bundleType` element set to `AGENT` and optionally a `<target>` element that controls whether the bundle is DRAFT (editable) or locked to a published version:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -122,7 +122,7 @@ Each phase is detailed in the sections that follow.
 
 [SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
-**Phase 5: Test** — Create test specs (`sf agent test create`), run tests against the activated agent (`sf agent test run`), and check results (`sf agent test resume`). Tests run against activated published agents only — draft authoring bundles cannot be tested. The `sf agent test create` command compiles an Agent Test Spec (YAML) into `AiEvaluationDefinition` metadata in the org. See Section 7 (Test Lifecycle).
+**Phase 5: Test** — Create test specs (`sf agent test create`), run tests against the activated agent (`sf agent test run`), and check results (`sf agent test resume`). Tests run against activated published agents only — DRAFT authoring bundles cannot be tested. The `sf agent test create` command compiles an Agent Test Spec (YAML) into `AiEvaluationDefinition` metadata in the org. See Section 7 (Test Lifecycle).
 
 [SOURCE: agent-testing-rules-no-edit.md, rf4-context-refined Fact 1]
 
@@ -130,7 +130,7 @@ Each phase is detailed in the sections that follow.
 
 These are two different operations that populate different domains.
 
-**Deploy** (`sf project deploy start`): Metadata operation only. Puts the `AiAuthoringBundle` source file into the org's authoring domain. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The authoring bundle IS visible in Agentforce Studio for low-code users to edit and preview as a draft. Deploy is a staging step — useful for pro-code/low-code collaboration where pro-code developers author locally and deploy to get the authoring bundle into Builder for low-code refinement.
+**Deploy** (`sf project deploy start`): Metadata operation only. Puts the `AiAuthoringBundle` source file into the org's authoring domain. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The authoring bundle IS visible in Agentforce Studio for low-code users to edit and preview as a DRAFT. Deploy is a staging step — useful for pro-code/low-code collaboration where pro-code developers author locally and deploy to get the authoring bundle into Builder for low-code refinement.
 
 [SOURCE: rf4-context-refined Fact 15a — Deploy vs. publish distinction]
 
@@ -177,7 +177,7 @@ aiAuthoringBundles/
 
 The `.agent` file contains boilerplate with `system`, `config`, `start_agent`, and placeholder topics. You edit this file to define your agent.
 
-The `.bundle-meta.xml` file is initially minimal (bundleType only, no `<target>`), indicating draft state.
+The `.bundle-meta.xml` file is initially minimal (bundleType only, no `<target>`), indicating DRAFT state.
 
 [SOURCE: rf4-context-refined Fact 6 — What generation creates]
 
@@ -252,11 +252,11 @@ Use version-suffixed authoring bundles for auditing and diffing version history,
 
 ### No Pro-Code Way to Create New DRAFT Versions
 
-Once a DRAFT version exists in the org, there is no CLI command to create additional DRAFT versions. The only way to create multiple DRAFTs is via Agentforce Studio's "create new draft version" button on a published version. These additional DRAFTs can then be retrieved with their version number.
+Once a DRAFT version exists in the org, there is no CLI command to create additional DRAFT versions. The only way to create multiple DRAFTs is via Agentforce Studio's "create new DRAFT version" button on a published version. These additional DRAFTs can then be retrieved with their version number.
 
 In pro-code workflows, you have one DRAFT per agent at any given time. The DRAFT evolves: you deploy, the DRAFT updates. You publish, the DRAFT becomes locked. You deploy again, a new DRAFT is created.
 
-[SOURCE: rf4-context-refined Fact 12 — No pro-code way to create new draft versions]
+[SOURCE: rf4-context-refined Fact 12 — No pro-code way to create new DRAFT versions]
 
 ### Deploy-Before-Publish Is Legitimate (For Pro-Code/Low-Code Collaboration)
 
@@ -322,7 +322,7 @@ When deploying a local authoring bundle (`Local_Info_Agent.agent`), the server u
 "AiAuthoringBundle, Local_Info_Agent_4.agent, returned from org, but not found in the local project"
 ```
 
-This is not an error — it's normal behavior. It reflects the "naked `AiAuthoringBundle` = highest draft" behavior. The warning is misleading but harmless.
+This is not an error — it's normal behavior. It reflects the "naked `AiAuthoringBundle` = highest DRAFT" behavior. The warning is misleading but harmless.
 
 [SOURCE: rf4-context-refined Fact 10 — Server-side AiAuthoringBundle filename versioning]
 
@@ -330,7 +330,7 @@ This is not an error — it's normal behavior. It reflects the "naked `AiAuthori
 
 After publishing, your local source remains unchanged. The `bundle-meta.xml` does NOT get `<target>` set automatically. You can immediately continue editing the `.agent` file and deploy again. The platform auto-creates a new DRAFT version on the server.
 
-The intended workflow is: publish → keep editing → deploy (auto-creates new draft).
+The intended workflow is: publish → keep editing → deploy (auto-creates new DRAFT).
 
 [SOURCE: rf4-context-refined Fact 19 — Post-publish workflow is seamless]
 
@@ -554,7 +554,7 @@ Deletion behavior differs based on whether the agent has been published.
 sf project delete source --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
-This works for draft-only agents that have never been published.
+This works for DRAFT-only agents that have never been published.
 
 **Published agents cannot be deleted via CLI:**
 
@@ -580,7 +580,7 @@ To delete a backing class:
 
 Renaming is hazardous due to the metadata hierarchy. The platform creates dependencies between `AiAuthoringBundle` names and published versions.
 
-Recommended approach: Create a new agent with the desired name and migrate content. Document the old agent as deprecated and schedule deletion after a grace period.
+Do not attempt an in-place rename. Create a new agent with the desired name and migrate content. Document the old agent as deprecated and schedule deletion after a grace period.
 
 ### Test Lifecycle
 
@@ -646,8 +646,4 @@ Opens Agentforce Studio showing all authoring bundles in the org.
 sf org open agent --api-name <Bot_API_Name>
 ```
 
-Opens the published agent in Agentforce Studio. Only works for published agents. Unpublished (draft-only) authoring bundles must be opened via `sf org open authoring-bundle`.
-
----
-
-**End of Reference File**
+Opens the published agent in Agentforce Studio. Only works for published agents. Unpublished (DRAFT-only) authoring bundles must be opened via `sf org open authoring-bundle`.
