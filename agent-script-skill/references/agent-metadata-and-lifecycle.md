@@ -1,355 +1,737 @@
-# Agent Metadata and Lifecycle Management
+# Agent Metadata and Lifecycle Reference
 
 ## Table of Contents
 
 1. Agent Metadata Structure
-2. Generating an Agent
-3. Deploy → Publish → Activate Pipeline
-4. Published Agent Metadata
-5. Retrieve and Sync
-6. Agent Management
-7. Delete and Rename
-8. Test Lifecycle
+2. Agent Metadata Lifecycle Overview
+3. Creating an Agent
+4. Working With Authoring Bundles
+5. Publishing Authoring Bundles
+6. Activating Published Agents
+7. Lifecycle Operations
 
 ---
 
 ## 1. Agent Metadata Structure
 
-An Agent Script agent is stored as an `AiAuthoringBundle` — a directory containing two files. The bundle lives under `aiAuthoringBundles/<API_Name>/` within the package directory.
+Agent Script agents are defined across two independent metadata domains. Understanding this distinction is critical for every lifecycle operation you perform.
 
-**Locate the package directory:** Read `sfdx-project.json` at the project root. The `packageDirectories` array contains entries with a `path` field (commonly `force-app`, but not guaranteed) and a `default` flag. Use the path marked `"default": true`. All metadata types live under `<packageDirectory>/main/default/`.
+### Two-Domain Entity Graph
 
-**Contents of an AiAuthoringBundle:**
+```
+AUTHORING DOMAIN (developer-owned, exists before any publish)
+  AiAuthoringBundle
+    ├── .agent (Agent Script source — editable text file)
+    └── .bundle-meta.xml (metadata; optional <target> links to published version)
 
-- `<API_Name>.agent` — The Agent Script source file. This is where you write topics, actions, variables, and all Agent Script code.
-- `<API_Name>.bundle-meta.xml` — Metadata about the bundle. Contains a `<bundleType>AGENT</bundleType>` element and (after publishing) a `<target>` element showing the most recently published version.
-
-**How to locate agents in a project:**
-
-1. Read `sfdx-project.json` for the default package directory path
-2. Navigate to `<path>/main/default/aiAuthoringBundles/`
-3. Each subdirectory name is an agent API name (e.g., `Local_Info_Agent`)
-4. The `.agent` file inside has the same name
-
-**Published Agent Metadata Hierarchy** [SOURCE: agent-dx-metadata (lines 1-16)]:
-
-After an agent is published, the platform creates a full metadata hierarchy in the org and retrieves it to the local project:
-
-- **Bot** — Container metadata at `bots/<API_Name>/<API_Name>.bot-meta.xml`. Top-level agent definition with `agentDSLEnabled: true`, agent type, and user context. [SOURCE: Local_Info_Agent.bot-meta.xml (lines 1-17)]
-- **BotVersion** — Version records at `bots/<API_Name>/vN.botVersion-meta.xml`. Minimal metadata — just a `<fullName>vN</fullName>` element. [SOURCE: Local_Info_Agent v1.botVersion-meta.xml (lines 1-4)]
-- **GenAiPlannerBundle** — Full expanded agent definition at `genAiPlannerBundles/<API_Name>_vN/<API_Name>_vN.genAiPlannerBundle`. Contains `localTopics` (all topics with full definitions), `localActions` (actions with targets), and org-generated ID suffixes (e.g., `_16jDL000000Cb11`). Version-suffixed directory names. [SOURCE: Local_Info_Agent_v1.genAiPlannerBundle (lines 1-49)]
-- **GenAiPlugin & GenAiFunction** — Individual topic and action definitions within the planner bundle. These are org-generated; you do not edit them directly.
-
-All published metadata is org-generated. The consuming agent does NOT edit Bot, BotVersion, or GenAiPlannerBundle files directly. Edit the `.agent` source file, then publish to update these files.
-
----
-
-## 2. Generating an Agent
-
-Create a new agent using the `sf agent generate authoring-bundle` command [SOURCE: agent-dx-nga-authbundle (lines 1-30)]:
-
-```bash
-sf agent generate authoring-bundle --api-name <API_NAME>
+RUNTIME DOMAIN (created by publish)
+  Bot (top-level container, one per agent)
+    └── BotVersion (one per published version)
+          └── GenAiPlannerBundle (versioned bundle, contains compiled agent definition)
+                ├── local topics and actions (scoped to this version only)
 ```
 
-Replace `<API_NAME>` with the agent's unique identifier (letters, numbers, underscores; no spaces). The command creates two files:
+The authoring domain is where you work. The runtime domain is what the org creates when you publish. These two domains are separate until you publish, which is when they connect.
 
-- `<API_NAME>.agent` — Empty shell Agent Script file ready for editing
-- `<API_NAME>.bundle-meta.xml` — Metadata wrapper for the bundle
+[SOURCE: rf4-context-refined Section B — Metadata Entity Graph]
 
-Both files are created in `aiAuthoringBundles/<API_NAME>/` under the default package directory. The `.agent` file is where all Agent Script code goes.
+### The Authoring Domain: AiAuthoringBundle
 
----
+An `AiAuthoringBundle` (AAB) is a directory in your local project containing two files:
 
-## 3. Deploy → Publish → Activate Pipeline
+**1. `.agent` file** — Your Agent Script source code. This is the editable text file where you define topics, actions, variables, and flow control. It is human-readable and version-controlled (goes in git).
 
-The lifecycle moves an agent from local development to a running state in a Salesforce org through three distinct steps.
+**2. `.bundle-meta.xml` file** — Metadata about the bundle itself. It contains a `bundleType` element set to `AGENT` and optionally a `<target>` element. The `<target>` element controls whether the AAB is draft (editable) or locked to a published version.
 
-### Deploy: Backing Code Dependencies
+**Example `bundle-meta.xml` (draft state):**
 
-Before publishing an agent, all backing logic must exist in the org. Deploy Apex classes, Flows, Prompt Templates, and any other dependencies your agent's actions require.
-
-```bash
-sf project deploy start --source-dir force-app/main/default/classes --json
-```
-
-Deploy each dependency type before (or concurrent with) agent deployment. Publishing fails if dependencies are missing from the org. [SOURCE: agent-dx-nga-publish (lines 15-25)]
-
-**CRITICAL CAUTION — NEVER deploy AiAuthoringBundle in routine deploys** [SOURCE: agent-script-rules (lines 64-65)]:
-
-WRONG: Deploying agent metadata with backing code
-```bash
-# WRONG — this accidentally deploys the agent metadata
-sf project deploy start --source-dir force-app/main/default/ --json
-```
-
-RIGHT: Deploying only backing code
-```bash
-# CORRECT — deploy Apex, Flows, etc. without agent metadata
-sf project deploy start --source-dir force-app/main/default/classes --json
-```
-
-Deploying the `AiAuthoringBundle` creates or updates the agent definition in the org. This should only happen as part of the intentional publish workflow, not as a side effect of routine backing-code deploys.
-
-### Publish: Commit and Hydrate
-
-Once backing code is deployed, publish the agent to commit a version and create the full metadata structure:
-
-```bash
-sf agent publish authoring-bundle --api-name <API_NAME> --json
-```
-
-Publishing does the following [SOURCE: agent-dx-nga-publish (lines 30-45)]:
-
-1. Validates the `.agent` file for syntax errors
-2. Commits the current Agent Script as a version (tracked via BotVersion files)
-3. Hydrates Bot/GenAi* metadata in the org
-4. Auto-retrieves the hydrated metadata back to the local project
-
-After publish, new files appear in your local project: a Bot container, BotVersion files, and GenAiPlannerBundle directories (see Section 4 for structure).
-
-### Activate: Make Live
-
-One published version can be active at a time. The active version is what the runtime uses for previews and customer conversations.
-
-```bash
-sf agent activate --api-name <Bot_API_Name> --json
-```
-
-Replace `<Bot_API_Name>` with the agent's API name (the same one used for publish). The command makes that agent's most recent published version live.
-
-To deactivate (take the agent offline without deleting it):
-
-```bash
-sf agent deactivate --api-name <Bot_API_Name> --json
-```
-
-[SOURCE: agent-dx-manage (lines 30-45)]
-
----
-
-## 4. Published Agent Metadata
-
-After publishing, several new files appear in the local project. Understanding this structure helps you navigate the file system and verify publish succeeded.
-
-**Bot Container** — Located at `bots/<API_Name>/<API_Name>.bot-meta.xml`.
-
-Sample (from Local_Info_Agent):
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Bot xmlns="http://soap.sforce.com/2006/04/metadata">
-    <agentDSLEnabled>true</agentDSLEnabled>
-    <agentType>EinsteinServiceAgent</agentType>
-    <botMlDomain>
-        <label>Local Info Agent</label>
-        <name>Local_Info_Agent</name>
-    </botMlDomain>
-    <botUser>afdx-agent@testdrive.org05e7916a-ce7e-4015-b412-20ce15bdc091</botUser>
-    <description>A next-gen agent for Coral Cloud Resort...</description>
-    <label>Local Info Agent</label>
-    <type>ExternalCopilot</type>
-</Bot>
-```
-
-The Bot is the top-level agent definition. It declares the agent name, type, and which user context it runs under.
-
-**BotVersion Files** — Located at `bots/<API_Name>/vN.botVersion-meta.xml`.
-
-Each published version gets a version record:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<BotVersion xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>v1</fullName>
-</BotVersion>
-```
-
-These are minimal — just version identifiers. The actual expanded definition is in the GenAiPlannerBundle.
-
-**GenAiPlannerBundle** — Located at `genAiPlannerBundles/<API_Name>_vN/<API_Name>_vN.genAiPlannerBundle`.
-
-This is the full expanded agent definition. It contains `<localTopicLinks>` (references to all topics), `<localTopics>` (full topic definitions with instructions), and org-generated IDs appended to topic names (e.g., `off_topic_16jDL000000Cb11`). Version numbers are suffixed to directory names (`Local_Info_Agent_v1`, `Local_Info_Agent_v2`). [SOURCE: Local_Info_Agent_v1.genAiPlannerBundle structure]
-
-**The `<target>` Element in bundle-meta.xml** — Located in `aiAuthoringBundles/<API_Name>/Local_Info_Agent.bundle-meta.xml`.
-
-After publishing and retrieving, the authoring bundle's metadata file includes:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <bundleType>AGENT</bundleType>
-    <target>Local_Info_Agent.v2</target>
 </AiAuthoringBundle>
 ```
 
-The `<target>` element maps the authoring bundle to the most recently published version. Format: `<Bot_API_Name>.vN`. This appears only after publish + retrieve.
+[SOURCE: Local_Info_Agent.bundle-meta.xml]
 
-**Version Accumulation** — Multiple published versions accumulate:
+**Storage location:** AABs are stored in `<packageDirectory>/main/default/aiAuthoringBundles/` where `<packageDirectory>` is specified in `sfdx-project.json`. For example, if `sfdx-project.json` lists `force-app` as the default package directory, your AABs live in `force-app/main/default/aiAuthoringBundles/`.
 
-After first publish:
-- `bots/Local_Info_Agent/v1.botVersion-meta.xml`
-- `genAiPlannerBundles/Local_Info_Agent_v1/Local_Info_Agent_v1.genAiPlannerBundle`
-- `aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.bundle-meta.xml` with `<target>Local_Info_Agent.v1</target>`
+[SOURCE: sfdx-project.json example, agent-dx-metadata.md]
 
-After second publish:
-- `bots/Local_Info_Agent/v1.botVersion-meta.xml` (unchanged)
-- `bots/Local_Info_Agent/v2.botVersion-meta.xml` (new)
-- `genAiPlannerBundles/Local_Info_Agent_v1/Local_Info_Agent_v1.genAiPlannerBundle` (unchanged)
-- `genAiPlannerBundles/Local_Info_Agent_v2/Local_Info_Agent_v2.genAiPlannerBundle` (new)
-- `aiAuthoringBundles/Local_Info_Agent/Local_Info_Agent.bundle-meta.xml` with `<target>Local_Info_Agent.v2</target>` (updated)
+### Two Forms of AiAuthoringBundle Locally
 
-Only one version can be active at a time. The `<target>` always points to the most recent version, regardless of which version is active.
+**Naked AAB** (e.g., `Local_Info_Agent`) — No version suffix in the directory name. In the org, this always points to the highest DRAFT version. This is the only writable surface for pro-code developers. After you publish, your local source stays clean (the `.bundle-meta.xml` does NOT get `<target>` set automatically). You can immediately continue editing and deploying.
+
+[SOURCE: rf4-context-refined Fact 18 — Naked AAB always points to highest DRAFT]
+
+**Version-suffixed AAB** (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`) — These are published snapshots retrieved from the org after publication. They are locked by a `<target>` element in their `bundle-meta.xml`. They are read-only — modified deploys fail; unmodified deploys succeed as misleading no-ops. Use these for version history inspection, diffing, and auditing. NEVER edit a version-suffixed AAB expecting your changes to persist.
+
+[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AABs are immutable snapshots]
+
+### The Runtime Domain: Bot → BotVersion → GenAiPlannerBundle
+
+Publishing an AAB creates the runtime entities that make an agent usable in the org.
+
+**Bot** — The top-level container (one per agent). It holds the agent's identity and links to all published versions.
+
+**BotVersion** — Represents a specific published version. Each time you publish, a new BotVersion is created (e.g., `v1`, `v2`, `v3`). Only one version can be active at a time.
+
+**GenAiPlannerBundle** — The compiled bundle containing the agent definition for that specific version. It contains topics, actions, and all runtime-necessary metadata, scoped to that version only.
+
+Think of it as: AAB is the recipe, the runtime domain is the cooked dish, and publish is the act of cooking. The AAB is editable and versionable in your local project. The runtime entities are the org's representation — created when you publish, never edited directly.
+
+[SOURCE: rf4-context-refined Section B.3 — Runtime Domain Explanation]
+
+### AiEvaluationDefinition for Tests
+
+`AiEvaluationDefinition` is the metadata type that represents an agent test spec. You author these in YAML format and deploy them to the org. Tests run against activated published agents only, not draft agents.
+
+[SOURCE: agent-dx-test.md, rf4-context-refined Fact 1]
+
+### Agent Pseudo Metadata Type
+
+When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers the runtime domain components: `Bot`, `BotVersion`, `GenAiPlannerBundle`, and related GenAiPlugin/GenAiFunction metadata. This saves you from specifying each type individually during retrieve/deploy.
+
+**CRITICAL GOTCHA:** `Agent:X` retrieve does NOT include `AiAuthoringBundle`. If you need the AAB (to see the `<target>` element or to work with the source), use `AiAuthoringBundle:X` explicitly.
+
+[SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
 
 ---
 
-## 5. Retrieve and Sync
+## 2. Agent Metadata Lifecycle Overview
 
-Retrieve all agent components from the org using the `Agent` pseudo metadata type [SOURCE: agent-dx-synch (lines 15-45)]:
+The agent lifecycle progresses through distinct phases, each populating a different domain and using different CLI commands.
 
-```bash
-sf project retrieve start --metadata Agent:<API_Name> --json
-```
+**Phase 1: Generate** — Create the AAB in your local project with `sf agent generate authoring-bundle`. The AAB exists locally only; the org is unaffected.
 
-The `Agent` pseudo metadata type is shorthand for all agent components: Bot, BotVersion, GenAiPlannerBundle, GenAiPlugin, and GenAiFunction. A single command pulls everything.
+**Phase 2: Deploy** — Push the AAB to the org using `sf project deploy start`. This populates the authoring domain only — the AAB becomes visible in Agentforce Studio (Agent Builder) for low-code editing. No Bot entity is created yet. The agent is not usable for preview or runtime.
 
-**When to retrieve:**
+**Phase 3: Publish** — Compile the AAB and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: Bot, BotVersion, and GenAiPlannerBundle are created. The agent becomes usable.
 
-- After publishing an agent (to get the hydrated metadata locally)
-- When starting from an org-built agent created in Agent Builder (to get local copies)
-- When syncing team changes (after a teammate publishes a new version)
+**Phase 4: Activate** — Make a published version live with `sf agent activate`. Only one version can be active at a time. Published agents can ONLY be previewed if activated.
 
-**To retrieve only the authoring bundle** (without published versions):
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
-```bash
-sf project retrieve start --metadata AiAuthoringBundle:<API_Name> --json
-```
+**Phase 5: Test** — Create test specs and run tests against the activated agent.
 
-This pulls just the source `.agent` file and `bundle-meta.xml`, not the Bot/GenAi* metadata.
+### Deploy vs. Publish: The Critical Distinction
+
+This is the most important concept in this reference file. These are two different operations that populate different domains.
+
+**Deploy** (`sf project deploy start`): Metadata operation only. Puts the AAB source file into the org. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The agent is not usable for preview (`--api-name` will fail) or runtime. However, the AAB IS visible in Agentforce Studio for low-code users to edit.
+
+Deploy is a staging step — useful for pro-code/low-code collaboration where pro-code developers author locally and deploy to get the AAB into Builder for low-code refinement.
+
+[SOURCE: rf4-context-refined Fact 15a — Deploy vs. publish distinction]
+
+**Publish** (`sf agent publish authoring-bundle`): Full entity creation. Deploys the AAB, compiles Agent Script to Agent DSL, and creates the entire runtime entity graph (Bot + BotVersion + GenAiPlannerBundle + GenAiPlugins). The agent becomes usable and visible for preview and runtime.
+
+Publish is self-contained — a brand-new AAB can be published directly with no prior deploy or org state.
+
+[SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
+
+### Recommended Pipeline
+
+The simplest, most straightforward pipeline is:
+
+1. `sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name>`
+2. Edit the `.agent` file locally
+3. `sf agent validate authoring-bundle --api-name <Developer_Name>`
+4. `sf agent publish authoring-bundle --api-name <Developer_Name>`
+5. `sf agent activate --api-name <Bot_API_Name>`
+
+This skips the intermediate deploy step entirely. Deploy is only needed if you're doing pro-code/low-code collaboration.
+
+[SOURCE: rf4-context-refined Fact 13 — Publish self-contained]
 
 ---
 
-## 6. Agent Management
+## 3. Creating an Agent
 
-Open an agent in Agent Builder (the web UI) for visual inspection or manual adjustments:
+Use the `sf agent generate authoring-bundle` command to create a new agent. This command requires three flags and is often a source of confusion.
+
+### Command Syntax
 
 ```bash
-sf org open agent --api-name <Agent_API_Name> --json
+sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Developer_Name> --json
 ```
 
-This opens the published agent's web interface. Useful for visual review of the agent structure, but the consuming agent's primary workflow is CLI-based.
+**Required flags:**
 
-**Checking Agent Status:**
+- `--no-spec` — Prevents the CLI from waiting for a classic-style agent spec file (which is now deprecated). This flag must be present, or the command hangs waiting for input.
 
-An agent is active if one of its published BotVersion files corresponds to a running agent. In the local project, check `bots/<API_Name>/` for version files. If a BotVersion exists for a version, it has been published. To determine which is active, either use Agent Builder or inspect deployment logs from your most recent publish/activate commands.
+- `--name "<Label>"` — The human-readable display name. This becomes `agent_label` in the Agent Script `config` block. Example: `"Coral Cloud Resort"`. Wrap in quotes if the label contains spaces.
 
-Deactivate a published version before making significant changes to ensure preview and runtime don't use stale logic:
+- `--api-name <Developer_Name>` — The unique API identifier (no spaces, letters/numbers/underscores only). This becomes `developer_name` in the `config` block. Example: `Coral_Cloud_Resort_Agent`.
+
+Always include `--json` for machine-readable output.
+
+[SOURCE: rf4-context-refined Fact 5 — Generation command syntax]
+
+### What the Command Creates
+
+The command creates two files in a directory named after your `--api-name`:
+
+```
+aiAuthoringBundles/
+  └── Coral_Cloud_Resort_Agent/
+        ├── Coral_Cloud_Resort_Agent.agent (editable source)
+        └── Coral_Cloud_Resort_Agent.bundle-meta.xml (metadata)
+```
+
+The `.agent` file contains boilerplate with `system`, `config`, `start_agent`, and placeholder topics. You edit this file to define your agent.
+
+The `.bundle-meta.xml` file is initially minimal (bundleType only, no `<target>`), indicating draft state.
+
+[SOURCE: rf4-context-refined Fact 6 — What generation creates]
+
+### Common Failure Modes with WRONG/RIGHT Pairs
+
+**1. Omitting `--no-spec`**
 
 ```bash
+# WRONG — CLI waits for spec file (hangs)
+sf agent generate authoring-bundle --name "My Agent" --api-name My_Agent
+
+# CORRECT — explicit --no-spec
+sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
+```
+
+Without `--no-spec`, the CLI expects you to provide a classic agent spec file on disk. This workflow is deprecated. Always include `--no-spec`.
+
+[SOURCE: rf4-context-refined Fact 5 — Generation command syntax]
+
+**2. Confusing `--name` and `--api-name`**
+
+```bash
+# WRONG — swapped; produces invalid developer_name
+sf agent generate authoring-bundle --no-spec \
+    --name My_Agent \
+    --api-name "Customer Service Agent"
+
+# CORRECT — name is human-readable (spaces OK), api-name is identifier
+sf agent generate authoring-bundle --no-spec \
+    --name "Customer Service Agent" \
+    --api-name My_Agent
+```
+
+`--name` is the label (human-readable, can include spaces, goes in `agent_label`). `--api-name` is the developer name (identifier, no spaces, goes in `developer_name`).
+
+[SOURCE: rf4-context-refined Fact 5]
+
+**3. Omitting Flags and Getting Interactive Prompts**
+
+```bash
+# WRONG — no flags, CLI prompts interactively
+sf agent generate authoring-bundle
+
+# CORRECT — all required flags provided
+sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
+```
+
+When running from automation (not interactive REPL), always provide all flags explicitly. Interactive prompts will hang.
+
+---
+
+## 4. Working With Authoring Bundles
+
+This section covers the non-obvious behaviors and hidden constraints that make AABs tricky to work with. These are the lessons learned from experimentation.
+
+### The "Naked" AAB Always Points to the Highest DRAFT
+
+Your local agent directory (without a version suffix) represents the editable working copy in the org. In the org, this "naked" AAB is always linked to the highest DRAFT version. When you deploy, you update this DRAFT. When you publish, a new DRAFT version is created for the next round of edits.
+
+This means: No matter how many times you publish, your local `Local_Info_Agent/` directory always floats to the highest draft. You never have to worry about "which version am I editing?" — it's always the latest draft.
+
+[SOURCE: rf4-context-refined Fact 18 — Naked AAB always points to highest DRAFT]
+
+### Version-Suffixed AABs Are Frozen Snapshots
+
+After you publish, version-suffixed AABs appear in your local project (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). These are org-generated snapshots locked by a `<target>` element in their `bundle-meta.xml`:
+
+```xml
+<AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <bundleType>AGENT</bundleType>
+    <target>Local_Info_Agent.v1</target>
+</AiAuthoringBundle>
+```
+
+The presence of `<target>` locks this AAB to that specific published version. It is read-only. Modified deploys fail with an error like "content cannot be changed on a locked version." Unmodified deploys succeed as meaningless no-ops.
+
+Use version-suffixed AABs for auditing and diffing version history, NOT for editing. All edits must go through the naked AAB.
+
+[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AABs are immutable snapshots]
+
+### First Deploy Creates DRAFT V1
+
+When you deploy an AAB to an org for the first time (if it has never been published), the org creates DRAFT V1. This is your starting state. Subsequent deploys update this DRAFT. When you publish, V1 becomes locked and a new DRAFT is created for future edits.
+
+[SOURCE: rf4-context-refined Fact 11 — First deploy creates DRAFT V1]
+
+### No Pro-Code Way to Create New DRAFT Versions
+
+Once a DRAFT version exists in the org, there is no CLI command to create additional DRAFT versions. The only way to create multiple DRAFTs is via Agentforce Studio's "create new draft version" button on a published version. These additional DRAFTs can then be retrieved with their version number.
+
+For pro-code workflows, this is not a limitation — you have one DRAFT per agent at any given time. The DRAFT evolves: you deploy, the DRAFT updates. You publish, the DRAFT becomes locked. You deploy again, a new DRAFT is created.
+
+[SOURCE: rf4-context-refined Fact 12 — No pro-code way to create new draft versions]
+
+### Deploy-Before-Publish Is Legitimate (For Pro-Code/Low-Code Collaboration)
+
+Deploying without publishing is not a failed workflow. It is the foundation for pro-code/low-code collaboration:
+
+1. Pro-code developer authors Agent Script locally
+2. Pro-code developer deploys the AAB (no publish step)
+3. Low-code user opens the AAB in Agentforce Studio and refines it
+4. Low-code user saves changes
+5. Pro-code developer retrieves the updated AAB and continues
+
+Deploy/retrieve are one-way overwrites with no sync warnings. This is by design for cross-tool collaboration.
+
+However, deploy should be a deliberate choice, not the default. The simpler pipeline (generate → validate → publish → activate) skips deploy entirely.
+
+[SOURCE: rf4-context-refined Fact 8 — Deploy-before-publish is legitimate for pro-code/low-code collaboration]
+
+### NEVER Deploy AAB in Routine Backing-Code Operations
+
+The `.a4drules` caution: When deploying backing code (Apex, Flows, Prompt Templates), NEVER include agent metadata (`.agent` files or `AiAuthoringBundle` metadata) in routine deploys unless you explicitly intend to update the agent.
+
+Accidental deployment of an outdated AAB will overwrite in-progress work in the org.
+
+[SOURCE: .a4drules/agent-script-rules-no-edit.md line 64]
+
+### `default_agent_user` Configuration: Immutable and Restricted
+
+The `default_agent_user` field in your Agent Script `config` block must reference a Salesforce user with the "Einstein Agent" license type. Standard Salesforce-licensed users, even System Administrators, will fail at publish time with a misleading error message: "Internal Error, try again later."
+
+This error message does NOT indicate a license issue — it masks the true problem. Developers waste time debugging unrelated issues.
+
+The second critical fact: `default_agent_user` is immutable after first publish. Once you publish with a specific user assigned, you cannot change it. Both CLI and Agentforce Studio enforce this immutability.
+
+Therefore, getting `default_agent_user` correct on the first publish is critical.
+
+[SOURCE: rf4-context-refined Fact 3, 3a — default_agent_user license and immutability]
+
+### Two Validation Layers: Compile vs. API Validation
+
+The CLI `sf agent validate authoring-bundle` checks syntax and Agent Script compilation only. It does NOT validate `default_agent_user` or backing logic references.
+
+API validation runs during `sf agent publish` and in Agentforce Studio. This is where `default_agent_user` license requirements are checked and backing logic references are fully validated.
+
+The result: A developer can validate successfully and still fail at publish due to invalid `default_agent_user` or missing backing logic.
+
+[SOURCE: rf4-context-refined Fact 3c — Two validation layers]
+
+### Deploy Validates Backing Logic via Invocable Action Registry Lookup
+
+When you deploy an AAB, the deployment process validates that every backing logic reference (Apex class, Flow, Prompt Template) resolves to a registered Invocable Action in the org. The referenced class or flow or prompt must exist.
+
+For Apex classes, the class must have an `@InvocableMethod`-annotated method.
+
+**Critical gap:** Deploy validation does NOT check parameter names, types, return types, or whether the method has the correct number of parameters. Stub classes with `@InvocableMethod` are sufficient to unblock deployment.
+
+This means you can deploy an AAB with completely wrong I/O definitions and not discover the problem until conversation or preview. Parameter mismatches are caught only at runtime.
+
+Stub classes are a real workflow tool (not a workaround). A minimal class with `@InvocableMethod` unblocks pro-code/low-code collaboration. Just know that you're deferring type validation to runtime.
+
+[SOURCE: rf4-context-refined Fact 4 — Deploy validates backing logic via Invocable Action registry lookup]
+
+### Server-Side AAB Filename Versioning
+
+When deploying a local AAB (`Local_Info_Agent.agent`), the server uses a version-suffixed filename (`Local_Info_Agent_4.agent`), triggering a CLI warning:
+
+```
+"AiAuthoringBundle, Local_Info_Agent_4.agent, returned from org, but not found in the local project"
+```
+
+This is not an error — it's normal behavior. It reflects the "naked AAB = highest draft" behavior. The warning is misleading but harmless.
+
+[SOURCE: rf4-context-refined Fact 10 — Server-side AAB filename versioning]
+
+### Post-Publish Workflow Is Seamless (Happy Path)
+
+After publishing, your local source remains unchanged. The `bundle-meta.xml` does NOT get `<target>` set automatically. You can immediately continue editing the `.agent` file and deploy again. The platform auto-creates a new DRAFT version on the server.
+
+The intended workflow is: publish → keep editing → deploy (auto-creates new draft). This is the happy path.
+
+[SOURCE: rf4-context-refined Fact 19 — Post-publish workflow is seamless]
+
+### Edge Case: Retrieve After Publish Locks AAB
+
+If you explicitly retrieve the AAB after publishing (e.g., `sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent`), the retrieved `bundle-meta.xml` WILL have `<target>` set, locking the AAB to that published version. Subsequent deploys with content changes fail.
+
+Recovery: Remove `<target>` from `bundle-meta.xml` and deploy. This unlocks the AAB and allows new edits.
+
+This edge case only happens if you retrieve after publish. Normal post-publish workflows (just keep editing and deploying) never trigger this behavior.
+
+[SOURCE: rf4-context-refined Fact 19-edge — Retrieve after publish locks AAB]
+
+---
+
+## 5. Publishing Authoring Bundles
+
+Publishing is how you transition from draft to production. It is self-contained and can be done with no prior deploy.
+
+### Why Publishing Is Needed
+
+Deploy alone puts the AAB source into the org but does NOT create the runtime entity graph. The agent cannot be previewed with `--api-name` or run in conversation.
+
+Publishing compiles the AAB to Agent DSL and creates Bot, BotVersion, and GenAiPlannerBundle. This makes the agent usable for preview and runtime.
+
+[SOURCE: rf4-context-refined Fact 15a, 15b — Deploy vs. publish distinction]
+
+### Publish Is Self-Contained
+
+You do NOT need to deploy first. A brand-new AAB can be published directly:
+
+```bash
+sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
+# Edit My_Agent.agent ...
+sf agent publish authoring-bundle --api-name My_Agent
+```
+
+Publish handles the initial deploy, compilation, and entity creation in one step. The simplest pipeline is: generate → edit → validate → publish → activate.
+
+[SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
+
+### Command Syntax
+
+```bash
+sf agent publish authoring-bundle --api-name <Developer_Name> --json
+```
+
+The `--api-name` is the directory name under `aiAuthoringBundles/` (the `developer_name` from your config block). Always include `--json` for machine-readable output.
+
+[SOURCE: agent-dx-nga-publish.md]
+
+### What Metadata Gets Created
+
+When you publish, the org creates:
+
+- **Bot** — Top-level container (one per agent)
+- **BotVersion** — Versioned instance (e.g., `v1`, `v2`, `v3`)
+- **GenAiPlannerBundle** — Compiled agent definition for this version
+- **GenAiPlugin/GenAiFunction** — Local copies of actions scoped to this version
+
+Example directory structure after publishing:
+
+```
+bots/Local_Info_Agent/
+  ├── Local_Info_Agent.bot-meta.xml
+  ├── v1.botVersion-meta.xml
+  └── Local_Info_Agent_v1.genAiPlannerBundle-meta.xml (contains topics and actions)
+
+bots/Local_Info_Agent/
+  ├── v2.botVersion-meta.xml
+  └── Local_Info_Agent_v2.genAiPlannerBundle-meta.xml
+```
+
+Each version has its own GenAiPlannerBundle. These are org-generated and read-only.
+
+[SOURCE: real published metadata from afdx-pro-code-testdrive project]
+
+### The `<target>` Element After Publish
+
+After publish, you can (but do NOT need to) retrieve the updated AAB. If you do, the `bundle-meta.xml` will contain a `<target>` element mapping to the published version:
+
+```xml
+<AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <bundleType>AGENT</bundleType>
+    <target>Local_Info_Agent.v1</target>
+</AiAuthoringBundle>
+```
+
+This is informational only (in normal workflows, this never gets set locally). If it does appear and you want to resume editing, remove it.
+
+[SOURCE: rf4-context-refined Fact 14 — Target controls draft/locked state]
+
+### Multiple Published Versions Accumulate
+
+Each publish creates a new version. Older versions remain in the org but become inactive. You can have v1, v2, v3, etc. coexisting.
+
+After first publish: `v1.botVersion-meta.xml` and `Local_Info_Agent_v1.genAiPlannerBundle` exist.
+After second publish: `v2.botVersion-meta.xml` and `Local_Info_Agent_v2.genAiPlannerBundle` exist. (v1 still exists but is inactive.)
+
+This is version inflation — versions accumulate whether content changed or not (when no existing DRAFT exists on server).
+
+[SOURCE: rf4-context-refined Fact 26 — Publishing creates new version with no DRAFT on server]
+
+### Gotcha: Publish Response Lacks Version Number
+
+The `sf agent publish authoring-bundle` response does NOT tell you which version number was created. You must retrieve with `AiAuthoringBundle:` (NOT `Agent:`) to see what version was published:
+
+```bash
+sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+Examine the returned `bundle-meta.xml` to see the `<target>` version (e.g., `Local_Info_Agent.v2`).
+
+[SOURCE: rf4-context-refined Fact 17 — Publish response lacks version number]
+
+### Retrieve with AiAuthoringBundle, NOT Agent
+
+When you want to see the AAB and its `<target>` element after publish, retrieve with:
+
+```bash
+sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+Do NOT use `Agent:Local_Info_Agent` — this retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin but omits AiAuthoringBundle.
+
+[SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
+
+---
+
+## 6. Activating Published Agents
+
+After publishing, an agent is created but inactive. Activation makes a published version live for preview and runtime access.
+
+### Activation Commands
+
+```bash
+# Activate a specific published version
+sf agent activate --api-name <Bot_API_Name> --json
+
+# Deactivate (take a version offline without deleting it)
 sf agent deactivate --api-name <Bot_API_Name> --json
 ```
 
----
+The `--api-name` is the Bot's API name (from your Agent Script `config` block's `developer_name`).
 
-## 7. Delete and Rename
+[SOURCE: rf4-context-refined Fact 2 — Activate/deactivate commands]
 
-### Delete Mechanics
+### One Version Active at a Time
 
-Delete an agent by removing its metadata. Deactivate first if it has an active published version.
+Only one published version of an agent can be active at any given moment. When you activate a new version, the previously active version becomes inactive.
 
-**Step 1: Deactivate**
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
-```bash
-sf agent deactivate --api-name <Bot_API_Name> --json
-```
+### Published Agents REQUIRE Activation for Preview
 
-**Step 2: Delete Local Artifacts**
+This is critical: After publishing, a published agent can ONLY be previewed if it has been activated. If you try to preview with `--api-name <Bot_API_Name>` and the agent is not activated, preview fails.
 
-Remove the authoring bundle directory from your local project:
+Draft agents (authoring bundles) can be previewed with `--authoring-bundle` regardless of activation state. Only published agents have this activation requirement.
 
-```bash
-rm -rf force-app/main/default/aiAuthoringBundles/<API_Name>
-```
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
-**Step 3: Delete from Org**
+### Activation Required for Test Execution
 
-Delete agent metadata from the org using one of two approaches:
+Tests run against activated published agents only. If you try to run a test against an unpublished or inactive agent, it fails.
 
-Option A — Delete authoring bundle and associated agent metadata:
-```bash
-sf project delete source --metadata AiAuthoringBundle:<API_Name> --json
-```
-
-This removes the authoring bundle AND the associated Bot/BotVersion/GenAiPlannerBundle metadata, but preserves Apex/Flow backing code.
-
-Option B — Delete all agent components:
-```bash
-sf project delete source --metadata Agent:<API_Name> --json
-```
-
-This removes all agent metadata (everything Option A removes, plus any lingering GenAiPlugin/GenAiFunction metadata). Use this for a complete cleanup.
-
-[SOURCE: agent-dx-synch (lines 46-65)]
-
-**Backing code persists** — Delete operations remove agent metadata only, not the Apex classes, Flows, or Prompt Templates backing your actions. Delete those separately if no other agents use them.
-
-### Rename Mechanics
-
-Renaming a published agent is complex because the API name appears in multiple locations: the Bot directory, the BotVersion directory, the GenAiPlannerBundle directory, and the AiAuthoringBundle directory. Platform tooling for rename is limited.
-
-**Recommended approach:** Create a new agent with the desired name, migrate the Agent Script source from the old agent to the new one, publish the new agent, activate it, then delete the old agent. This is cleaner and less error-prone than renaming across the metadata hierarchy.
-
-If you must rename, be aware that published versions may require additional steps in the org (deactivation, re-publication, or manual cleanup). Inform the developer of the implications before proceeding.
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
 ---
 
-## 8. Test Lifecycle
+## 7. Lifecycle Operations
 
-Agent tests are defined in YAML test specs and deployed as `AiEvaluationDefinition` metadata. Tests run only against activated published agents (not authoring bundles).
+This section consolidates CLI commands for deploy, retrieve, delete, rename, test execution, and opening in Builder. These commands reappear here after being detailed in earlier sections — this is intentional reinforcement for readers who arrive directly here.
 
-**Step 1: Create Test in Org**
+### Deploy
+
+Deploy puts the AAB into the org as metadata. It does NOT create runtime entities.
+
+**Routine deploy (backing code only):**
 
 ```bash
-sf agent test create --spec specs/<Agent_Name>-testSpec.yaml --api-name <Test_API_Name> --json
+sf project deploy start --json
 ```
 
-This takes a local test spec YAML file (see RF5 for test spec authoring) and creates an `AiEvaluationDefinition` in the org. The test spec itself is NOT deployable metadata — it's an intermediate artifact used to create the definition. The metadata is retrieved to your local project at `aiEvaluationDefinitions/<Test_API_Name>.aiEvaluationDefinition-meta.xml`.
+By default, this deploys backing code (Apex, Flows, etc.) but excludes agent metadata. Use this for routine updates to supporting code.
 
-[SOURCE: agent-testing-rules (lines 180-190)]
+**Deliberate agent metadata deploy (pro-code/low-code collaboration):**
 
-**Step 2: Run Tests**
+```bash
+sf project deploy start --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+Explicitly include agent metadata only when collaborating with low-code users in Agentforce Studio. This is NOT the default pipeline.
+
+**Gotcha: Accidental AAB Deploy in Routine Operations**
+
+```bash
+# WRONG — backing code deploy that accidentally includes agent metadata
+sf project deploy start --json
+# (if agent metadata changed locally, it will deploy)
+
+# CORRECT — explicit exclusion or deliberate inclusion
+# For routine backing-code only:
+# Update .forceignore to exclude agent metadata, OR
+sf project deploy start --metadata ApexClass:*,Flow:* --json
+
+# For deliberate agent update:
+sf project deploy start --metadata ApexClass:*,AiAuthoringBundle:* --json
+```
+
+Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
+
+[SOURCE: rf4-context-refined Fact 8b — Never deploy AAB in routine backing-code operations]
+
+### Retrieve
+
+Retrieve pulls metadata from the org to your local project.
+
+**Retrieve published agent (runtime domain):**
+
+```bash
+sf project retrieve start --metadata Agent:Local_Info_Agent --json
+```
+
+This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT include AiAuthoringBundle.
+
+**Retrieve authoring bundle (source):**
+
+```bash
+sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+This retrieves the AAB source files (`.agent` and `.bundle-meta.xml`). Use this to see the `<target>` element or to get the latest AAB source from the org.
+
+**Retrieve version history (all published snapshots):**
+
+```bash
+sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent_* --json
+```
+
+The wildcard `*` retrieves all version-suffixed AABs (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked AAB is returned.
+
+Use this pattern for version history inspection and diffing.
+
+[SOURCE: rf4-context-refined Fact 21 — Wildcard retrieve returns all version-suffixed AABs]
+
+**Gotcha: Agent: Does NOT Include AiAuthoringBundle**
+
+```bash
+# WRONG — does not include AAB source
+sf project retrieve start --metadata Agent:Local_Info_Agent --json
+
+# CORRECT — includes AAB source
+sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+If you need to see the AAB (to inspect `<target>` or work with source), use `AiAuthoringBundle:` explicitly.
+
+[SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
+
+### Delete
+
+Deletion behavior differs based on whether the agent has been published.
+
+**Delete unpublished AAB:**
+
+```bash
+sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
+```
+
+This works for draft-only agents that have never been published.
+
+**Published agents cannot be deleted via CLI:**
+
+Published agents cannot be deleted via the Metadata API due to circular dependencies between metadata types. There is no CLI path to delete a published NGA agent. Cleanup requires the Salesforce Setup UI or scratch org expiration.
+
+This has implications for test hygiene and scratch org management. Use unique names for test agents to avoid collisions.
+
+[SOURCE: rf4-context-refined Fact 24 — Published agents cannot be deleted via Metadata API]
+
+**Gotcha: Delete Removes Local Files**
+
+```bash
+# WRONG — deletes both org metadata AND local source files
+sf project delete source --metadata AiAuthoringBundle:Local_Info_Agent --json
+
+# CORRECT — understand that local files are also deleted
+# Back up local files if you need them
+```
+
+`sf project delete source` removes both org metadata and corresponding local files. Developers expecting "delete from org only" will lose their local source.
+
+[SOURCE: rf4-context-refined Fact 25 — sf project delete source removes local files]
+
+**Backing Code Deletion Enforcement:**
+
+The org tracks dependencies between AAB versions and their backing Apex classes. Attempting to delete a backing class while any AAB version references it fails with a dependency error.
+
+To delete a backing class:
+
+1. Update the AAB to remove the reference
+2. Deploy the updated AAB
+3. Delete the backing class
+
+[SOURCE: rf4-context-refined Fact 9 — Backing code deletion enforcement]
+
+### Rename
+
+Renaming is hazardous due to the metadata hierarchy. The platform creates dependencies between AAB names and published versions.
+
+Recommended approach: Create a new agent with the desired name and migrate content. Document the old agent as deprecated and schedule deletion after a grace period.
+
+The Salesforce ecosystem does not provide robust agent rename tooling. Treat rename as a full migration, not a simple rename operation.
+
+### Test Lifecycle
+
+**Create a test spec:**
+
+```bash
+sf agent test create --spec <PATH_TO_YAML> --json
+```
+
+The `<PATH_TO_YAML>` is the path to your test spec file in YAML format (not to be confused with `sf agent generate test-spec`, which is an interactive command for humans).
+
+This command creates `AiEvaluationDefinition` metadata in the org.
+
+**Run tests:**
 
 ```bash
 sf agent test run --name <AiEvalDef_Name> --api-name <Bot_API_Name> --json
 ```
 
-Replace `<AiEvalDef_Name>` with the test definition's API name (what you passed to `--api-name` during create). Replace `<Bot_API_Name>` with the agent's API name.
+The `--name` is the AiEvaluationDefinition name. The `--api-name` is the Bot's API name.
 
-Tests execute against the ACTIVATED published version of the agent. If no version is active, the test fails. [SOURCE: agent-testing-rules (lines 58-62), agent-dx-test (lines 15-20)]
+Tests run against ACTIVATED published agents only. If the agent is not activated, tests fail.
 
-**Step 3: Long-Running Tests**
-
-For tests that take longer than expected, resume with:
+**Check test results:**
 
 ```bash
 sf agent test resume --job-id <JOB_ID> --json
 ```
 
-The job ID is returned by the `run` command.
+Use this to check results if a test run is still in progress.
 
-[SOURCE: agent-testing-rules (lines 244-248)]
+**Gotcha: Testing Unpublished Agents**
 
-**CRITICAL: Tests require activation**
-
-WRONG: Running tests against an authoring bundle
 ```bash
-# WRONG — tests cannot run against authoring bundles
-sf agent test run --name My_Test --authoring-bundle Local_Info_Agent --json
+# WRONG — tests require activated published agent
+sf agent test run --name My_Test --api-name My_Agent --json
+# (fails if My_Agent is not published and activated)
+
+# CORRECT — publish and activate first
+sf agent publish authoring-bundle --api-name My_Agent
+sf agent activate --api-name My_Agent
+# Then run tests
+sf agent test run --name My_Test --api-name My_Agent --json
 ```
 
-RIGHT: Tests run against published, activated agents
+Tests CANNOT run against draft authoring bundles. Publish and activate first.
+
+[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
+
+### Open in Builder
+
+**View all authoring bundles:**
+
 ```bash
-# CORRECT — the agent must be published and activated first
-sf agent test run --name My_Test --api-name Local_Info_Agent --json
+sf org open authoring-bundle
 ```
 
-Authoring bundles are draft definitions. Tests validate published behavior against real action execution in the org. Publish and activate the agent before running tests.
+This opens Agentforce Studio showing a list of all AABs in the org.
+
+**View a specific published agent:**
+
+```bash
+sf org open agent --api-name <Bot_API_Name>
+```
+
+This opens the published agent in Agentforce Studio. Note: This only works for published agents. Unpublished (draft-only) AABs must be opened via the authoring bundle command above.
 
 ---
+
+**End of Reference File**
