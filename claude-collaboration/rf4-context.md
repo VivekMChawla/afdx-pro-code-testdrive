@@ -327,7 +327,10 @@ results. CLI commands appear in both files (intentional duplication).
    - The "naked" AAB (no version suffix) always points to the highest
      DRAFT version in the org, not the most recently published version.
    - Version-suffixed AABs (e.g., `Local_Info_Agent_1`) are published
-     snapshots — frozen, not editable.
+     snapshots — frozen, not editable. They contain full Agent Script
+     but `<target>` locks them to the published version. Modified deploys
+     fail; unmodified deploys succeed as misleading no-ops (CONFIRMED
+     via RQ5).
    - First deploy creates DRAFT V1 in the org.
    - No pro-code way to create new draft versions — only via Builder's
      "create new draft version" button. But drafts CAN be retrieved
@@ -402,6 +405,10 @@ results. CLI commands appear in both files (intentional duplication).
      metadata type. GOTCHA: `Agent:` retrieve does NOT include
      AiAuthoringBundle (DISCOVERED via RQ4). Must use
      `AiAuthoringBundle:` for AAB-specific retrieves.
+     Version history: wildcard `AiAuthoringBundle:Local_Info_Agent_*`
+     retrieves ALL version-suffixed AABs (DISCOVERED via RQ5). Without
+     wildcard, only naked AAB returned. Useful for diffing, auditing.
+     Source tracking does NOT cover version-suffixed AABs.
    - **Delete**: Two levels of complexity:
      (a) Unpublished AABs: `sf project delete source` with
      `AiAuthoringBundle` or `Agent` type works. WARNING: also deletes
@@ -531,6 +538,23 @@ results. CLI commands appear in both files (intentional duplication).
 - **`sf project delete source` removes local files too.** Developers
   will expect "delete from org only" and lose their local source.
   WRONG/RIGHT pair needed in Section 7.
+
+- **Version-suffixed AABs are read-only reference copies, not editable
+  branches.** The skill should teach devs to use wildcard retrieve
+  (`AiAuthoringBundle:Local_Info_Agent_*`) for version history
+  inspection and diffing, but make clear that ALL edits must go through
+  the naked AAB. WRONG/RIGHT pair needed: "Don't edit a version-
+  suffixed AAB expecting to update that version — edit the naked AAB."
+
+- **Unmodified deploys of version-suffixed AABs are misleading.**
+  They report `success: true` and `created: true` but nothing happens.
+  Automation checking deploy success could be fooled. The skill should
+  warn about this if covering version-suffixed deploy behavior.
+
+- **`<target>` is the universal lock mechanism.** RQ3 showed it
+  appearing after explicit retrieve of a published version. RQ5
+  confirms ALL version-suffixed AABs inherently have `<target>`. This
+  unifies the RQ3 and RQ5 stories: `<target>` = published = immutable.
 
 - **Section 7 is reinforcement, not redundancy.** CLI commands
   introduced in detail sections (3-6) reappear in Section 7 as a
@@ -962,6 +986,42 @@ expect "delete from org only" will lose their local files and need to
 re-create them. The skill should warn about this behavior, especially
 for cleanup and testing workflows.
 
+**20. Version-suffixed AABs are immutable snapshots of published versions.**
+**(CONFIRMED via RQ5 experiment — 2026-02-20)**
+
+Retrieved version-suffixed AABs (e.g., `Local_Info_Agent_3`) contain
+full Agent Script (.agent files) but are locked by their `<target>`
+element pointing to the published version (e.g., `Local_Info_Agent.v3`).
+Content modifications fail on deploy; unmodified deploys succeed as
+misleading no-ops. The naked AAB is the only writable surface.
+
+**21. Wildcard retrieve returns all version-suffixed AABs.**
+**(DISCOVERED via RQ5 experiment — 2026-02-20)**
+
+`sf project retrieve start -m "AiAuthoringBundle:Local_Info_Agent_*"`
+retrieves ALL version-suffixed AABs. Without the wildcard,
+`AiAuthoringBundle:Local_Info_Agent` returns only the naked AAB. This
+is the version history inspection pattern — useful for diffing between
+versions, auditing what was published, and understanding the agent's
+evolution over time.
+
+**22. Source tracking does not cover version-suffixed AABs.**
+**(DISCOVERED via RQ5 experiment — 2026-02-20)**
+
+Deploying a version-suffixed AAB generates source tracking timeout
+warnings: `"Polling for 1 SourceMembers timed out"`. The org's source
+tracking system does not recognize version-suffixed AABs as tracked
+entities. They exist outside the normal source tracking model.
+
+**23. Unmodified deploy of version-suffixed AAB is a misleading no-op.**
+**(DISCOVERED via RQ5 experiment — 2026-02-20)**
+
+Deploying a version-suffixed AAB without content changes reports
+`success: true` and `created: true`, but nothing meaningful happens.
+The server accepts it because there's nothing to reject (content is
+identical to the published version). Automation or developers checking
+`success: true` could be misled into thinking they deployed changes.
+
 ### AAB Lifecycle Model (Structured from Brain Dump)
 
 This is the conceptual model that emerges from the confirmed facts.
@@ -1070,13 +1130,36 @@ source` also removes local files. See Confirmed Facts 15-19.
 Full experiment results in `rf4-experiments/RQ4-publish-without-prior-deploy.md`.
 
 **RQ5: Can version-suffixed AABs be deployed independently?**
-If a developer retrieves `Local_Info_Agent_3` (a draft created in
-Builder), can they modify it locally and deploy it back? Or is the
-version-suffixed AAB read-only in the local project?
-- **Why it matters**: Affects guidance on the pro-code/low-code
-  collaboration model.
-- **Test approach**: Retrieve a version-suffixed AAB, modify it,
-  attempt to deploy. Observe result.
+**RESOLVED — Outcome B (2026-02-20).**
+
+Version-suffixed AABs are immutable snapshots of published versions.
+They contain full Agent Script (.agent files with ~15.6KB of real
+content) but their `<target>` field locks them to the published version.
+Modified deploys fail; unmodified deploys succeed as misleading no-ops.
+
+Key findings:
+- Wildcard retrieve (`AiAuthoringBundle:Local_Info_Agent_*`) retrieves
+  ALL versions. Without wildcard, only the naked AAB is returned.
+- All 5 version-suffixed AABs had `<target>` pointing to their published
+  version (v1-v5). No `<status>` element in any `bundle-meta.xml`.
+- Deploying unmodified version-suffixed AAB: SUCCEEDS with `created:
+  true` — misleading no-op (server has nothing to reject).
+- Deploying modified version-suffixed AAB: FAILS — `"content cannot be
+  changed once the bundle version is published."` Same lock as RQ3.
+- Source tracking does not cover version-suffixed AABs (timeout warnings
+  on deploy).
+- Naked AAB is the ONLY writable surface for pro-code edits.
+- Collaboration loop is one-directional at the version level: retrieve
+  for diffing/auditing, but all edits go through the naked AAB.
+
+Bad error messages: (1) Deploy response contains component in BOTH
+`componentSuccesses` AND `componentFailures` simultaneously, with
+`numberComponentErrors: 0` — contradictory. (2) Malformed warning
+`", , returned from org, but not found in the local project"` — empty
+entity identifiers.
+
+See Confirmed Facts 20-23.
+Full experiment results in `rf4-experiments/RQ5-versioned-aab-deploy.md`.
 
 ### Validation Plan: Claude Code Experiment Prompts
 
