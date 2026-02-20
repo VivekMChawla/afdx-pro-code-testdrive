@@ -7,6 +7,16 @@ Flows) referenced by actions is invalid or missing. We need to determine
 whether validation checks only referential integrity (does the class
 exist?) or also validates method/property signatures.
 
+**Key context from RQ1 findings:**
+- `sf agent validate authoring-bundle` only checks Agent Script
+  syntax/compilation. It does NOT validate backing logic references.
+- Deploy-time validation is a separate, deeper layer. This experiment
+  specifically tests how deep deploy-time validation goes.
+- **IMPORTANT: This experiment tests `sf project deploy start`
+  specifically. Do NOT substitute `sf agent publish` for any deploy
+  step. They are different operations with different validation
+  behavior.**
+
 ## Project Location
 
 This experiment uses the project at the current working directory.
@@ -18,16 +28,26 @@ The Apex class is at `force-app/main/default/classes/CheckWeather.cls`.
 
 ## Experiment Steps
 
-### Step 1: Baseline — deploy with correct backing logic
+### Step 1: Baseline — deploy AAB with correct backing logic
 
-Ensure the current state works. Deploy backing code and AAB together:
+Ensure the current AAB deploys successfully. Deploy ONLY the AAB
+directory (not the entire `force-app` — the project contains other
+unrelated metadata that could interfere):
 ```
-sf project deploy start --source-dir force-app --json
+sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/Local_Info_Agent --json
 ```
+
+This assumes backing code (`CheckWeather`, `Get_Resort_Hours`) is
+already deployed to the org. If this step fails because backing code
+is missing, deploy the backing code first:
+```
+sf project deploy start --source-dir force-app/main/default/classes/CheckWeather.cls force-app/main/default/classes/CheckWeather.cls-meta.xml --json
+```
+Then retry the AAB deploy above.
 
 Record: success/failure.
 
-### Step 2: Test with non-existent class reference
+### Step 2a: Test with non-existent Apex class reference
 
 Create a temporary copy of `Local_Info_Agent.agent`. In the copy,
 change the action target from `apex://CheckWeather` to
@@ -41,10 +61,30 @@ sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/L
 Record: the exact error message. Does it mention the missing class?
 What does it say?
 
+**Restore `Local_Info_Agent.agent` to its original state before
+proceeding to Step 2b.**
+
+### Step 2b: Test with non-existent Flow reference
+
+In a temporary copy of `Local_Info_Agent.agent`, change the action
+target from `flow://Get_Resort_Hours` to `flow://NonExistentFlow`
+(a Flow that does not exist in the org).
+
+Deploy ONLY the AAB:
+```
+sf project deploy start --source-dir force-app/main/default/aiAuthoringBundles/Local_Info_Agent --json
+```
+
+Record: the exact error message. Does it mention the missing Flow?
+Is the error format the same as Step 2a, or different?
+
+**Restore `Local_Info_Agent.agent` to its original state before
+proceeding to Step 3.**
+
 ### Step 3: Test with existing class but wrong method signature
 
 Create a minimal Apex class that exists but has the WRONG method
-signature. For example, create a file
+signature. Create a file
 `force-app/main/default/classes/WrongSignature.cls`:
 ```apex
 public class WrongSignature {
@@ -93,7 +133,10 @@ For each step, capture:
 1. The exact command run
 2. The full JSON output (or relevant error portions)
 3. Success/failure status
-4. The EXACT error message text
+4. The EXACT error message text — if any error message is vague or
+   misleading (e.g., "Internal Error, try again later"), flag it
+   explicitly. We are maintaining an inventory of bad error messages
+   for the engineering team.
 
 ## Expected Outcome
 
