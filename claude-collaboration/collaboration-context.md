@@ -1511,6 +1511,7 @@ following the same pattern as Files 1-4.
 |---|---|---|---|---|
 | 1 | `sf agent publish` with `default_agent_user` set to a non-Einstein-Agent-licensed user | `"Internal Error, try again later"` | `"The default_agent_user must have the Einstein Agent license. User [username] has [license_type] which is not supported."` | RQ1 experiment (2026-02-19) |
 | 2 | `sf agent publish` (or NGA Web publish) with changed `default_agent_user` on already-published agent | CLI: `"Default Agent user [X] does not match the existing Default Agent user [Y]"` / NGA Web: `"API validation failed. Error details: ..."` | Error message is technically accurate but the underlying behavior (immutability) is undocumented. The error should include: `"The default agent user cannot be changed after first publish."` | RQ1 experiment + Vivek NGA Web confirmation (2026-02-19) |
+| 3 | `sf project deploy start` of AAB referencing an Apex class that exists but lacks `@InvocableMethod` | `"We couldn't find the flow, prompt, or apex class: apex://[ClassName]. Verify the name and ensure it exists."` | The class exists — it just lacks the required `@InvocableMethod` annotation. Should say: `"Found class '[ClassName]' but it does not have an @InvocableMethod-annotated method. Apex classes referenced by agent actions must contain an @InvocableMethod."` Confirmed via controlled repro: same class with annotation = success, without annotation = this error. | RQ2 experiment + follow-up repro (2026-02-19) |
 
 ---
 
