@@ -14,7 +14,7 @@
 
 ## 1. Agent Metadata Structure
 
-Agent Script agents are defined across two independent metadata domains. Understanding this distinction is critical for every lifecycle operation you perform.
+Agent Script agents are defined across two independent metadata domains. Understanding this distinction is critical for every lifecycle operation.
 
 ### Two-Domain Entity Graph
 
@@ -254,7 +254,7 @@ Use version-suffixed authoring bundles for auditing and diffing version history,
 
 Once a DRAFT version exists in the org, there is no CLI command to create additional DRAFT versions. The only way to create multiple DRAFTs is via Agentforce Studio's "create new draft version" button on a published version. These additional DRAFTs can then be retrieved with their version number.
 
-For pro-code workflows, this is not a limitation — you have one DRAFT per agent at any given time. The DRAFT evolves: you deploy, the DRAFT updates. You publish, the DRAFT becomes locked. You deploy again, a new DRAFT is created.
+In pro-code workflows, you have one DRAFT per agent at any given time. The DRAFT evolves: you deploy, the DRAFT updates. You publish, the DRAFT becomes locked. You deploy again, a new DRAFT is created.
 
 [SOURCE: rf4-context-refined Fact 12 — No pro-code way to create new draft versions]
 
@@ -284,11 +284,9 @@ Accidental deployment of an outdated authoring bundle will overwrite in-progress
 
 The `default_agent_user` field in your Agent Script `config` block must reference a Salesforce user with the "Einstein Agent" license type. Standard Salesforce-licensed users, even System Administrators, will fail at publish time with a misleading error message: "Internal Error, try again later."
 
-This error message does NOT indicate a license issue — it masks the true problem. Developers waste time debugging unrelated issues.
+This error message does NOT indicate a license issue — it masks the true problem.
 
 The second critical fact: `default_agent_user` is immutable after first publish. Once you publish with a specific user assigned, you cannot change it. Both CLI and Agentforce Studio enforce this immutability.
-
-Therefore, getting `default_agent_user` correct on the first publish is critical.
 
 [SOURCE: rf4-context-refined Fact 3, 3a — default_agent_user license and immutability]
 
@@ -328,7 +326,7 @@ This is not an error — it's normal behavior. It reflects the "naked `AiAuthori
 
 [SOURCE: rf4-context-refined Fact 10 — Server-side AiAuthoringBundle filename versioning]
 
-### Post-Publish Workflow Is Seamless (Happy Path)
+### Post-Publish Workflow Is Seamless
 
 After publishing, your local source remains unchanged. The `bundle-meta.xml` does NOT get `<target>` set automatically. You can immediately continue editing the `.agent` file and deploy again. The platform auto-creates a new DRAFT version on the server.
 
@@ -488,7 +486,7 @@ Tests run against activated published agents only. If you try to run a test agai
 
 ## 7. Lifecycle Operations
 
-This section consolidates CLI commands for deploy, retrieve, delete, rename, test execution, and opening in Builder. These commands reappear here after being detailed in earlier sections — this is intentional reinforcement for readers who arrive directly here.
+This section consolidates CLI commands for deploy, retrieve, delete, rename, test execution, and opening in Builder.
 
 ### Deploy
 
@@ -515,14 +513,6 @@ Explicitly including agent metadata is useful when collaborating with low-code u
 ### Retrieve
 
 Retrieve pulls metadata from the org to your local project.
-
-**Retrieve published agent (runtime domain):**
-
-```bash
-sf project retrieve start --json --metadata Agent:Local_Info_Agent
-```
-
-This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT include AiAuthoringBundle.
 
 **Retrieve authoring bundle (highest version):**
 
@@ -570,7 +560,7 @@ This works for draft-only agents that have never been published.
 
 Published agents cannot be deleted via the Metadata API due to circular dependencies between metadata types. There is no CLI path to delete a published NGA agent. Cleanup requires the Salesforce Setup UI or scratch org expiration.
 
-This has implications for test hygiene and scratch org management. Use unique names for test agents to avoid collisions.
+Use unique names for test agents to avoid collisions.
 
 [SOURCE: rf4-context-refined Fact 24 — Published agents cannot be deleted via Metadata API]
 
