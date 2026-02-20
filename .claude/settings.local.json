@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.gearset.com)",
+      "WebFetch(domain:www.sweep.io)",
+      "WebFetch(domain:developer.salesforce.com)",
+      "Bash(sf data query:*)",
+      "Bash(sf agent preview:*)",
+      "WebFetch(domain:www.improvingagents.com)",
+      "Bash(npm view:*)"
+    ]
+  }
+}
