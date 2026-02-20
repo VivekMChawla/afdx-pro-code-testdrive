@@ -456,7 +456,7 @@ sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 
 ## 6. Activating Published Agents
 
-After publishing, an agent is created but inactive. Activation makes a published version live for preview and runtime access.
+After publishing, the agent exists but is inactive. Activation makes a published version live for preview, runtime access, and testing.
 
 ### Activation Commands
 
@@ -472,19 +472,13 @@ The `--api-name` is the Bot's API name (from your Agent Script `config` block's 
 
 [SOURCE: rf4-context-refined Fact 2 — Activate/deactivate commands]
 
-### One Version Active at a Time
+### Activation Requirements
 
-Only one published version of an agent can be active at any given moment. When you activate a new version, the previously active version becomes inactive.
-
-[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
-
-### Published Agents REQUIRE Activation for Preview
-
-After publishing, a published agent can ONLY be previewed with `--api-name <Bot_API_Name>` if the `Bot` has an activated version. If no version is activated, preview with `--api-name` fails.
+Only one published version can be active at a time. Activating a new version automatically deactivates the previous one. Running `sf agent preview start --api-name <Bot_API_Name>` requires the Bot to have an activated version. If no version is activated, attempting to start a preview with `--api-name` fails.
 
 [SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
-### Activation Required for Test Execution
+### Agent Test Execution Requires an Activated Agent
 
 Tests run against activated published agents only. If you try to run a test against an unpublished or inactive agent, it fails.
 
