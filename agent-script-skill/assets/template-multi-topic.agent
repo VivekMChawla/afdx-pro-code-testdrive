@@ -1,12 +1,12 @@
 # Multi-Topic Agent Template
 # Copy this file to your AiAuthoringBundle directory and rename it to match
-# your agent's developer_name. Update all placeholder values marked with
-# angle brackets (<...>). Add, remove, or rename topics as needed.
+# your agent's developer_name. Replace all placeholder values with real ones.
+# Add, remove, or rename topics as needed.
 
 system:
-    instructions: "<Agent persona and purpose>"
+    instructions: "You are a helpful assistant. Describe the agent's persona and purpose here."
     messages:
-        welcome: "<Welcome message>"
+        welcome: "Hello! How can I help you today?"
         error: "Sorry, it looks like something has gone wrong."
 
 config:
@@ -16,8 +16,8 @@ config:
     default_agent_user: "username@identifier.org"
 
 variables:
-    <variable_name>: mutable string = ""
-        description: "<What this variable tracks>"
+    collected_input: mutable string = ""
+        description: "Replace with a description of what this variable tracks"
 
 language:
     default_locale: "en_US"
@@ -25,7 +25,7 @@ language:
     all_additional_locales: False
 
 start_agent topic_selector:
-    description: "<Describe how the agent routes user requests>"
+    description: "Welcome the user and determine the appropriate topic based on user input"
     reasoning:
         actions:
             go_to_topic_a: @utils.transition to @topic.topic_a
@@ -35,104 +35,104 @@ start_agent topic_selector:
             go_to_off_topic: @utils.transition to @topic.off_topic
 
 topic topic_a:
-    label: "<Topic A Display Name>"
-    description: "<What this topic handles>"
+    label: "Topic A"
+    description: "Describe what this topic handles"
 
     reasoning:
         instructions: ->
-            | <Instructions for topic A.>
+            | Replace this with instructions for topic A.
 
         actions:
             action_a: @actions.action_a
-                with <param_name> = ...
+                with input_param = ...
 
     actions:
         action_a:
-            description: "<What this action does>"
-            label: "<Action Display Name>"
-            target: "<apex://ClassName>"
+            description: "Describe what this action does"
+            label: "Action A"
+            target: "apex://ClassName"
             inputs:
-                <param_name>: string
-                    description: "<Parameter description>"
-                    label: "<Parameter Display Name>"
+                input_param: string
+                    description: "Describe this parameter"
+                    label: "Parameter Name"
                     is_required: True
             outputs:
-                <output_name>: string
-                    label: "<Output Display Name>"
-                    description: "<Output description>"
+                output_field: string
+                    label: "Output Name"
+                    description: "Describe this output"
                     is_displayable: True
                     filter_from_agent: False
 
 topic topic_b:
-    label: "<Topic B Display Name>"
-    description: "<What this topic handles>"
+    label: "Topic B"
+    description: "Describe what this topic handles"
 
     reasoning:
         instructions: ->
-            | <Instructions for topic B. Demonstrates gating pattern.>
+            | Replace this with instructions for topic B. This topic demonstrates the gating pattern.
 
         actions:
             # Collect data into a variable first
             collect_data: @utils.setVariables
-                description: "<Collect user input into a variable>"
-                with <variable_name> = ...
+                description: "Collect user input into a variable"
+                with collected_input = ...
 
             # Gate the main action behind the variable
             main_action: @actions.action_b
-                description: "<What this gated action does>"
-                available when @variables.<variable_name> != ""
-                with <param_name> = @variables.<variable_name>
+                description: "Describe what this gated action does"
+                available when @variables.collected_input != ""
+                with query_param = @variables.collected_input
 
     actions:
         action_b:
-            description: "<What this action does>"
-            label: "<Action Display Name>"
-            target: "<prompt://PromptTemplateName>"
+            description: "Describe what this action does"
+            label: "Action B"
+            target: "prompt://PromptTemplateName"
             inputs:
-                <param_name>: string
-                    description: "<Parameter description>"
-                    label: "<Parameter Display Name>"
+                query_param: string
+                    description: "Describe this parameter"
+                    label: "Parameter Name"
                     is_required: True
             outputs:
-                <output_name>: string
-                    description: "<Output description>"
-                    label: "<Output Display Name>"
+                result_text: string
+                    description: "Describe this output"
+                    label: "Result"
                     is_displayable: False
 
 topic topic_c:
-    label: "<Topic C Display Name>"
-    description: "<What this topic handles>"
+    label: "Topic C"
+    description: "Describe what this topic handles"
 
     reasoning:
         instructions: ->
-            | <Base instructions for topic C.>
+            | Replace this with base instructions for topic C.
 
             # Conditional instructions based on variable state
-            if @variables.<variable_name> != "":
-                | <Additional instructions when variable is set.>
+            if @variables.collected_input != "":
+                | Additional instructions when the variable has been set.
             else:
-                | <Instructions when variable is not set.>
+                | Instructions when the variable has not been set yet.
 
         actions:
             action_c: @actions.action_c
-                with <param_name> = ...
+                with input_param = ...
                 # Bind an action output to an agent variable
-                set @variables.<variable_name> = @outputs.<output_field>
+                set @variables.collected_input = @outputs.result_value
 
     actions:
         action_c:
-            description: "<What this action does>"
-            label: "<Action Display Name>"
-            target: "<flow://FlowName>"
+            description: "Describe what this action does"
+            label: "Action C"
+            target: "flow://FlowName"
             inputs:
-                <param_name>: string
-                    description: "<Parameter description>"
-                    label: "<Parameter Display Name>"
+                input_param: string
+                    description: "Describe this parameter"
+                    label: "Parameter Name"
                     is_required: True
             outputs:
-                <output_field>: string
-                    label: "<Output Display Name>"
-                    description: "<Output description>"
+                result_value: string
+                    label: "Result Value"
+                    description: "Describe this output"
                     is_displayable: True
                     filter_from_agent: False
 
