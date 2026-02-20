@@ -144,7 +144,7 @@ Mental model: the `AiAuthoringBundle` is the recipe; the runtime domain entities
 
 ## 3. Creating an Agent
 
-Use the `sf agent generate authoring-bundle` command to create a new agent. This command requires three flags and is often a source of confusion.
+Use the `sf agent generate authoring-bundle` command to create a new agent. This command requires three flags.
 
 ### Command Syntax
 
@@ -154,11 +154,11 @@ sf agent generate authoring-bundle --no-spec --name "<Label>" --api-name <Develo
 
 **Required flags:**
 
-- `--no-spec` — Prevents the CLI from waiting for a classic-style agent spec file (which is now deprecated). This flag must be present, or the command hangs waiting for input.
+- `--no-spec` — This flag must be present, or the command hangs waiting for input.
 
 - `--name "<Label>"` — The human-readable display name. This becomes `agent_label` in the Agent Script `config` block. Example: `"Coral Cloud Resort"`. Wrap in quotes if the label contains spaces.
 
-- `--api-name <Developer_Name>` — The unique API identifier (no spaces, letters/numbers/underscores only). This becomes `developer_name` in the `config` block. Example: `Coral_Cloud_Resort_Agent`.
+- `--api-name <Developer_Name>` — The unique API identifier (no spaces, letters/numbers/underscores only). This becomes `developer_name` in the `config` block. Example: `Local_Info_Agent`.
 
 Always include `--json` for machine-readable output.
 
@@ -170,9 +170,9 @@ The command creates two files in a directory named after your `--api-name`:
 
 ```
 aiAuthoringBundles/
-  └── Coral_Cloud_Resort_Agent/
-        ├── Coral_Cloud_Resort_Agent.agent (editable source)
-        └── Coral_Cloud_Resort_Agent.bundle-meta.xml (metadata)
+  └── Local_Info_Agent/
+        ├── Local_Info_Agent.agent (editable source)
+        └── Local_Info_Agent.bundle-meta.xml (metadata)
 ```
 
 The `.agent` file contains boilerplate with `system`, `config`, `start_agent`, and placeholder topics. You edit this file to define your agent.
@@ -187,13 +187,13 @@ The `.bundle-meta.xml` file is initially minimal (bundleType only, no `<target>`
 
 ```bash
 # WRONG — CLI waits for spec file (hangs)
-sf agent generate authoring-bundle --name "My Agent" --api-name My_Agent
+sf agent generate authoring-bundle --name "Local Info Agent" --api-name Local_Info_Agent
 
 # CORRECT — explicit --no-spec
-sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
+sf agent generate authoring-bundle --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
 ```
 
-Without `--no-spec`, the CLI expects you to provide a classic agent spec file on disk. This workflow is deprecated. Always include `--no-spec`.
+Without `--no-spec`, the CLI expects interactive input. Always include `--no-spec`.
 
 [SOURCE: rf4-context-refined Fact 5 — Generation command syntax]
 
@@ -202,30 +202,18 @@ Without `--no-spec`, the CLI expects you to provide a classic agent spec file on
 ```bash
 # WRONG — swapped; produces invalid developer_name
 sf agent generate authoring-bundle --no-spec \
-    --name My_Agent \
-    --api-name "Customer Service Agent"
+    --name Local_Info_Agent \
+    --api-name "Local Info Agent"
 
 # CORRECT — name is human-readable (spaces OK), api-name is identifier
 sf agent generate authoring-bundle --no-spec \
-    --name "Customer Service Agent" \
-    --api-name My_Agent
+    --name "Local Info Agent" \
+    --api-name Local_Info_Agent
 ```
 
 `--name` is the label (human-readable, can include spaces, goes in `agent_label`). `--api-name` is the developer name (identifier, no spaces, goes in `developer_name`).
 
 [SOURCE: rf4-context-refined Fact 5]
-
-**3. Omitting Flags and Getting Interactive Prompts**
-
-```bash
-# WRONG — no flags, CLI prompts interactively
-sf agent generate authoring-bundle
-
-# CORRECT — all required flags provided
-sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
-```
-
-When running from automation (not interactive REPL), always provide all flags explicitly. Interactive prompts will hang.
 
 ---
 
@@ -283,8 +271,6 @@ Deploying without publishing is not a failed workflow. It is the foundation for 
 5. Pro-code developer retrieves the updated authoring bundle and continues
 
 Deploy/retrieve are one-way overwrites with no sync warnings. This is by design for cross-tool collaboration.
-
-However, deploy should be a deliberate choice, not the default. The simpler pipeline (generate → validate → publish → activate) skips deploy entirely.
 
 [SOURCE: rf4-context-refined Fact 8 — Deploy-before-publish is legitimate for pro-code/low-code collaboration]
 
@@ -381,9 +367,9 @@ Publishing compiles the `AiAuthoringBundle` to Agent DSL and creates Bot, BotVer
 You do NOT need to deploy first. A brand-new authoring bundle can be published directly:
 
 ```bash
-sf agent generate authoring-bundle --no-spec --name "My Agent" --api-name My_Agent
-# Edit My_Agent.agent ...
-sf agent publish authoring-bundle --api-name My_Agent
+sf agent generate authoring-bundle --no-spec --name "Local Info Agent" --api-name Local_Info_Agent
+# Edit Local_Info_Agent.agent ...
+sf agent publish authoring-bundle --api-name Local_Info_Agent
 ```
 
 Publish handles the initial deploy, compilation, and entity creation in one step. The simplest pipeline is: generate → edit → validate → publish → activate.
@@ -694,14 +680,14 @@ Use this to check results if a test run is still in progress.
 
 ```bash
 # WRONG — tests require activated published agent
-sf agent test run --name My_Test --api-name My_Agent --json
-# (fails if My_Agent is not published and activated)
+sf agent test run --name Local_Info_Agent_Test --api-name Local_Info_Agent --json
+# (fails if Local_Info_Agent is not published and activated)
 
 # CORRECT — publish and activate first
-sf agent publish authoring-bundle --api-name My_Agent
-sf agent activate --api-name My_Agent
+sf agent publish authoring-bundle --api-name Local_Info_Agent
+sf agent activate --api-name Local_Info_Agent
 # Then run tests
-sf agent test run --name My_Test --api-name My_Agent --json
+sf agent test run --name Local_Info_Agent_Test --api-name Local_Info_Agent --json
 ```
 
 Tests CANNOT run against draft authoring bundles. Publish and activate first.
