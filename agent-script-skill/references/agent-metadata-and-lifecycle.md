@@ -401,7 +401,6 @@ bots/
       ├── v1.botVersion-meta.xml
       ├── v2.botVersion-meta.xml
       └── v3.botVersion-meta.xml
-
 genAiPlannerBundles/
   ├── Local_Info_Agent_v1/
   │   ├── localActions/
