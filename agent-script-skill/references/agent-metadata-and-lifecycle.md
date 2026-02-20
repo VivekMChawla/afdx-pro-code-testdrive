@@ -231,8 +231,6 @@ When you deploy an `AiAuthoringBundle` to an org for the first time (if it has n
 
 Your local agent directory (without a version suffix) represents the editable working copy in the org. In the org, this "naked" `AiAuthoringBundle` is always linked to the highest DRAFT version. When you deploy, you update this DRAFT. When you publish, a new DRAFT version is created for the next round of edits.
 
-This means: No matter how many times you publish, your local `Local_Info_Agent/` directory always floats to the highest draft. You never have to worry about "which version am I editing?" — it's always the latest draft.
-
 [SOURCE: rf4-context-refined Fact 18 — Naked AiAuthoringBundle always points to highest DRAFT]
 
 ### Version-Suffixed AiAuthoringBundles Are Frozen Snapshots
@@ -262,7 +260,7 @@ For pro-code workflows, this is not a limitation — you have one DRAFT per agen
 
 ### Deploy-Before-Publish Is Legitimate (For Pro-Code/Low-Code Collaboration)
 
-Deploying without publishing is not a failed workflow. It is the foundation for pro-code/low-code collaboration:
+Deploy-before-publish is the foundation for pro-code/low-code collaboration:
 
 1. Pro-code developer authors Agent Script locally
 2. Pro-code developer deploys the authoring bundle (no publish step)
@@ -276,7 +274,7 @@ Deploy/retrieve are one-way overwrites with no sync warnings. This is by design 
 
 ### NEVER Deploy `AiAuthoringBundle` in Routine Backing-Code Operations
 
-The `.a4drules` caution: When deploying backing code (Apex, Flows, Prompt Templates), NEVER include agent metadata (`.agent` files or `AiAuthoringBundle` metadata) in routine deploys unless you explicitly intend to update the agent.
+When deploying backing code (Apex, Flows, Prompt Templates), NEVER include agent metadata (`.agent` files or `AiAuthoringBundle` metadata) unless you explicitly intend to update the agent.
 
 Accidental deployment of an outdated authoring bundle will overwrite in-progress work in the org.
 
@@ -314,7 +312,7 @@ For Apex classes, the class must have an `@InvocableMethod`-annotated method.
 
 This means you can deploy an authoring bundle with completely wrong I/O definitions and not discover the problem until conversation or preview. Parameter mismatches are caught only at runtime.
 
-Stub classes are a real workflow tool (not a workaround). A minimal class with `@InvocableMethod` unblocks pro-code/low-code collaboration. Just know that you're deferring type validation to runtime.
+A minimal stub class with `@InvocableMethod` unblocks pro-code/low-code collaboration, but defers type validation to runtime.
 
 [SOURCE: rf4-context-refined Fact 4 — Deploy validates backing logic via Invocable Action registry lookup]
 
@@ -334,13 +332,13 @@ This is not an error — it's normal behavior. It reflects the "naked `AiAuthori
 
 After publishing, your local source remains unchanged. The `bundle-meta.xml` does NOT get `<target>` set automatically. You can immediately continue editing the `.agent` file and deploy again. The platform auto-creates a new DRAFT version on the server.
 
-The intended workflow is: publish → keep editing → deploy (auto-creates new draft). This is the happy path.
+The intended workflow is: publish → keep editing → deploy (auto-creates new draft).
 
 [SOURCE: rf4-context-refined Fact 19 — Post-publish workflow is seamless]
 
 ### Edge Case: Retrieve After Publish Locks the Authoring Bundle
 
-If you explicitly retrieve the authoring bundle after publishing (e.g., `sf project retrieve start --metadata AiAuthoringBundle:Local_Info_Agent`), the retrieved `bundle-meta.xml` WILL have `<target>` set, locking the authoring bundle to that published version. Subsequent deploys with content changes fail.
+If you explicitly retrieve the authoring bundle after publishing (e.g., `sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent`), the retrieved `bundle-meta.xml` WILL have `<target>` set, locking the authoring bundle to that published version. Subsequent deploys with content changes fail.
 
 Recovery: Remove `<target>` from `bundle-meta.xml` and deploy. This unlocks the authoring bundle and allows new edits.
 
