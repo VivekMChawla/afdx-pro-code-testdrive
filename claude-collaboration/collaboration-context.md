@@ -1389,7 +1389,14 @@ Sessions should consult this section to determine what to work on.
     is the happy path", "you never have to worry"), and
     parenthetical asides that editorialize rather than inform.
 
-12. **[FUTURE]** Mermaid diagram conventions placement — discovered
+12. **[PENDING — after RF4 review]** Flesh out
+    `agent-script-skill/assets/template-testSpec.yaml` — currently a
+    copy of `specs/Local_Info_Agent-testSpec.yaml` as a placeholder.
+    Needs to be generalized into a proper template with placeholder
+    values and inline comments explaining each field. The skill's
+    Test Lifecycle subsection in RF4 references this asset.
+
+13. **[FUTURE]** Mermaid diagram conventions placement — discovered
    `agent-script-recipes/.airules/MERMAID_DIAGRAMS.md` (380 lines of
    detailed conventions for producing Topic Map diagrams). Currently
    referenced as a skill asset in RF2, but the content is more
