@@ -494,34 +494,21 @@ This section consolidates CLI commands for deploy, retrieve, delete, rename, tes
 
 Deploy puts the `AiAuthoringBundle` into the org as metadata. It does NOT create runtime entities.
 
-**Routine deploy (backing code only):**
+**Deploy action-backing code only:**
 
 ```bash
-sf project deploy start --json
+sf project deploy start --json --metadata ApexClass Flow
 ```
 
-By default, this deploys backing code (Apex, Flows, etc.) but excludes agent metadata. Use this for routine updates to supporting code.
+Use `--metadata` to scope routine deploys to backing code. A bare `sf project deploy start` deploys all changed local metadata, including agent metadata.
 
-**Deliberate agent metadata deploy (pro-code/low-code collaboration):**
+**Deploy agent metadata (pro-code/low-code collaboration):**
 
 ```bash
 sf project deploy start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
 
-Explicitly include agent metadata only when collaborating with low-code users in Agentforce Studio. This is NOT the default pipeline.
-
-**Gotcha: Accidental `AiAuthoringBundle` Deploy in Routine Operations**
-
-```bash
-# WRONG — backing code deploy that accidentally includes agent metadata
-sf project deploy start --json
-# (if agent metadata changed locally, it will deploy)
-
-# CORRECT — Deploy logic-backing code only:
-sf project deploy start --json --metadata ApexClass Flow
-```
-
-Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
+Explicitly including agent metadata is useful when collaborating with low-code users in Agentforce Studio.
 
 [SOURCE: rf4-context-refined Fact 8b — Never deploy AiAuthoringBundle in routine backing-code operations]
 
@@ -537,7 +524,7 @@ sf project retrieve start --json --metadata Agent:Local_Info_Agent
 
 This retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin. It does NOT include AiAuthoringBundle.
 
-**Retrieve authoring bundle (source):**
+**Retrieve authoring bundle (highest version):**
 
 ```bash
 sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
@@ -545,15 +532,15 @@ sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 
 This retrieves the authoring bundle source files (`.agent` and `.bundle-meta.xml`). Use this to see the `<target>` element or to get the latest source from the org.
 
-**Retrieve version history (all published snapshots):**
+**Retrieve authoring bundles (all versions):**
 
 ```bash
 sf project retrieve start --json --metadata "AiAuthoringBundle:Local_Info_Agent_*"
 ```
 
-The wildcard `*` retrieves all version-suffixed authoring bundles (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked `AiAuthoringBundle` is returned.
+The wildcard `*` retrieves every version of an authoring bundle (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked `AiAuthoringBundle` is returned.
 
-Use this pattern for version history inspection and diffing.
+Use this pattern to inspect/compare different versions of an authoring bundle.
 
 [SOURCE: rf4-context-refined Fact 21 — Wildcard retrieve returns all version-suffixed AiAuthoringBundles]
 
@@ -591,20 +578,6 @@ This has implications for test hygiene and scratch org management. Use unique na
 
 [SOURCE: rf4-context-refined Fact 24 — Published agents cannot be deleted via Metadata API]
 
-**Gotcha: Delete Removes Local Files**
-
-```bash
-# WRONG — deletes both org metadata AND local source files
-sf project delete source --json --metadata AiAuthoringBundle:Local_Info_Agent
-
-# CORRECT — understand that local files are also deleted
-# Back up local files if you need them
-```
-
-`sf project delete source` removes both org metadata and corresponding local files. Developers expecting "delete from org only" will lose their local source.
-
-[SOURCE: rf4-context-refined Fact 25 — sf project delete source removes local files]
-
 **Backing Code Deletion Enforcement:**
 
 The org tracks dependencies between `AiAuthoringBundle` versions and their backing Apex classes. Attempting to delete a backing class while any version references it fails with a dependency error.
@@ -622,8 +595,6 @@ To delete a backing class:
 Renaming is hazardous due to the metadata hierarchy. The platform creates dependencies between `AiAuthoringBundle` names and published versions.
 
 Recommended approach: Create a new agent with the desired name and migrate content. Document the old agent as deprecated and schedule deletion after a grace period.
-
-The Salesforce ecosystem does not provide robust agent rename tooling. Treat rename as a full migration, not a simple rename operation.
 
 ### Test Lifecycle
 
@@ -675,13 +646,15 @@ Tests CANNOT run against draft authoring bundles. Publish and activate first.
 
 ### Open in Builder
 
+These commands launch the user's local browser to Agentforce Studio. Do NOT use `--json` with these commands — JSON mode outputs the target URL but does not open the browser.
+
 **View all authoring bundles:**
 
 ```bash
 sf org open authoring-bundle
 ```
 
-This opens Agentforce Studio showing a list of all authoring bundles in the org.
+Opens Agentforce Studio showing all authoring bundles in the org.
 
 **View a specific published agent:**
 
@@ -689,7 +662,7 @@ This opens Agentforce Studio showing a list of all authoring bundles in the org.
 sf org open agent --api-name <Bot_API_Name>
 ```
 
-This opens the published agent in Agentforce Studio. Note: This only works for published agents. Unpublished (draft-only) authoring bundles must be opened via the `sf org open authoring-bundle` command above.
+Opens the published agent in Agentforce Studio. Only works for published agents. Unpublished (draft-only) authoring bundles must be opened via `sf org open authoring-bundle`.
 
 ---
 
