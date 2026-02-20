@@ -354,6 +354,15 @@ results. CLI commands appear in both files (intentional duplication).
    - Server-side AAB filename includes version suffix (e.g.,
      `Local_Info_Agent_4.agent`) even though local filename doesn't —
      triggers a CLI warning that can confuse developers.
+   - **Post-publish `<target>` trap (CONFIRMED via RQ3)**: After
+     publishing, `<target>` in `bundle-meta.xml` locks the AAB to the
+     published version. Deploy with changes FAILS. Must clear `<target>`
+     before next deploy. The platform does NOT auto-create a new draft.
+     This is the single most important AAB oddity — it breaks the most
+     natural workflow with no documentation. Skill MUST teach the
+     post-publish recipe: publish → clear `<target>` → continue editing.
+   - `<target>` absent = draft (deployable); `<target>` present =
+     locked to published version.
 
 5. **Publishing Authoring Bundles** — Why publishing is needed (locks
    a version, creates runtime metadata). When to publish (after
@@ -365,9 +374,13 @@ results. CLI commands appear in both files (intentional duplication).
    `<target>` element in `bundle-meta.xml`. Multiple published versions
    and how they accumulate. What metadata gets created (Bot container,
    BotVersion files, GenAiPlannerBundle directories with version-suffixed
-   names and org-generated ID suffixes). Post-publish draft behavior
-   UNKNOWN — see Research Questions. Use real metadata from the
-   reference project to illustrate.
+   names and org-generated ID suffixes). Post-publish behavior:
+   `<target>` locks AAB, must be cleared before next deploy (CONFIRMED
+   via RQ3). Gotcha: publishing identical content creates a new version
+   silently (no guard, no warning). Gotcha: publish response doesn't
+   include the version number — must retrieve and inspect
+   `bundle-meta.xml`. Use real metadata from the reference project
+   to illustrate.
 
 6. **Activating Published Agents** — `sf agent activate` /
    `sf agent deactivate`. Only one published version active at a
@@ -464,6 +477,19 @@ results. CLI commands appear in both files (intentional duplication).
   be deleted while any AAB version references it. The skill should
   teach the correct cleanup sequence: update AAB → deploy → delete
   old class. This especially matters for refactoring workflows.
+
+- **The post-publish `<target>` trap is RF4's highest-value content
+  (from RQ3).** No documentation covers this. Every developer who
+  publishes and continues editing will hit the "content cannot be
+  changed" error. The skill MUST teach the post-publish recipe
+  (clear `<target>` → edit → deploy) as a WRONG/RIGHT pair. This
+  should be prominent in both Section 4 (AAB oddities) and Section 5
+  (Publishing). Consider a dedicated "Post-Publish Workflow" subsection.
+
+- **`<target>` is the draft/published toggle.** Absent = draft,
+  present = locked. This is the mental model the consuming agent needs.
+  Don't describe it as "a field that gets populated after publish" —
+  describe it as "the mechanism that controls whether deploys succeed."
 
 - **Section 7 is reinforcement, not redundancy.** CLI commands
   introduced in detail sections (3-6) reappear in Section 7 as a
@@ -699,13 +725,36 @@ to the org, while low-code users refine the agent in Builder. This is
 a valuable feature of the Agent Script workflow, not just a step in
 the publish pipeline.
 
-**9. Post-publish draft behavior is uncertain.**
+**9. Post-publish `<target>` locks the AAB — deploy fails until cleared.**
+**(RESOLVED via RQ3 experiment — 2026-02-19)**
 
-After publishing an AAB, something happens regarding the next draft
-version. If the `<target>` field in `bundle-meta.xml` is empty or
-points to a published bundle, either an error occurs or a new DRAFT
-version is created automatically. This needs experimental validation
-(see Research Questions below).
+After publishing, `<target>` in `bundle-meta.xml` is set to the
+published version (e.g., `Local_Info_Agent.v4`). Any subsequent deploy
+with content changes **fails** with:
+> `"content cannot be changed once the bundle version is published."`
+
+The platform does NOT auto-create a new draft version after publishing.
+The developer is stuck until they manually clear `<target>`.
+
+**The workaround:** Remove the `<target>` element from
+`bundle-meta.xml` before the next deploy. This tells the platform to
+treat the AAB as a new draft rather than a locked published version.
+After deploy with cleared `<target>`, the org does not auto-set it
+back — subsequent deploys continue to work.
+
+**Post-publish workflow recipe:**
+1. Publish succeeds → `<target>` is set in `bundle-meta.xml`
+2. Retrieve (optional) → `<target>` persists in retrieved file
+3. **Clear `<target>` from `bundle-meta.xml`** — required before any
+   further deploys
+4. Make changes to `.agent` file
+5. Deploy — succeeds, treated as new draft
+
+**This is the single most important AAB oddity.** It breaks the most
+natural workflow (publish, continue editing, deploy) with no
+documentation or guidance. The skill MUST teach this recipe.
+
+Full experiment results: `rf4-experiments/RQ3-post-publish-draft-behavior.md`
 
 **10. Org enforces deletion dependency between AABs and backing code.**
 **(DISCOVERED via RQ2 experiment — 2026-02-19)**
@@ -731,6 +780,36 @@ a CLI warning: `"AiAuthoringBundle, Local_Info_Agent_4.agent, returned
 from org, but not found in the local project"`. Another manifestation
 of the "naked AAB = highest draft" behavior — the server knows the
 version number, the local project doesn't include it in the filename.
+
+**12. Publishing identical content creates a new version silently.**
+**(DISCOVERED via RQ3 experiment — 2026-02-19)**
+
+Running `sf agent publish authoring-bundle` on unchanged content
+succeeds and creates a new version (observed: v4 → v5 with zero
+content changes). No warning, no guard. This causes silent version
+inflation. The skill should note this as a gotcha — developers may
+accidentally create empty versions.
+
+**13. Publish response does not include the version number created.**
+**(DISCOVERED via RQ3 experiment — 2026-02-19)**
+
+The JSON response from `sf agent publish authoring-bundle` includes
+only `{ "success": true, "botDeveloperName": "Local_Info_Agent" }`.
+No version number. To discover what version was created, the developer
+must retrieve the AAB and inspect `<target>` in `bundle-meta.xml`.
+
+**14. `<target>` absent = draft state; `<target>` present = locked.**
+**(CONFIRMED via RQ3 experiment — 2026-02-19)**
+
+The `<target>` element in `bundle-meta.xml` is the mechanism that
+controls whether the AAB is treated as a draft or a published version:
+- `<target>` absent or empty → AAB is a draft, deployable, editable
+- `<target>` set (e.g., `Local_Info_Agent.v4`) → AAB is locked to
+  that published version, deploy with changes fails
+
+Before RQ3, we knew `<target>` appeared after publish + retrieve. Now
+we know it's the actual locking mechanism — and clearing it is the
+unlock.
 
 ### AAB Lifecycle Model (Structured from Brain Dump)
 
@@ -758,7 +837,11 @@ PUBLISHED VN — version locked, Bot/GenAi* metadata created,
                version-suffixed AAB appears in local project,
                <target> updated in bundle-meta.xml
     ↓
-[New draft auto-created? Or must be created via Builder? UNKNOWN]
+<target> LOCKS the AAB — deploy with changes FAILS
+    ↓
+CLEAR <target> from bundle-meta.xml (manual, required)
+    ↓
+DRAFT (new) — AAB is unlocked, deployable again
     ↓
 ACTIVATE (sf agent activate)
     ↓
@@ -769,7 +852,8 @@ ACTIVE — one version at a time, required for preview via --api-name,
 Key insight: the pro-code developer's "naked" AAB always floats to
 the highest draft. Published versions are frozen snapshots with
 version-suffixed names. The developer never edits a published version
-— they edit the current draft and publish again.
+— they clear `<target>`, edit the current draft, and publish again.
+The platform does NOT auto-create new drafts after publish.
 
 ### Open Research Questions
 
@@ -795,14 +879,14 @@ Full experiment results in `rf4-experiments/RQ2-deploy-validation-depth.md`.
 
 **RQ3: What happens after publishing when the current AAB has no
 draft to point to?**
-After publishing, the `<target>` element points to the published
-version. If the developer then tries to deploy or modify the "naked"
-AAB, does the platform (a) auto-create a new draft version, (b)
-throw an error, or (c) overwrite the published version?
-- **Why it matters**: Determines whether the skill must warn about
-  post-publish state or can rely on automatic draft creation.
-- **Test approach**: Publish an AAB, then immediately try to deploy
-  a modified version of the "naked" AAB. Observe org state.
+**RESOLVED — Outcome C with workaround.** Deploy after publish FAILS
+with "content cannot be changed once the bundle version is published."
+The platform does NOT auto-create a new draft. The `<target>` element
+in `bundle-meta.xml` is the locking mechanism — clearing it unblocks
+deploy by treating the AAB as a new draft. No-op publishes also
+succeed silently (version inflation). Publish response lacks version
+number. See Confirmed Facts 9, 12, 13, 14.
+Full experiment results in `rf4-experiments/RQ3-post-publish-draft-behavior.md`.
 
 **RQ4: Can you publish an AAB that has never been manually deployed?**
 The publish command deploys the AAB internally. Does this work for a
