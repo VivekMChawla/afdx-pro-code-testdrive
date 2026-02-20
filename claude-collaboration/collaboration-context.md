@@ -1367,7 +1367,17 @@ Sessions should consult this section to determine what to work on.
 8. **[FUTURE]** Agent Script Skill Validator — separate skill for
    ongoing platform validation. See Section 11.1.
 
-9. **[FUTURE]** Mermaid diagram conventions placement — discovered
+9. **[PENDING — after RF4 review]** Retroactive CLI syntax fixes across
+   RF1, RF2, RF3 — During RF4 review, two CLI syntax conventions were
+   established that must be applied to all prior reference files:
+   (a) `--json` must appear as the FIRST flag after the base command
+   (positional primacy ensures mid-tier LLMs never drop it).
+   (b) Multiple metadata types in `--metadata` must be space-separated
+   arguments, NOT comma-separated. Wildcard patterns must be quoted
+   (e.g., `--metadata "AiAuthoringBundle:*"` not `--metadata AiAuthoringBundle:*`).
+   Scan RF1, RF2, RF3 for violations and fix.
+
+10. **[FUTURE]** Mermaid diagram conventions placement — discovered
    `agent-script-recipes/.airules/MERMAID_DIAGRAMS.md` (380 lines of
    detailed conventions for producing Topic Map diagrams). Currently
    referenced as a skill asset in RF2, but the content is more
