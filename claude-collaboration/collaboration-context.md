@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 20, 2026 — Session 12 (RQ2-RQ4 results synthesized, deploy vs publish distinction confirmed, Fact 8 Agent Builder clarification resolved, bad error inventory at 10 entries)
+> **Last updated**: February 20, 2026 — Session 12 (ALL 5 experiments complete, RQ1-RQ5 results synthesized, 23 confirmed facts, bad error inventory at 12 entries)
 
 ---
 
@@ -1519,6 +1519,8 @@ following the same pattern as Files 1-4.
 | 8 | `sf project delete source --metadata Agent:X` (Bot component) on published agent | `"setup object in use"` | Extremely vague. Doesn't identify WHAT is using the Bot or how to resolve it. | RQ4 experiment (2026-02-20) |
 | 9 | `sf project delete source --metadata Agent:X` (BotVersion component) on published agent | `"This bot version is referenced elsewhere in Salesforce. Remove the usage and try again. : Authoring Bundle Definition Version - X_1."` | References internal object name (`Authoring Bundle Definition Version`) that developers cannot interact with via CLI. No actionable guidance. | RQ4 experiment (2026-02-20) |
 | 10 | `sf project delete source --metadata GenAiPlannerBundle:X` on published agent | `"This generative ai planner definition is referenced elsewhere in Salesforce. Remove the usage and try again. : Generative AI Conversation Definition Planner - [ID]."` | References internal object with Salesforce ID. Developers cannot resolve this reference via CLI. | RQ4 experiment (2026-02-20) |
+| 11 | `sf project deploy start` on modified version-suffixed AAB | Deploy response contains component in BOTH `componentSuccesses` (`created: true`, `success: true`) AND `componentFailures` (`"content cannot be changed"`). `numberComponentErrors: 0`. | Contradictory signals — component simultaneously succeeded and failed. `numberComponentErrors: 0` is factually wrong. Automation checking error count would miss the failure. | RQ5 experiment (2026-02-20) |
+| 12 | `sf project deploy start` on version-suffixed AAB | `", , returned from org, but not found in the local project"` | Malformed warning with empty entity identifiers where type and name should appear. Developer cannot determine what entity the warning refers to. Same pattern as #6 but in different context. | RQ5 experiment (2026-02-20) |
 
 ---
 
@@ -1909,12 +1911,37 @@ hydrates the actual agent. Builder supports canvas editing, script view
 editing, and built-in preview. Deploy/retrieve are one-way overwrites
 with no sync warnings. Collision risk low (one person per AAB per org).
 
-**What's unresolved**: RQ5 experiment pending. reference-file-4-prompt.md
-needs update to match finalized outline + all experiment findings before
-sub-agent can write RF4.
+- RQ5 prompt reviewed and updated with 7 fixes: RQ1-RQ4 context block,
+  "do NOT substitute" guard, strengthened bad error message capture,
+  org-first ground truth (Step 1 retrieve), fallback for missing
+  versions, post-deploy org state verification (Step 5),
+  `default_agent_user` immutability warning
+- RQ5 experiment run by local Claude Code agent — excellent execution,
+  discovered wildcard retrieve pattern
+- RQ5 results synthesized into rf4-context.md: RQ5 resolved (Outcome B
+  — version-suffixed AABs are immutable snapshots), new Facts 20-23
+  added (immutability, wildcard retrieve, source tracking gap,
+  misleading no-op deploy)
+- Fact 8 [NEEDS VIVEK CLARIFICATION] resolved: Agent Builder CAN see
+  deployed-but-unpublished AABs. AAB is configuration container;
+  publish hydrates actual agent. Deploy/retrieve are one-way overwrites.
+- Bad Error Message Inventory expanded from 10 to 12 entries (2 new
+  from RQ5: contradictory success/failure in deploy response, malformed
+  warning with empty entity identifiers)
+- Outline Sections 4 and 7 updated: Section 4 expanded with version-
+  suffixed immutability details, Section 7 expanded with wildcard
+  retrieve pattern and source tracking gap
+- 3 new writing insights: version-suffixed AABs as read-only reference
+  copies, misleading no-op deploys, `<target>` as universal lock
+  mechanism unifying RQ3 and RQ5
+
+**What's unresolved**: All 5 experiments complete. reference-file-4-prompt.md
+needs update to match finalized outline + all experiment findings (RQ1-
+RQ5) before sub-agent can write RF4.
 
 **Files modified**: `claude-collaboration/rf4-context.md`,
 `claude-collaboration/rf4-experiments/RQ2-deploy-validation-depth.md`,
 `claude-collaboration/rf4-experiments/RQ3-post-publish-draft-behavior.md`,
 `claude-collaboration/rf4-experiments/RQ4-publish-without-prior-deploy.md`,
+`claude-collaboration/rf4-experiments/RQ5-versioned-aab-deploy.md`,
 `claude-collaboration/collaboration-context.md`
