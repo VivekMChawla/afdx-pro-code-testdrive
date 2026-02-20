@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 20, 2026 — Session 12 (RQ2-RQ4 results synthesized, deploy vs publish distinction confirmed, bad error inventory at 10 entries)
+> **Last updated**: February 20, 2026 — Session 12 (RQ2-RQ4 results synthesized, deploy vs publish distinction confirmed, Fact 8 Agent Builder clarification resolved, bad error inventory at 10 entries)
 
 ---
 
@@ -1902,11 +1902,16 @@ before writing prompt can be finalized and sub-agent launched.
 - RQ4 conclusion: both A and C — deploy works on fresh AABs (metadata
   only) and publish works without prior deploy (full entity creation)
 
-**What's unresolved**: RQ5 experiment pending. Fact 8 needs Vivek
-clarification (how does pro-code/low-code collaboration work if deploy
-doesn't create a Bot entity?). reference-file-4-prompt.md needs update
-to match finalized outline + all experiment findings before sub-agent
-can write RF4.
+**Vivek clarification (2026-02-20):** Resolved Fact 8 — Agent Builder
+(part of Agentforce Studio) CAN see and open deployed-but-unpublished
+AABs. AAB is a configuration container, not an actual agent; "publish"
+hydrates the actual agent. Builder supports canvas editing, script view
+editing, and built-in preview. Deploy/retrieve are one-way overwrites
+with no sync warnings. Collision risk low (one person per AAB per org).
+
+**What's unresolved**: RQ5 experiment pending. reference-file-4-prompt.md
+needs update to match finalized outline + all experiment findings before
+sub-agent can write RF4.
 
 **Files modified**: `claude-collaboration/rf4-context.md`,
 `claude-collaboration/rf4-experiments/RQ2-deploy-validation-depth.md`,
