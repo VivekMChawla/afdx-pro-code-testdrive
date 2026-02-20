@@ -594,51 +594,49 @@ Recommended approach: Create a new agent with the desired name and migrate conte
 
 ### Test Lifecycle
 
-**Create a test spec:**
+Agent testing requires a test spec (YAML), which gets compiled into `AiEvaluationDefinition` metadata in the org. Test specs are NOT Salesforce metadata — they are local YAML files that the CLI uses as input.
+
+**Test spec location:** `specs/` directory at the SFDX project root (not inside a package directory).
+
+**Create a test spec from the skill template:**
+
+Copy the skill's `assets/template-testSpec.yaml` (relative to this skill's root directory) to `specs/<Agent_API_Name>-testSpec.yaml` in the user's SFDX project. Update `name`, `description`, `subjectName`, and `testCases` to match the agent being tested.
+
+Do NOT use `sf agent generate test-spec` to create a new test spec. This command requires interactive input and cannot be used programmatically. It can reverse-engineer a test spec from an existing `AiEvaluationDefinition` when supplied with the `--from-definition` flag:
 
 ```bash
-sf agent test create --json --spec <PATH_TO_YAML>
+sf agent generate test-spec --from-definition force-app/main/default/aiEvaluationDefinitions/Local_Info_Agent_Test.aiEvaluationDefinition-meta.xml --output-file specs/Local_Info_Agent-testSpec.yaml
 ```
 
-The `<PATH_TO_YAML>` is the path to your test spec file in YAML format (not to be confused with `sf agent generate test-spec`, which is an interactive command for humans).
+**Create the test in the org:**
 
-This command creates `AiEvaluationDefinition` metadata in the org.
+```bash
+sf agent test create --json --spec specs/Local_Info_Agent-testSpec.yaml --api-name Local_Info_Agent_Test --force-overwrite
+```
+
+This compiles the test spec YAML into `AiEvaluationDefinition` metadata and automatically deploys it to the target org. The `--force-overwrite` flag ensures the CLI does not enter interactive mode if an `AiEvaluationDefinition` with the same `--api-name` already exists. Use `--preview` to generate the `AiEvaluationDefinition` locally without deploying to the org.
+
+Iterating on a test spec is a common workflow: edit the YAML, re-run `sf agent test create` with the same `--api-name` and `--force-overwrite`, then run the test again.
+
+A local test spec YAML does NOT mean the test exists in the org. You must run `sf agent test create` before you can run the test.
 
 **Run tests:**
 
 ```bash
-sf agent test run --json --name <AiEvalDef_Name> --api-name <Bot_API_Name>
+sf agent test run --json --api-name Local_Info_Agent_Test --wait 5
 ```
 
-The `--name` is the AiEvaluationDefinition name. The `--api-name` is the Bot's API name.
+The `--api-name` is the `AiEvaluationDefinition` name (set by `--api-name` during `sf agent test create`). The `--wait 5` flag forces synchronous execution with a 5-minute timeout — the command blocks until the test completes or times out. Without `--wait`, the command returns a job ID immediately and the agent must poll `sf agent test results` for completion. Tests run against activated published agents only.
 
-Tests run against ACTIVATED published agents only. If the agent is not activated, tests fail.
-
-**Check test results:**
+**Check test results (async fallback):**
 
 ```bash
-sf agent test resume --json --job-id <JOB_ID>
+sf agent test results --json --job-id <JOB_ID>
 ```
 
-Use this to check results if a test run is still in progress.
+Only needed if `--wait` was not used or the wait timed out. Use the job ID from the `sf agent test run` response.
 
-**Gotcha: Testing Unpublished Agents**
-
-```bash
-# WRONG — tests require activated published agent
-sf agent test run --json --name Local_Info_Agent_Test --api-name Local_Info_Agent
-# (fails if Local_Info_Agent is not published and activated)
-
-# CORRECT — publish and activate first
-sf agent publish authoring-bundle --json --api-name Local_Info_Agent
-sf agent activate --json --api-name Local_Info_Agent
-# Then run tests
-sf agent test run --json --name Local_Info_Agent_Test --api-name Local_Info_Agent
-```
-
-Tests CANNOT run against draft authoring bundles. Publish and activate first.
-
-[SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
+[SOURCE: rf4-context-refined Fact 1, .a4drules/agent-testing-rules-no-edit.md]
 
 ### Open in Builder
 
