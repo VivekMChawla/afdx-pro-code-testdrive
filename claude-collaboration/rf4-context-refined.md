@@ -8,31 +8,7 @@ This document captures the domain knowledge and structural decisions for `refere
 
 ## B. Conceptual Foundation
 
-Before reading the procedural sections, a reader must understand four core concepts:
-
-### 1. AiAuthoringBundle (AAB) is a Configuration Container
-
-An `AiAuthoringBundle` is NOT an agent — it is a developer-authored configuration container that holds Agent Script source code. It consists of two files:
-- `.agent` — the Agent Script source (text file, editable)
-- `.bundle-meta.xml` — metadata about the bundle (XML, includes the optional `<target>` element)
-
-The AAB is stored in the `aiAuthoringBundles/` directory within the package directory specified in `sfdx-project.json`.
-
-### 2. The AAB ↔ Agent Relationship: Recipe vs. Cooking
-
-- **AAB = recipe.** The developer's source artifact. Editable, versionable in the local project, stored in git.
-- **Agent (Bot + GenAiPlannerBundle + GenAiPlugin) = the cooked dish.** The org's runtime representation. Created when the AAB is published.
-- **Publish = cooking.** The operation that transforms the recipe (AAB source) into the finished dish (Bot/GenAi* metadata in the org).
-
-Deploy alone does NOT cook — it only puts the source in the org. Publish cooks.
-
-### 3. Deploy vs. Publish: Different Operations for Different Audiences
-
-- **Deploy** (`sf project deploy start`): Metadata operation. Puts the AAB source file into the org as `AiAuthoringBundle` metadata. Does NOT create a Bot entity. The agent is not usable for runtime or preview via `--api-name`, but it IS visible in Agent Builder (Agentforce Studio) for low-code editing. Deploy is a staging step — useful for pro-code/low-code collaboration.
-
-- **Publish** (`sf agent publish authoring-bundle`): Full entity creation. Deploys the AAB internally, compiles Agent Script to Agent DSL, and creates the entire agent metadata graph (Bot + BotVersion + GenAiPlannerBundle + GenAiPlugins with org-generated ID suffixes). The agent becomes usable and visible for preview and runtime. Publish is self-contained — a brand-new AAB can be published directly with no prior deploy or org state.
-
-### 4. The Metadata Entity Graph
+### 1. The Metadata Entity Graph
 
 Agent metadata spans two domains that are independent until publish connects them:
 
@@ -50,15 +26,31 @@ RUNTIME DOMAIN (created by publish)
                 └── local action files (scoped to this version only)
 ```
 
+### 2. The Authoring Domain: AiAuthoringBundle
+
+An `AiAuthoringBundle` (AAB) is a developer-authored configuration container that holds Agent Script source code — it is NOT an agent. It consists of two files: `.agent` (the Agent Script source, editable text) and `.bundle-meta.xml` (metadata about the bundle, XML). The AAB is stored in the `aiAuthoringBundles/` directory within the package directory specified in `sfdx-project.json`.
+
+The `<target>` element in `bundle-meta.xml` is the AAB-side pointer into the runtime domain (format: `Bot_API_Name.vN`). It controls AAB state: absent = draft (editable), present = locked to that published version.
+
+AABs take two forms locally:
+
+- **Naked AAB** (e.g., `Local_Info_Agent`): No version suffix in filename. Always points to the highest DRAFT version in the org. This is the only writable surface for pro-code developers. After publish, local source is unchanged (no `<target>` set). Deploying it creates or updates draft versions.
+
+- **Version-suffixed AAB** (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`): Published snapshots retrieved from the org. Locked by their `<target>` element. Read-only — useful for diffing, auditing, and understanding version history. Modified deploys fail; unmodified deploys succeed as misleading no-ops.
+
+### 3. The Runtime Domain: Bot → BotVersion → GenAiPlannerBundle
+
+Publishing an AAB creates the runtime entities that make an agent usable. `Bot` is the top-level container (one per agent). `BotVersion` represents a specific published version. `GenAiPlannerBundle` is a versioned bundle containing the compiled agent definition for that version.
+
 `GenAiPlannerBundle` is a "bundle" metadata type — it decomposes in local source into multiple files representing topics and actions. These local components are scoped to that version of the agent only. `GenAiPlugin` and `GenAiFunction` also exist as standalone global metadata types, but the versions inside a `GenAiPlannerBundle` are local copies, not independently addressable global metadata.
 
-Publishing an AAB version creates the corresponding runtime entities and establishes the version-level connection between the two domains (AAB version → GenAiPlannerBundle version). The `<target>` element in `bundle-meta.xml` is the AAB-side pointer into this connection (format: `Bot_API_Name.vN`). It also controls AAB state: absent = draft (editable), present = locked to that published version.
+Think of it as: AAB is the recipe, the runtime domain is the cooked dish, and publish is the act of cooking. The AAB is editable and versionable in the local project, stored in git. The runtime entities are the org's representation — created when the AAB is published, never edited directly.
 
-### 5. The "Naked" AAB vs. Version-Suffixed AABs
+### 4. Deploy vs. Publish: Different Operations for Different Audiences
 
-- **Naked AAB** (e.g., `Local_Info_Agent`): No version suffix in filename. Always points to the highest DRAFT version in the org. This is the writable surface for pro-code developers. After publish, local source is unchanged (no `<target>` set). Deploying it creates or updates draft versions.
+- **Deploy** (`sf project deploy start`): Populates the authoring domain only. Puts the AAB source file into the org as `AiAuthoringBundle` metadata. Does NOT create Bot, BotVersion, or GenAiPlannerBundle. The agent is not usable for runtime or preview via `--api-name`, but it IS visible in Agent Builder (Agentforce Studio) for low-code editing. Deploy is a staging step — useful for pro-code/low-code collaboration.
 
-- **Version-suffixed AAB** (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`): Published snapshots. Retrieved from the org after publish. Locked by their `<target>` element. Read-only for reference, diffing, and auditing. Modified deploys fail; unmodified deploys succeed as misleading no-ops.
+- **Publish** (`sf agent publish authoring-bundle`): Populates the runtime domain. Deploys the AAB internally, compiles Agent Script to Agent DSL, and creates the entire runtime entity graph (Bot + BotVersion + GenAiPlannerBundle with local topics and actions). The agent becomes usable and visible for preview and runtime. Publish is self-contained — a brand-new AAB can be published directly with no prior deploy or org state.
 
 ---
 
