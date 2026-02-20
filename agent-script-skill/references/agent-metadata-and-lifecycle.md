@@ -28,7 +28,7 @@ RUNTIME DOMAIN (created by publish)
   Bot (top-level container, one per agent)
     └── BotVersion (one per published version)
           └── GenAiPlannerBundle (versioned bundle, contains compiled agent definition)
-                ├── local topics and actions (scoped to this version only)
+                └── local topics and actions (scoped to this version only)
 ```
 
 The authoring domain is where you work. The runtime domain is what the org creates when you publish. These two domains are separate until you publish, which is when they connect.
@@ -102,13 +102,13 @@ When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers t
 
 The agent lifecycle progresses through distinct phases, each populating a different domain and using different CLI commands.
 
-**Phase 1: Generate** — Create the AAB in your local project with `sf agent generate authoring-bundle`. The AAB exists locally only; the org is unaffected.
+**Phase 1: Generate** — Create a boilerlate AAB in your local project with `sf agent generate authoring-bundle`. The AAB exists locally only; the org is unaffected.
 
-**Phase 2: Deploy** — Push the AAB to the org using `sf project deploy start`. This populates the authoring domain only — the AAB becomes visible in Agentforce Studio (Agent Builder) for low-code editing. No Bot entity is created yet. The agent is not usable for preview or runtime.
+**Phase 2: Deploy** — Push the AAB to the org using `sf project deploy start`. This populates the authoring domain only — the AAB becomes visible in Agent Builder (part of Agentforce Studio) for low-code authoring and preview. No `Bot` or `GenAi*` metadata entities are created yet.
 
-**Phase 3: Publish** — Compile the AAB and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: Bot, BotVersion, and GenAiPlannerBundle are created. The agent becomes usable.
+**Phase 3: Publish** — Compile the AAB and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: `Bot`, `BotVersion`, and `GenAiPlannerBundle` are created.
 
-**Phase 4: Activate** — Make a published version live with `sf agent activate`. Only one version can be active at a time. Published agents can ONLY be previewed if activated.
+**Phase 4: Activate** — Make a published version live with `sf agent activate`. Only one version can be active at a time. Published agents must be activated before developers or end users can interact with them.
 
 [SOURCE: rf4-context-refined Fact 1 — Published agents require activation for preview]
 
