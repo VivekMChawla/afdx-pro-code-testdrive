@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 19, 2026 — Session 11 (RF4 domain reads complete, outline collaboratively finalized, context docs and writing prompt created)
+> **Last updated**: February 20, 2026 — Session 12 (RQ2 experiment results synthesized, deploy validation depth confirmed, deletion dependency and server-side versioning discovered)
 
 ---
 
@@ -1804,4 +1804,42 @@ before writing prompt can be finalized and sub-agent launched.
 
 **Files modified**: `claude-collaboration/rf4-context.md`,
 `claude-collaboration/reference-file-4-prompt.md`,
+`claude-collaboration/collaboration-context.md`
+
+### Session 12 — February 19-20, 2026
+
+**Outputs**:
+- RQ2 prompt reviewed, updated with 5 fixes: scoped deploy to AAB-only
+  (not full `force-app`), added Flow reference test (Step 2b), added
+  "do NOT substitute `sf agent publish`" guard, added RQ1 context block,
+  added bad error message capture instructions
+- RQ2 experiment run by local Claude Code agent — excellent execution
+  with agent-initiated follow-up experiments (Steps 3b-3f)
+- RQ2 results synthesized into rf4-context.md: Confirmed Fact 4 resolved
+  (deploy = Invocable Action registry lookup), new Facts 10 (deletion
+  dependency) and 11 (server-side filename versioning) added
+- Bad Error Message Inventory entry #3 confirmed (added by RQ2 agent):
+  "couldn't find" used for both missing classes AND classes without
+  `@InvocableMethod`
+- rf4-context.md outline updated: Section 4 (AAB) updated with deploy
+  validation depth, Section 7 (Lifecycle Ops) updated with deletion
+  dependency
+- 3 new writing insights added to rf4-context.md: deploy-runtime gap,
+  stub classes as workflow tool, deletion dependency enforcement
+
+**Key decisions**:
+- Fresh session recommended for each experiment (avoids carrying flawed
+  mental models from prior experiments — validated by RQ1 agent's
+  incorrect BotVersion claim)
+- Run experiments against current org state (not fresh scratch org) —
+  real-world state makes results more representative
+- RQ2 conclusion: "B-minus" — validates `@InvocableMethod` annotation
+  presence but nothing else about the method signature
+
+**What's unresolved**: RQ3-RQ5 experiments pending. reference-file-4-prompt.md
+needs update to match finalized outline + all experiment findings before
+sub-agent can write RF4.
+
+**Files modified**: `claude-collaboration/rf4-context.md`,
+`claude-collaboration/rf4-experiments/RQ2-deploy-validation-depth.md`,
 `claude-collaboration/collaboration-context.md`
