@@ -37,62 +37,57 @@ The authoring domain is where you work. The runtime domain is what the org creat
 
 ### The Authoring Domain: AiAuthoringBundle
 
-An `AiAuthoringBundle` (AAB) is a directory in your local project containing two files:
+An `AiAuthoringBundle` is a Salesforce metadata source component represented as a directory in your local project containing two files:
 
-**1. `.agent` file** — Your Agent Script source code. This is the editable text file where you define topics, actions, variables, and flow control. It is human-readable and version-controlled (goes in git).
+**1. `.agent` file** —  Agent Script source code. This is the editable text file where you define topics, actions, variables, and flow control. It is human-readable and supports multiple versions.
 
-**2. `.bundle-meta.xml` file** — Metadata about the bundle itself. It contains a `bundleType` element set to `AGENT` and optionally a `<target>` element. The `<target>` element controls whether the AAB is draft (editable) or locked to a published version.
-
-**Example `bundle-meta.xml` (draft state):**
+**2. `.bundle-meta.xml` file** — Metadata about the bundle. Contains a `bundleType` element set to `AGENT` and optionally a `<target>` element that controls whether the bundle is draft (editable) or locked to a published version:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <bundleType>AGENT</bundleType>
+    <target>Local_Info_Agent.v2</target>
 </AiAuthoringBundle>
 ```
 
-[SOURCE: Local_Info_Agent.bundle-meta.xml]
+When `<target>` is present, the bundle is locked to that published version and cannot be modified. Draft-state bundles omit `<target>` entirely.
 
-**Storage location:** AABs are stored in `<packageDirectory>/main/default/aiAuthoringBundles/` where `<packageDirectory>` is specified in `sfdx-project.json`. For example, if `sfdx-project.json` lists `force-app` as the default package directory, your AABs live in `force-app/main/default/aiAuthoringBundles/`.
+[SOURCE: rf4-context-refined Fact 14 — Target controls draft/locked state]
 
-[SOURCE: sfdx-project.json example, agent-dx-metadata.md]
+Authoring bundles are stored in `<packageDirectory>/main/default/aiAuthoringBundles/` where `<packageDirectory>` comes from `sfdx-project.json`.
+
+[SOURCE: sfdx-project.json, agent-dx-metadata.md]
 
 ### Two Forms of AiAuthoringBundle Locally
 
-**Naked AAB** (e.g., `Local_Info_Agent`) — No version suffix in the directory name. In the org, this always points to the highest DRAFT version. This is the only writable surface for pro-code developers. After you publish, your local source stays clean (the `.bundle-meta.xml` does NOT get `<target>` set automatically). You can immediately continue editing and deploying.
+**Naked AiAuthoringBundle** (e.g., `Local_Info_Agent`) — No version suffix in the directory name. In the org, this always points to the highest DRAFT version. This is the only writable surface for pro-code developers.
 
-[SOURCE: rf4-context-refined Fact 18 — Naked AAB always points to highest DRAFT]
+[SOURCE: rf4-context-refined Fact 18 — Naked AiAuthoringBundle always points to highest DRAFT]
 
-**Version-suffixed AAB** (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`) — These are published snapshots retrieved from the org after publication. They are locked by a `<target>` element in their `bundle-meta.xml`. They are read-only — modified deploys fail; unmodified deploys succeed as misleading no-ops. Use these for version history inspection, diffing, and auditing. NEVER edit a version-suffixed AAB expecting your changes to persist.
+**Version-suffixed AiAuthoringBundle** (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`) — Published snapshots retrieved from the org after publication. Locked by a `<target>` element in their `bundle-meta.xml`. Read-only — modified deploys fail; unmodified deploys succeed as misleading no-ops. Use these for version history inspection, diffing, and auditing. NEVER edit a version-suffixed authoring bundle expecting your changes to persist.
 
-[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AABs are immutable snapshots]
+[SOURCE: rf4-context-refined Fact 20 — Version-suffixed AiAuthoringBundles are immutable snapshots]
 
 ### The Runtime Domain: Bot → BotVersion → GenAiPlannerBundle
 
-Publishing an AAB creates the runtime entities that make an agent usable in the org.
+Publishing creates the runtime entities that make an agent usable in the org.
 
-**Bot** — The top-level container (one per agent). It holds the agent's identity and links to all published versions.
+**Bot** — Top-level container (one per agent). Links to all published versions.
 
-**BotVersion** — Represents a specific published version. Each time you publish, a new BotVersion is created (e.g., `v1`, `v2`, `v3`). Only one version can be active at a time.
+**BotVersion** — One per published version (e.g., `v1`, `v2`, `v3`). Only one version can be active at a time.
 
-**GenAiPlannerBundle** — The compiled bundle containing the agent definition for that specific version. It contains topics, actions, and all runtime-necessary metadata, scoped to that version only.
+**GenAiPlannerBundle** — Compiled agent definition for a specific version. Contains topics, actions, and all runtime metadata, scoped to that version only.
 
-Think of it as: AAB is the recipe, the runtime domain is the cooked dish, and publish is the act of cooking. The AAB is editable and versionable in your local project. The runtime entities are the org's representation — created when you publish, never edited directly.
+Runtime entities are org-generated and never edited directly.
 
 [SOURCE: rf4-context-refined Section B.3 — Runtime Domain Explanation]
-
-### AiEvaluationDefinition for Tests
-
-`AiEvaluationDefinition` is the metadata type that represents an agent test spec. You author these in YAML format and deploy them to the org. Tests run against activated published agents only, not draft agents.
-
-[SOURCE: agent-dx-test.md, rf4-context-refined Fact 1]
 
 ### Agent Pseudo Metadata Type
 
 When using the Salesforce CLI, `Agent:X` is a pseudo-metadata type that covers the runtime domain components: `Bot`, `BotVersion`, `GenAiPlannerBundle`, and related GenAiPlugin/GenAiFunction metadata. This saves you from specifying each type individually during retrieve/deploy.
 
-**CRITICAL GOTCHA:** `Agent:X` retrieve does NOT include `AiAuthoringBundle`. If you need the AAB (to see the `<target>` element or to work with the source), use `AiAuthoringBundle:X` explicitly.
+**CRITICAL GOTCHA:** `Agent:X` retrieve does NOT include `AiAuthoringBundle`. If you need the authoring bundle (to see the `<target>` element or to work with the source), use `AiAuthoringBundle:X` explicitly.
 
 [SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
 
@@ -126,7 +121,9 @@ Deploy is a staging step — useful for pro-code/low-code collaboration where pr
 
 **Publish** (`sf agent publish authoring-bundle`): Full entity creation. Deploys the AAB, compiles Agent Script to Agent DSL, and creates the entire runtime entity graph (Bot + BotVersion + GenAiPlannerBundle + GenAiPlugins). The agent becomes usable and visible for preview and runtime.
 
-Publish is self-contained — a brand-new AAB can be published directly with no prior deploy or org state.
+Publish is self-contained — a brand-new `AiAuthoringBundle` can be published directly with no prior deploy or org state.
+
+Mental model: the `AiAuthoringBundle` is the recipe; the runtime domain entities are the cooked dish; publish is the act of cooking. Deploy stages the recipe in the org's kitchen — publish actually cooks it.
 
 [SOURCE: rf4-context-refined Fact 13 — Publish is self-contained]
 
