@@ -1512,7 +1512,7 @@ following the same pattern as Files 1-4.
 | 1 | `sf agent publish` with `default_agent_user` set to a non-Einstein-Agent-licensed user | `"Internal Error, try again later"` | `"The default_agent_user must have the Einstein Agent license. User [username] has [license_type] which is not supported."` | RQ1 experiment (2026-02-19) |
 | 2 | `sf agent publish` (or NGA Web publish) with changed `default_agent_user` on already-published agent | CLI: `"Default Agent user [X] does not match the existing Default Agent user [Y]"` / NGA Web: `"API validation failed. Error details: ..."` | Error message is technically accurate but the underlying behavior (immutability) is undocumented. The error should include: `"The default agent user cannot be changed after first publish."` | RQ1 experiment + Vivek NGA Web confirmation (2026-02-19) |
 | 3 | `sf project deploy start` of AAB referencing an Apex class that exists but lacks `@InvocableMethod` | `"We couldn't find the flow, prompt, or apex class: apex://[ClassName]. Verify the name and ensure it exists."` | The class exists — it just lacks the required `@InvocableMethod` annotation. Should say: `"Found class '[ClassName]' but it does not have an @InvocableMethod-annotated method. Apex classes referenced by agent actions must contain an @InvocableMethod."` Confirmed via controlled repro: same class with annotation = success, without annotation = this error. | RQ2 experiment + follow-up repro (2026-02-19) |
-| 4 | `sf project deploy start` of AAB after publishing (with `<target>` set) | `"content cannot be changed once the bundle version is published."` | Error is accurate but doesn't mention the root cause (`<target>` field in `bundle-meta.xml`) or the fix (remove it). Should say: `"The <target> element in bundle-meta.xml locks the bundle to published version [vN]. Remove the <target> element to create a new draft."` | RQ3 experiment (2026-02-19) |
+| 4 | `sf project deploy start` of AAB when local `bundle-meta.xml` has `<target>` set (e.g., after retrieving a published AAB) | `"content cannot be changed once the bundle version is published."` | Error is accurate but doesn't mention the root cause (`<target>` in local `bundle-meta.xml`) or the fix (remove it). Should say: `"The <target> element in bundle-meta.xml locks the bundle to published version [vN]. Remove the <target> element to create a new draft."` Note: this only occurs if developer retrieved the published AAB — normal post-publish workflow (no retrieve) doesn't hit this. | RQ3 experiment + Vivek clarification (2026-02-20) |
 | 5 | `sf project deploy start` fails but `numberComponentErrors: 0` | `numberComponentErrors: 0` in JSON response despite deploy failure via `componentFailures` | Error count should be 1 when `componentFailures` contains entries. Also: `componentType: ""` and `fullName: ""` are empty strings — component identity missing from failure entry. | RQ3 experiment (2026-02-19) |
 | 6 | `sf project deploy start` CLI warning after deploy | `", , returned from org, but not found in the local project"` | Garbled warning with empty component name and type. Should populate the component name/type from the deploy response. | RQ3 experiment (2026-02-19) |
 
@@ -1835,17 +1835,17 @@ before writing prompt can be finalized and sub-agent launched.
   bad error message capture, `default_agent_user` immutability warning
 - RQ3 experiment run by local Claude Code agent — excellent execution
   including bonus experiment (deploy with cleared `<target>`)
-- RQ3 results synthesized into rf4-context.md: Confirmed Fact 9
-  resolved (post-publish `<target>` locks AAB, clearing unlocks), new
-  Facts 12 (no-op publish version inflation), 13 (publish response
-  lacks version number), 14 (`<target>` as draft/published toggle)
-- AAB lifecycle model updated: UNKNOWN post-publish step replaced with
-  confirmed `<target>` lock → clear → new draft sequence
+- RQ3 results initially synthesized, then CORRECTED by Vivek's 5-point
+  reframe: the "trap" framing was wrong. Post-publish workflow is
+  seamless by design (publish → keep editing → deploy auto-creates
+  DRAFT). `<target>` not updating on publish is a feature. The locking
+  only occurs if developer retrieves the published AAB. Confirmed
+  Fact 9 rewritten, Facts 12-14 corrected, lifecycle model updated,
+  writing insights reframed from "trap" to "seamless happy path with
+  edge case recovery"
 - Bad Error Message Inventory expanded to 6 entries (3 new from RQ3):
-  #4 "content cannot be changed" (no mention of fix), #5 wrong error
-  count, #6 garbled warning with empty component name
-- 2 new writing insights: post-publish `<target>` trap as RF4's
-  highest-value content, `<target>` as the draft/published mental model
+  #4 reframed as edge-case-only, #5 wrong error count, #6 garbled
+  warning with empty component name
 
 **Key decisions**:
 - Fresh session recommended for each experiment (avoids carrying flawed
@@ -1855,9 +1855,12 @@ before writing prompt can be finalized and sub-agent launched.
   real-world state makes results more representative
 - RQ2 conclusion: "B-minus" — validates `@InvocableMethod` annotation
   presence but nothing else about the method signature
-- RQ3 conclusion: "Outcome C with workaround" — deploy fails after
-  publish, clearing `<target>` unblocks. This is RF4's single most
-  important finding.
+- RQ3 initial conclusion: "Outcome C with workaround." CORRECTED by
+  Vivek (5-point reframe): the "trap" was an artifact of the experiment
+  retrieving after publish. Normal workflow is seamless — publish, keep
+  editing, deploy auto-creates new DRAFT. `<target>` not updating on
+  publish is a FEATURE. Corrected conclusion: "Outcome A (seamless)
+  with edge case C (retrieve after publish)."
 
 **What's unresolved**: RQ4-RQ5 experiments pending. reference-file-4-prompt.md
 needs update to match finalized outline + all experiment findings before
