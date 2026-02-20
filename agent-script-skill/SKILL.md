@@ -58,7 +58,9 @@ reviewable, not buried in code.
 2. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
    topic graph design, flow control patterns, Agent Spec production,
    backing logic analysis
-3. [Validation & Debugging](references/agent-validation-and-debugging.md) —
+3. [Topic Map Diagrams](references/agent-topic-map-diagrams.md) —
+   Mermaid diagram conventions for visualizing the agent's topic graph
+4. [Validation & Debugging](references/agent-validation-and-debugging.md) —
    validate the agent compiles, preview to confirm behavior
 
 ### Comprehend an Existing Agent
@@ -78,7 +80,9 @@ flowchart of the topic graph.
 2. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
    Agent Spec structure for the reverse-engineered output, flow control
    pattern recognition
-3. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
+3. [Topic Map Diagrams](references/agent-topic-map-diagrams.md) —
+   produce a Mermaid topic map of the existing agent's architecture
+4. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
    locate the agent files, understand directory conventions
 
 ### Modify an Existing Agent
@@ -216,14 +220,15 @@ when you need a starting point or a concrete reference.
   compose into a working agent, or as a fallback when focused examples in
   the reference files aren't sufficient.
 
-- **`assets/local-info-agent-testSpec.yaml`** — An example test spec
-  showing the YAML format, expectations, and metrics. Read this when
-  writing test specs for the first time.
+- **`assets/template-testSpec.yaml`** — A test spec template with
+  placeholder values and inline comments explaining each field. Copy to
+  `specs/<Agent_API_Name>-testSpec.yaml` in the user's SFDX project and
+  customize for the agent being tested.
 
-- **`assets/single-topic-template.agent`** — Minimal starting-point agent
+- **`assets/template-single-topic.agent`** — Minimal starting-point agent
   with one topic. Copy and modify for simple agents.
 
-- **`assets/multi-topic-template.agent`** — Starting-point agent with
+- **`assets/template-multi-topic.agent`** — Starting-point agent with
   multiple topics and transitions. Copy and modify for complex agents.
 
 ## Important Constraints
