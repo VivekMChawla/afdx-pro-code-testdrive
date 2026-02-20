@@ -533,11 +533,8 @@ Explicitly include agent metadata only when collaborating with low-code users in
 sf project deploy start --json
 # (if agent metadata changed locally, it will deploy)
 
-# CORRECT — Deliberate inclusion of logic-backing code only:
+# CORRECT — Deploy logic-backing code only:
 sf project deploy start --json --metadata ApexClass Flow
-
-# For deliberate agent update:
-sf project deploy start --json --metadata ApexClass AiAuthoringBundle:Local_Info_Agent
 ```
 
 Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
