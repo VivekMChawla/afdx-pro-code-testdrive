@@ -1377,7 +1377,19 @@ Sessions should consult this section to determine what to work on.
    (e.g., `--metadata "AiAuthoringBundle:*"` not `--metadata AiAuthoringBundle:*`).
    Scan RF1, RF2, RF3 for violations and fix.
 
-10. **[FUTURE]** Mermaid diagram conventions placement — discovered
+10. **[PENDING — after RF4 review]** Scan all reference files for
+    `.a4drules` references in prose (not SOURCE attributions). The
+    consuming agent has no context for `.a4drules` — any prose
+    references should state the rule directly without citing the
+    source file name. SOURCE attribution lines are fine as-is.
+
+11. **[PENDING — before final RF4 signoff]** Full-pass editorial
+    prose check across entire RF4. Remove conversational tone,
+    hand-holding, unnecessary qualifiers ("just know that", "this
+    is the happy path", "you never have to worry"), and
+    parenthetical asides that editorialize rather than inform.
+
+12. **[FUTURE]** Mermaid diagram conventions placement — discovered
    `agent-script-recipes/.airules/MERMAID_DIAGRAMS.md` (380 lines of
    detailed conventions for producing Topic Map diagrams). Currently
    referenced as a skill asset in RF2, but the content is more
