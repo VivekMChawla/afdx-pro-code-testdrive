@@ -114,7 +114,7 @@ Each phase is detailed in the sections that follow.
 
 **Phase 1: Generate** — Create a boilerplate `AiAuthoringBundle` in your local project with `sf agent generate authoring-bundle`. The authoring bundle exists locally only; the org is unaffected. See Section 3.
 
-**Phase 2: Deploy** — Push the `AiAuthoringBundle` to the org using `sf project deploy start`. This populates the authoring domain only — the authoring bundle becomes visible in Agent Builder (part of Agentforce Studio) for low-code authoring and preview. No `Bot` or `GenAi*` metadata entities are created yet. Deploy is optional in the recommended pipeline. See Section 4.
+**Phase 2: Deploy** — Push the `AiAuthoringBundle` to the org using `sf project deploy start`. This populates the authoring domain only — the authoring bundle becomes visible in Agent Builder (part of Agentforce Studio) for low-code authoring and preview. The `Bot` and `GenAiPlannerBundle` metadata entities are NOT created yet. 
 
 **Phase 3: Publish** — Compile the `AiAuthoringBundle` and create the full runtime entity graph with `sf agent publish authoring-bundle`. This populates the runtime domain: `Bot`, `BotVersion`, and `GenAiPlannerBundle` are created. See Section 5.
 
@@ -219,7 +219,13 @@ sf agent generate authoring-bundle --json --no-spec \
 
 ## 4. Working With Authoring Bundles
 
-This section covers the non-obvious behaviors and hidden constraints that make authoring bundles tricky to work with. These are the lessons learned from experimentation.
+This section covers the non-obvious behaviors and constraints of authoring bundles.
+
+### First Deploy Creates DRAFT V1
+
+When you deploy an `AiAuthoringBundle` to an org for the first time (if it has never been published), the org creates DRAFT V1. This is your starting state. Subsequent deploys update this DRAFT. When you publish, V1 becomes locked and a new DRAFT is created for future edits.
+
+[SOURCE: rf4-context-refined Fact 11 — First deploy creates DRAFT V1]
 
 ### The "Naked" AiAuthoringBundle Always Points to the Highest DRAFT
 
@@ -245,12 +251,6 @@ The presence of `<target>` locks this authoring bundle to that specific publishe
 Use version-suffixed authoring bundles for auditing and diffing version history, NOT for editing. All edits must go through the naked `AiAuthoringBundle`.
 
 [SOURCE: rf4-context-refined Fact 20 — Version-suffixed AiAuthoringBundles are immutable snapshots]
-
-### First Deploy Creates DRAFT V1
-
-When you deploy an `AiAuthoringBundle` to an org for the first time (if it has never been published), the org creates DRAFT V1. This is your starting state. Subsequent deploys update this DRAFT. When you publish, V1 becomes locked and a new DRAFT is created for future edits.
-
-[SOURCE: rf4-context-refined Fact 11 — First deploy creates DRAFT V1]
 
 ### No Pro-Code Way to Create New DRAFT Versions
 
@@ -533,13 +533,11 @@ Explicitly include agent metadata only when collaborating with low-code users in
 sf project deploy start --json
 # (if agent metadata changed locally, it will deploy)
 
-# CORRECT — explicit exclusion or deliberate inclusion
-# For routine backing-code only:
-# Update .forceignore to exclude agent metadata, OR
-sf project deploy start --json --metadata ApexClass:*,Flow:*
+# CORRECT — Deliberate inclusion of logic-backing code only:
+sf project deploy start --json --metadata ApexClass Flow
 
 # For deliberate agent update:
-sf project deploy start --json --metadata ApexClass:*,AiAuthoringBundle:*
+sf project deploy start --json --metadata ApexClass AiAuthoringBundle:Local_Info_Agent
 ```
 
 Ensure agent metadata is included only when you intend to update the agent. Accidental deploys overwrite in-progress work in the org.
@@ -569,7 +567,7 @@ This retrieves the authoring bundle source files (`.agent` and `.bundle-meta.xml
 **Retrieve version history (all published snapshots):**
 
 ```bash
-sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent_*
+sf project retrieve start --json --metadata "AiAuthoringBundle:Local_Info_Agent_*"
 ```
 
 The wildcard `*` retrieves all version-suffixed authoring bundles (e.g., `Local_Info_Agent_1`, `Local_Info_Agent_2`). Without the wildcard, only the naked `AiAuthoringBundle` is returned.
