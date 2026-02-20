@@ -350,7 +350,7 @@ This edge case only happens if you retrieve after publish. Normal post-publish w
 
 ## 5. Publishing Authoring Bundles
 
-Publishing is how you transition from draft to production. It is self-contained and can be done with no prior deploy.
+Publishing converts an agent's design (Agent Script in an `AiAuthoringBundle`) into its runtime existence (Bot, BotVersion, GenAiPlannerBundle). It is self-contained and can be done with no prior deploy.
 
 ### Why Publishing Is Needed
 
@@ -396,34 +396,25 @@ When you publish, the org creates:
 Example directory structure after publishing:
 
 ```
-bots/Local_Info_Agent/
-  ├── Local_Info_Agent.bot-meta.xml
-  ├── v1.botVersion-meta.xml
-  └── Local_Info_Agent_v1.genAiPlannerBundle-meta.xml (contains topics and actions)
+bots/
+  └── Local_Info_Agent/
+      ├── Local_Info_Agent.bot-meta.xml
+      ├── v1.botVersion-meta.xml
+      ├── v2.botVersion-meta.xml
+      └── v3.botVersion-meta.xml
 
-bots/Local_Info_Agent/
-  ├── v2.botVersion-meta.xml
-  └── Local_Info_Agent_v2.genAiPlannerBundle-meta.xml
+genAiPlannerBundles/
+  ├── Local_Info_Agent_v1/
+  │   └── Local_Info_Agent_v1.genAiPlannerBundle
+  ├── Local_Info_Agent_v2/
+  │   └── Local_Info_Agent_v2.genAiPlannerBundle
+  └── Local_Info_Agent_v3/
+      └── Local_Info_Agent_v3.genAiPlannerBundle
 ```
 
-Each version has its own GenAiPlannerBundle. These are org-generated and read-only.
+These are separate top-level directories. Each publish adds a BotVersion and a version-named GenAiPlannerBundle subdirectory. All are org-generated and read-only.
 
 [SOURCE: real published metadata from afdx-pro-code-testdrive project]
-
-### The `<target>` Element After Publish
-
-After publish, you can (but do NOT need to) retrieve the updated authoring bundle. If you do, the `bundle-meta.xml` will contain a `<target>` element mapping to the published version:
-
-```xml
-<AiAuthoringBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <bundleType>AGENT</bundleType>
-    <target>Local_Info_Agent.v1</target>
-</AiAuthoringBundle>
-```
-
-This is informational only (in normal workflows, this never gets set locally). If it does appear and you want to resume editing, remove it.
-
-[SOURCE: rf4-context-refined Fact 14 — Target controls draft/locked state]
 
 ### Multiple Published Versions Accumulate
 
@@ -448,15 +439,15 @@ Examine the returned `bundle-meta.xml` to see the `<target>` version (e.g., `Loc
 
 [SOURCE: rf4-context-refined Fact 17 — Publish response lacks version number]
 
-### Retrieve with AiAuthoringBundle, NOT Agent
+### The `Agent` Pseudo-Type Retrieves Runtime Metadata Only
 
-When you want to see the authoring bundle and its `<target>` element after publish, retrieve with:
+Retrieving with `Agent:Local_Info_Agent` returns the runtime entity graph: `Bot`, `BotVersion`, and `GenAiPlannerBundle` metadata. It does not include `AiAuthoringBundle` metadata.
+
+To retrieve the authoring bundle (e.g., to inspect `<target>` after publish), use the `AiAuthoringBundle` metadata type directly:
 
 ```bash
 sf project retrieve start --json --metadata AiAuthoringBundle:Local_Info_Agent
 ```
-
-Do NOT use `Agent:Local_Info_Agent` — this retrieves Bot, BotVersion, GenAiPlannerBundle, and GenAiPlugin but omits AiAuthoringBundle.
 
 [SOURCE: rf4-context-refined Fact 16 — Agent pseudo-type omits AiAuthoringBundle]
 
