@@ -12,7 +12,7 @@
 >   override it
 > - Sections marked [UNRESOLVED] need Vivek's input before acting on them
 >
-> **Last updated**: February 20, 2026 — Session 12 (RQ2+RQ3 results synthesized, post-publish `<target>` locking confirmed, bad error inventory at 6 entries)
+> **Last updated**: February 20, 2026 — Session 12 (RQ2-RQ4 results synthesized, deploy vs publish distinction confirmed, bad error inventory at 10 entries)
 
 ---
 
@@ -1515,6 +1515,10 @@ following the same pattern as Files 1-4.
 | 4 | `sf project deploy start` of AAB when local `bundle-meta.xml` has `<target>` set (e.g., after retrieving a published AAB) | `"content cannot be changed once the bundle version is published."` | Error is accurate but doesn't mention the root cause (`<target>` in local `bundle-meta.xml`) or the fix (remove it). Should say: `"The <target> element in bundle-meta.xml locks the bundle to published version [vN]. Remove the <target> element to create a new draft."` Note: this only occurs if developer retrieved the published AAB — normal post-publish workflow (no retrieve) doesn't hit this. | RQ3 experiment + Vivek clarification (2026-02-20) |
 | 5 | `sf project deploy start` fails but `numberComponentErrors: 0` | `numberComponentErrors: 0` in JSON response despite deploy failure via `componentFailures` | Error count should be 1 when `componentFailures` contains entries. Also: `componentType: ""` and `fullName: ""` are empty strings — component identity missing from failure entry. | RQ3 experiment (2026-02-19) |
 | 6 | `sf project deploy start` CLI warning after deploy | `", , returned from org, but not found in the local project"` | Garbled warning with empty component name and type. Should populate the component name/type from the deploy response. | RQ3 experiment (2026-02-19) |
+| 7 | `sf project delete source --metadata AiAuthoringBundle:X` on published agent | `"Published bundle versions cannot be deleted. : Authoring Bundle Definition Versions."` | Doesn't explain HOW to delete a published agent. Doesn't mention that the entire agent graph must be deleted together, or that Setup UI is required. | RQ4 experiment (2026-02-20) |
+| 8 | `sf project delete source --metadata Agent:X` (Bot component) on published agent | `"setup object in use"` | Extremely vague. Doesn't identify WHAT is using the Bot or how to resolve it. | RQ4 experiment (2026-02-20) |
+| 9 | `sf project delete source --metadata Agent:X` (BotVersion component) on published agent | `"This bot version is referenced elsewhere in Salesforce. Remove the usage and try again. : Authoring Bundle Definition Version - X_1."` | References internal object name (`Authoring Bundle Definition Version`) that developers cannot interact with via CLI. No actionable guidance. | RQ4 experiment (2026-02-20) |
+| 10 | `sf project delete source --metadata GenAiPlannerBundle:X` on published agent | `"This generative ai planner definition is referenced elsewhere in Salesforce. Remove the usage and try again. : Generative AI Conversation Definition Planner - [ID]."` | References internal object with Salesforce ID. Developers cannot resolve this reference via CLI. | RQ4 experiment (2026-02-20) |
 
 ---
 
@@ -1862,11 +1866,50 @@ before writing prompt can be finalized and sub-agent launched.
   publish is a FEATURE. Corrected conclusion: "Outcome A (seamless)
   with edge case C (retrieve after publish)."
 
-**What's unresolved**: RQ4-RQ5 experiments pending. reference-file-4-prompt.md
-needs update to match finalized outline + all experiment findings before
-sub-agent can write RF4.
+- RQ4 prompt reviewed and updated with 7 fixes: RQ1/RQ2/RQ3 context
+  block, removed hardcoded agent user (read from Local_Info_Agent),
+  removed literal template (work with generated boilerplate), added
+  local file verification after delete, added Step 5 "do NOT substitute"
+  guard, added `<target>` context for Step 6 retrieve, added bad error
+  message capture instruction
+- RQ4 experiment run by local Claude Code agent — excellent execution,
+  clean methodology
+- RQ4 results synthesized into rf4-context.md: RQ4 resolved (both
+  deploy and publish work on fresh AABs, but they create fundamentally
+  different org states), new Facts 15-19 added
+- Deploy vs publish distinction confirmed as RF4's most important
+  conceptual finding: deploy = metadata only, publish = full entity
+  creation. Fact 8 (pro-code/low-code collaboration) flagged for Vivek
+  clarification — deploy doesn't create Bot entity, so how does
+  collaboration work?
+- Bad Error Message Inventory expanded from 6 to 10 entries (4 new from
+  RQ4 deletion attempts: "Published bundle versions cannot be deleted",
+  "setup object in use", and two internal object reference errors)
+- Outline Sections 5 and 7 updated: Section 5 reframed around publish
+  as self-contained operation, Section 7 expanded with deletion
+  impossibility, local file deletion gotcha, Agent pseudo-type gap
+- 4 new writing insights: deploy vs publish distinction, publish as
+  streamlined happy path, deletion impossibility, delete-removes-local
+  gotcha
+
+**Key decisions**:
+- Fresh session recommended for each experiment (validated across 4
+  experiments now)
+- RQ2 conclusion: "B-minus" — validates `@InvocableMethod` annotation
+  presence but nothing else about the method signature
+- RQ3 initial conclusion corrected by Vivek's 5-point reframe: normal
+  post-publish workflow is seamless
+- RQ4 conclusion: both A and C — deploy works on fresh AABs (metadata
+  only) and publish works without prior deploy (full entity creation)
+
+**What's unresolved**: RQ5 experiment pending. Fact 8 needs Vivek
+clarification (how does pro-code/low-code collaboration work if deploy
+doesn't create a Bot entity?). reference-file-4-prompt.md needs update
+to match finalized outline + all experiment findings before sub-agent
+can write RF4.
 
 **Files modified**: `claude-collaboration/rf4-context.md`,
 `claude-collaboration/rf4-experiments/RQ2-deploy-validation-depth.md`,
 `claude-collaboration/rf4-experiments/RQ3-post-publish-draft-behavior.md`,
+`claude-collaboration/rf4-experiments/RQ4-publish-without-prior-deploy.md`,
 `claude-collaboration/collaboration-context.md`
