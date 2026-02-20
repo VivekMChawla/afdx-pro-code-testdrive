@@ -184,7 +184,7 @@ scenarios. Write test spec YAML, create the test metadata, then run tests.
    test metadata creation and execution commands
 4. [Test Authoring](references/agent-test-authoring.md) — test spec YAML
    format, expectations, metrics, test design methodology
-5. [assets/local-info-agent-testSpec.yaml](assets/local-info-agent-testSpec.yaml) —
+5. [assets/local-info-agent-testSpec.yaml](assets/template-testSpec.yaml) —
    concrete example of a complete test spec
 
 ## The Agent Spec
