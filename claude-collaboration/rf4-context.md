@@ -757,14 +757,29 @@ mandatory manual steps. The pipeline is more accurately:
 - Activate — makes the published version live
 
 **8. Deploying AAB before publishing has legitimate uses.**
+**(CONFIRMED via RQ4 + Vivek clarification — 2026-02-20)**
 
 Deploying an AAB to an org WITHOUT publishing is genuinely useful:
-it lets someone use the org-based Agent Builder to contribute to the
-agent's development. This enables a pro-code/low-code collaboration
-model where pro-code developers author Agent Script locally and deploy
-to the org, while low-code users refine the agent in Builder. This is
-a valuable feature of the Agent Script workflow, not just a step in
-the publish pipeline.
+Agent Builder (part of Agentforce Studio) CAN see and open deployed-
+but-unpublished AABs. This enables a pro-code/low-code collaboration
+model:
+
+1. Pro-code dev authors Agent Script locally and deploys to the org
+2. Low-code user opens the deployed AAB in Agent Builder
+3. Agent Builder supports canvas editing, script view text editing,
+   and built-in preview — every change modifies the underlying Agent
+   Script
+4. Pro-code dev retrieves to see Builder changes, makes further edits,
+   deploys back
+
+**Important caveats:**
+- Deploy/retrieve are one-way overwrites with NO sync warnings — last
+  write wins
+- Collision risk is low because usually one person works on one AAB
+  per org at a time
+- AAB is a configuration container for Agent Script, NOT an actual
+  agent — "publish" hydrates the actual agent (Bot + GenAiPlanner
+  metadata)
 
 **9. Post-publish workflow: deploy auto-creates a new DRAFT.**
 **(RESOLVED via RQ3 experiment + Vivek clarification — 2026-02-20)**
@@ -888,17 +903,15 @@ This distinction is critical for how we frame the pipeline. Deploy
 alone is not sufficient to make an agent usable — only publish does
 that.
 
-**IMPORTANT — Impact on Confirmed Fact 8:** Fact 8 says "Deploying
-an AAB to an org WITHOUT publishing is genuinely useful: it lets
-someone use the org-based Agent Builder to contribute." RQ4 found
-that deploy does NOT create a Bot entity visible in Agent Builder.
-This needs clarification from Vivek — how does the pro-code/low-code
-collaboration model work if deploy-only doesn't make the agent visible
-in Builder? Possible explanations: (a) Agentforce Studio has a
-separate view for unpublished AABs, (b) `sf org open authoring-bundle`
-opens a list that includes deployed-but-unpublished AABs, or (c) the
-collaboration requires at least one publish first. **[NEEDS VIVEK
-CLARIFICATION]**
+**RESOLVED — Impact on Confirmed Fact 8 (Vivek clarification
+2026-02-20):** Although deploy does NOT create a Bot entity, Agent
+Builder (part of Agentforce Studio) CAN see and open deployed-but-
+unpublished AABs directly. Deploy creates AiAuthoringBundle metadata
+in the org, which is sufficient for Agent Builder to discover and
+open the AAB for canvas editing, script view editing, and built-in
+preview. The Bot/GenAi* entities are only needed for the published,
+usable agent — not for Builder-based editing of the configuration.
+See updated Confirmed Fact 8 for the full collaboration workflow.
 
 **16. Publish is self-contained — no prior deploy or org state needed.**
 **(CONFIRMED via RQ4 experiment — 2026-02-20)**
@@ -1041,8 +1054,10 @@ Full experiment results in `rf4-experiments/RQ3-post-publish-draft-behavior.md`.
 Step 4 (deploy): Outcome **A** — `sf project deploy start` succeeds
 on a fresh AAB, creating AiAuthoringBundle metadata in the org. BUT
 deploy alone does NOT create a Bot entity — the agent is not usable
-or visible in Agent Builder. Deploy puts source in the org; it does
-not compile or instantiate the agent.
+as an agent. However, Agent Builder CAN see and open deployed AABs
+for editing. Deploy puts source in the org; it does not compile or
+instantiate the agent, but it does make the AAB available for Builder-
+based collaboration (see Confirmed Fact 8).
 
 Step 5 (publish): Outcome **C** — `sf agent publish authoring-bundle`
 succeeds on a fresh AAB with no prior org state. Publish handles
