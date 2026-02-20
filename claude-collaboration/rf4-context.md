@@ -343,11 +343,17 @@ results. CLI commands appear in both files (intentional duplication).
    - Two validation layers: compile (CLI `validate`) and API (during
      `publish`). API validation catches agent user and backing logic
      issues that compile validation misses. Open TD to integrate them.
-   - Deploy validates backing logic existence (validation depth
-     UNKNOWN — see Research Questions).
+   - Deploy validates backing logic via Invocable Action registry
+     lookup (CONFIRMED via RQ2): class must exist AND have
+     `@InvocableMethod`. Parameter names, types, return types are NOT
+     validated at deploy time — only caught at runtime. Stub classes
+     with `@InvocableMethod` are sufficient to unblock deploy.
    - "Backing code" defined: Apex classes, Flows, Prompt Templates,
      and any other metadata that agent actions reference as invocation
      targets.
+   - Server-side AAB filename includes version suffix (e.g.,
+     `Local_Info_Agent_4.agent`) even though local filename doesn't —
+     triggers a CLI warning that can confuse developers.
 
 5. **Publishing Authoring Bundles** — Why publishing is needed (locks
    a version, creates runtime metadata). When to publish (after
@@ -376,7 +382,10 @@ results. CLI commands appear in both files (intentional duplication).
      metadata type. When to retrieve.
    - **Delete**: Deactivate first → `sf project delete source` with
      `AiAuthoringBundle` or `Agent` type. What gets deleted vs.
-     preserved.
+     preserved. CRITICAL: org enforces deletion dependency — backing
+     code (Apex classes) cannot be deleted while any AAB version
+     references them. Must update AAB to remove reference first, then
+     delete the class.
    - **Rename**: Advise against for published agents. Create-new-and-
      migrate approach. Honest about limitations.
    - **Test lifecycle**: `sf agent test create`, `sf agent test run`,
@@ -436,6 +445,25 @@ results. CLI commands appear in both files (intentional duplication).
 - **The `Agent` pseudo metadata type saves time.** Instead of
   specifying every individual metadata type, `Agent:X` covers them
   all. The consuming agent should use this by default.
+
+- **The deploy-runtime validation gap is a trap (from RQ2).** Deploy
+  validates only that referenced classes have `@InvocableMethod`. It
+  does NOT validate parameter names, types, or return types. A
+  developer can deploy an AAB with completely wrong I/O definitions
+  and not discover the problem until someone talks to the agent. The
+  skill must explicitly warn about this gap and advise deploying fully
+  implemented (not just stub) classes when possible.
+
+- **Stub classes are a real workflow tool, not just a workaround.**
+  A minimal class with `@InvocableMethod` unblocks AAB deployment for
+  pro-code/low-code collaboration. This connects to Confirmed Fact 8
+  (deploying before publishing). The skill should teach stub creation
+  as a deliberate pattern, with a clear warning about the runtime gap.
+
+- **Deletion has hidden dependency enforcement.** Backing code can't
+  be deleted while any AAB version references it. The skill should
+  teach the correct cleanup sequence: update AAB → deploy → delete
+  old class. This especially matters for refactoring workflows.
 
 - **Section 7 is reinforcement, not redundancy.** CLI commands
   introduced in detail sections (3-6) reappear in Section 7 as a
@@ -589,13 +617,42 @@ the Agentforce team to integrate the API validation into the CLI
 developers will see validation pass but publish fail for these classes
 of errors.
 
-**4. Deploy validates backing logic existence.**
+**4. Deploy validates backing logic via Invocable Action registry lookup.**
+**(RESOLVED via RQ2 experiment — 2026-02-19)**
 
-Deploying an AAB fails when any backing logic for the agent's actions
-is invalid or does not exist in the org. The depth of this validation
-is UNKNOWN — unclear if it's referential integrity only (does the
-class exist?) or if it also validates method/property signatures (see
-Research Questions below).
+Deploying an AAB validates that every backing logic reference resolves
+to a registered Invocable Action in the org. Specifically:
+
+- The referenced class/flow/prompt must **exist** in the org.
+- For Apex classes, the class must have an **`@InvocableMethod`-annotated
+  method**. A class without `@InvocableMethod` fails with the same
+  "couldn't find" error as a truly missing class (bad error message #3).
+- Validation is **identical for Apex and Flow references** — same error
+  format, same behavior.
+
+Deploy validation does **NOT** check:
+- `@InvocableVariable` names (wrong names pass)
+- Whether the method has any parameters at all (zero-param `void` passes)
+- Parameter types or return types (completely wrong types pass)
+
+The validation is essentially: "Is there a registered Invocable Action
+with this name?" — not a structural contract check. Parameter/type
+mismatches are only caught at **runtime** (during agent preview or
+conversation), creating a gap where deploy succeeds but the agent
+breaks when used.
+
+**Practical implication — stub classes are viable:** A minimal stub
+with `@InvocableMethod` is sufficient to unblock AAB deployment:
+```apex
+public class MyStubAction {
+    @InvocableMethod(label='Stub' description='Stub for AAB deploy')
+    public static void stub() {}
+}
+```
+This is useful for the pro-code/low-code collaboration model: deploy
+stubs to get the agent into Builder, then backfill real implementations.
+
+Full experiment results: `rf4-experiments/RQ2-deploy-validation-depth.md`
 
 **5. First AAB deploy creates DRAFT V1.**
 
@@ -650,6 +707,31 @@ points to a published bundle, either an error occurs or a new DRAFT
 version is created automatically. This needs experimental validation
 (see Research Questions below).
 
+**10. Org enforces deletion dependency between AABs and backing code.**
+**(DISCOVERED via RQ2 experiment — 2026-02-19)**
+
+The org tracks hard dependencies between AAB versions and their
+backing Apex classes. Attempting to delete a backing class while any
+AAB version still references it produces:
+> `"This apex class is referenced elsewhere in Salesforce. Remove the
+> usage and try again. : Authoring Bundle Version Content Dependency
+> - [Id]."`
+
+To delete a backing class, you must first update the AAB to remove
+the reference (or point to a different class), deploy the updated AAB,
+and then delete the old class. This affects cleanup and refactoring
+workflows.
+
+**11. Server-side AAB filename includes version suffix.**
+**(OBSERVED during RQ2 experiment — 2026-02-19)**
+
+When deploying a local AAB (`Local_Info_Agent.agent`), the server uses
+a version-suffixed filename (`Local_Info_Agent_4.agent`). This triggers
+a CLI warning: `"AiAuthoringBundle, Local_Info_Agent_4.agent, returned
+from org, but not found in the local project"`. Another manifestation
+of the "naked AAB = highest draft" behavior — the server knows the
+version number, the local project doesn't include it in the filename.
+
 ### AAB Lifecycle Model (Structured from Brain Dump)
 
 This is the conceptual model that emerges from the confirmed facts.
@@ -700,16 +782,16 @@ See Confirmed Facts 3, 3a, 3b, 3c above. Full experiment results
 in `rf4-experiments/RQ1-agent-user-license.md`.
 
 **RQ2: How deep is deploy validation of backing logic?**
-Does deployment validation only check referential integrity (does
-the "CheckWeather" class exist in the org?) or does it also validate
-against method and property signatures (does the class have the
-expected `@InvocableMethod` with the right parameters)?
-- **Why it matters**: Determines whether the skill should advise
-  deploying stub classes (existence-only) or fully implemented
-  classes before deploying the AAB.
-- **Test approach**: Deploy an AAB that references (a) a non-existent
-  Apex class, (b) an existing class with wrong method signature,
-  (c) an existing class with correct signature. Compare error messages.
+**RESOLVED — Outcome B-minus.** Deploy validates `@InvocableMethod`
+annotation presence but nothing else about the method signature.
+Class must exist AND have `@InvocableMethod`. Parameter names, types,
+return types, and even zero-parameter void methods all pass. Stub
+classes with `@InvocableMethod` are viable. The error message for
+"class exists but no @InvocableMethod" is identical to "class doesn't
+exist" — bad error message #3. Additionally discovered: org enforces
+deletion dependency (can't delete backing class while AAB references
+it) and server-side filename versioning. See Confirmed Facts 4, 10, 11.
+Full experiment results in `rf4-experiments/RQ2-deploy-validation-depth.md`.
 
 **RQ3: What happens after publishing when the current AAB has no
 draft to point to?**
