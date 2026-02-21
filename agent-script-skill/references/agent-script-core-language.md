@@ -236,8 +236,8 @@ config:
 ```
 
 **Required fields:**
-- `developer_name` (NOT `agent_name`) — unique identifier following naming rules
-- `default_agent_user` (for `AgentforceServiceAgent` type only) — Salesforce username
+- `developer_name` (NOT `agent_name`) — unique identifier following naming rules. Must exactly match the AiAuthoringBundle directory name (e.g., if the directory is `aiAuthoringBundles/Travel_Advisor/`, then `developer_name` must be `"Travel_Advisor"`). A mismatch causes deploy failures.
+- `default_agent_user` (for `AgentforceServiceAgent` type only) — Salesforce username. This user must exist in the target org and have the Einstein Agent license. An invalid user causes publish failure.
 
 **Optional fields:**
 - `agent_label` — human-readable display name. Defaults to normalized `developer_name` if omitted
