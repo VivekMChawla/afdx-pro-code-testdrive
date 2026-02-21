@@ -53,14 +53,18 @@ any Agent Script code. This ensures design decisions are explicit and
 reviewable, not buried in code.
 
 **Reference files to read:**
-1. [Core Language](references/agent-script-core-language.md) — execution
+1. [CLI for Agents](references/salesforce-cli-for-agents.md) — exact
+   command syntax for generate, validate, deploy, publish, activate
+2. [Core Language](references/agent-script-core-language.md) — execution
    model, syntax, block structure, anti-patterns
-2. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
+3. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
    topic graph design, flow control patterns, Agent Spec production,
    backing logic analysis
-3. [Topic Map Diagrams](references/agent-topic-map-diagrams.md) —
+4. [Topic Map Diagrams](references/agent-topic-map-diagrams.md) —
    Mermaid diagram conventions for visualizing the agent's topic graph
-4. [Validation & Debugging](references/agent-validation-and-debugging.md) —
+5. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
+   Section 3 (Creating an Agent): directory structure, bundle metadata
+6. [Validation & Debugging](references/agent-validation-and-debugging.md) —
    validate the agent compiles, preview to confirm behavior
 
 ### Comprehend an Existing Agent
@@ -98,11 +102,13 @@ implement. For action changes, analyze backing logic requirements — what
 Apex/Flow/Prompt Template exists, what's missing, and what needs stubbing.
 
 **Reference files to read:**
-1. [Core Language](references/agent-script-core-language.md) — syntax for
+1. [CLI for Agents](references/salesforce-cli-for-agents.md) — exact
+   command syntax for validate, deploy, preview
+2. [Core Language](references/agent-script-core-language.md) — syntax for
    writing the modifications
-2. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
+3. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
    update the Agent Spec, analyze backing logic for new actions
-3. [Validation & Debugging](references/agent-validation-and-debugging.md) —
+4. [Validation & Debugging](references/agent-validation-and-debugging.md) —
    validate the modified agent compiles and behaves correctly
 
 ### Diagnose Compilation Errors
@@ -148,9 +154,11 @@ state in a Salesforce org. This is a three-step pipeline: deploy the
 activate to make it live.
 
 **Reference files to read:**
-1. [Validation & Debugging](references/agent-validation-and-debugging.md) —
+1. [CLI for Agents](references/salesforce-cli-for-agents.md) — exact
+   command syntax for deploy, publish, activate, deactivate
+2. [Validation & Debugging](references/agent-validation-and-debugging.md) —
    validate before deploying, preview to confirm behavior
-2. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
+3. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
    deploy pipeline, publish and activate commands, dependency management
 
 ### Delete or Rename an Agent
@@ -160,9 +168,11 @@ tasks complicated by `AiAuthoringBundle` versioning and published version
 dependencies.
 
 **Reference files to read:**
-1. [Validation & Debugging](references/agent-validation-and-debugging.md) —
+1. [CLI for Agents](references/salesforce-cli-for-agents.md) — exact
+   command syntax for delete, retrieve
+2. [Validation & Debugging](references/agent-validation-and-debugging.md) —
    validate state after changes, preview to confirm
-2. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
+3. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
    delete mechanics, rename mechanics, orphan cleanup
 
 ### Test an Agent
@@ -176,16 +186,18 @@ topic, action, and flow control path should have corresponding test
 scenarios. Write test spec YAML, create the test metadata, then run tests.
 
 **Reference files to read:**
-1. [Core Language](references/agent-script-core-language.md) — understand
+1. [CLI for Agents](references/salesforce-cli-for-agents.md) — exact
+   command syntax for test create, test run, test results
+2. [Core Language](references/agent-script-core-language.md) — understand
    the agent's structure to design meaningful tests
-2. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
+3. [Design & Agent Spec](references/agent-design-and-spec-creation.md) —
    Agent Spec as test coverage baseline
-3. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
+4. [Metadata & Lifecycle](references/agent-metadata-and-lifecycle.md) —
    test metadata creation and execution commands
-4. [Test Authoring](references/agent-test-authoring.md) — test spec YAML
+5. [Test Authoring](references/agent-test-authoring.md) — test spec YAML
    format, expectations, metrics, test design methodology
-5. [assets/local-info-agent-testSpec.yaml](assets/template-testSpec.yaml) —
-   concrete example of a complete test spec
+6. [assets/template-testSpec.yaml](assets/template-testSpec.yaml) —
+   test spec template with placeholder values
 
 ## The Agent Spec
 
@@ -212,6 +224,12 @@ For Agent Spec structure and production methodology, read
 
 The `assets/` directory contains templates and examples. Read these
 when you need a starting point or a concrete reference.
+
+- **`assets/agent-spec-template.md`** — Agent Spec template with all
+  sections and placeholder content. Copy to `<AgentName>-AgentSpec.md`
+  in the project directory, then fill in during design. Save the Agent
+  Spec as a file — it is a significant design artifact that benefits from
+  proper rendering, especially the Mermaid Topic Map diagram.
 
 - **`assets/local-info-agent-annotated.agent`** — A complete annotated
   example based on the Local Info Agent, showing all major Agent Script
